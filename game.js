@@ -298,6 +298,8 @@
   }
   
   function showLobbyCode() {
+    console.log('showLobbyCode called, currentLobby:', currentLobby);
+    
     // Remove old lobby screen if exists
     const oldLobby = document.getElementById('lobbyScreen');
     if (oldLobby) oldLobby.remove();
@@ -307,14 +309,17 @@
     codeScreen.id = 'codeScreen';
     codeScreen.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 99999;';
     
+    const code = currentLobby && currentLobby.inviteCode ? currentLobby.inviteCode : 'ERROR: NO CODE';
+    console.log('Displaying code:', code);
+    
     codeScreen.innerHTML = `
       <div style="background: #1a1a1a; border: 3px solid #34ff86; padding: 50px; border-radius: 15px; max-width: 500px; color: #34ff86; font-family: monospace; text-align: center;">
-        <h2 style="margin-bottom: 30px;">INVITE CODE</h2>
-        <div style="background: #333; border: 2px solid #34ff86; padding: 20px; margin-bottom: 20px; font-size: 40px; letter-spacing: 5px; font-weight: bold;">
-          ${currentLobby.inviteCode}
+        <h2 style="margin-bottom: 30px; font-size: 24px;">INVITE CODE</h2>
+        <div style="background: #333; border: 3px solid #34ff86; padding: 30px; margin-bottom: 30px; font-size: 48px; letter-spacing: 8px; font-weight: bold; word-break: break-all;">
+          ${code}
         </div>
-        <p style="color: #34ff86; margin-bottom: 30px;">Share this code with your friends</p>
-        <button id="startBtn" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px; font-size: 16px;">START GAME</button>
+        <p style="color: #34ff86; margin-bottom: 30px; font-size: 16px;">Share this code with your friends</p>
+        <button id="startBtn" style="width: 100%; padding: 15px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px; font-size: 16px;">START GAME</button>
       </div>
     `;
     
