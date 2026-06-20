@@ -164,11 +164,12 @@
   
   function showLobbyInterface() {
     const shell = document.getElementById('gameShell');
+    shell.innerHTML = '';
     
     // Create lobby UI
     const lobbyUI = document.createElement('div');
     lobbyUI.id = 'lobbyScreen';
-    lobbyUI.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+    lobbyUI.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000;';
     
     lobbyUI.innerHTML = `
       <div style="background: #1a1a1a; border: 3px solid #34ff86; padding: 50px; border-radius: 15px; max-width: 500px; color: #34ff86; font-family: monospace; text-align: center;">
@@ -178,134 +179,169 @@
         
         <button id="joinBtn" style="width: 100%; padding: 20px; background: transparent; color: #34ff86; border: 3px solid #34ff86; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 5px;">JOIN LOBBY</button>
         
-        <div id="lobbyContent" style="display: none; margin-top: 30px;"></div>
+        <div id="lobbyContent" style="margin-top: 30px; text-align: left;"></div>
       </div>
     `;
     
     shell.appendChild(lobbyUI);
     
-    document.getElementById('hostBtn').onclick = showHostLobby;
-    document.getElementById('joinBtn').onclick = showJoinLobby;
+    // Add event listeners AFTER elements are created
+    setTimeout(() => {
+      const hostBtn = document.getElementById('hostBtn');
+      const joinBtn = document.getElementById('joinBtn');
+      if (hostBtn) hostBtn.onclick = showHostLobby;
+      if (joinBtn) joinBtn.onclick = showJoinLobby;
+    }, 100);
   }
   
   function showHostLobby() {
     const content = document.getElementById('lobbyContent');
-    content.style.display = 'block';
+    if (!content) return;
+    
     content.innerHTML = `
-      <div style="text-align: left; margin-top: 20px;">
-        <label style="display: block; margin-bottom: 15px; color: #34ff86;">
-          <div style="margin-bottom: 5px;">Game Mode:</div>
-          <select id="modeSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
-            <option value="campaign100">100 Days</option>
-            <option value="majority50">50% Mode</option>
-          </select>
-        </label>
-        
-        <label style="display: block; margin-bottom: 15px; color: #34ff86;">
-          <div style="margin-bottom: 5px;">Difficulty:</div>
-          <select id="diffSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </label>
-        
-        <label style="display: block; margin-bottom: 20px; color: #34ff86;">
-          <div style="margin-bottom: 5px;">Players:</div>
-          <select id="playerSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-        
-        <button id="confirmHost" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px;">CREATE LOBBY</button>
-      </div>
+      <label style="display: block; margin-bottom: 15px; color: #34ff86;">
+        <div style="margin-bottom: 5px;">Game Mode:</div>
+        <select id="modeSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
+          <option value="campaign100">100 Days</option>
+          <option value="majority50">50% Mode</option>
+        </select>
+      </label>
+      
+      <label style="display: block; margin-bottom: 15px; color: #34ff86;">
+        <div style="margin-bottom: 5px;">Difficulty:</div>
+        <select id="diffSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      
+      <label style="display: block; margin-bottom: 20px; color: #34ff86;">
+        <div style="margin-bottom: 5px;">Players:</div>
+        <select id="playerSelect" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 8px; font-family: monospace;">
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+        </select>
+      </label>
+      
+      <button id="confirmHost" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px;">CREATE LOBBY</button>
     `;
     
-    document.getElementById('confirmHost').onclick = async () => {
-      const mode = document.getElementById('modeSelect').value;
-      const difficulty = document.getElementById('diffSelect').value;
-      const maxPlayers = document.getElementById('playerSelect').value;
-      
-      const result = await createLobby('Host', mode, difficulty, maxPlayers);
-      if (result) {
-        showLobbyCode();
+    setTimeout(() => {
+      const confirmBtn = document.getElementById('confirmHost');
+      if (confirmBtn) {
+        confirmBtn.onclick = async () => {
+          const mode = document.getElementById('modeSelect').value;
+          const difficulty = document.getElementById('diffSelect').value;
+          const maxPlayers = document.getElementById('playerSelect').value;
+          
+          console.log('Creating lobby:', { mode, difficulty, maxPlayers });
+          const result = await createLobby('Host', mode, difficulty, maxPlayers);
+          console.log('Lobby result:', result);
+          
+          if (result && result.lobbyId) {
+            showLobbyCode();
+          } else {
+            alert('Failed to create lobby. Check console.');
+          }
+        };
       }
-    };
+    }, 100);
   }
   
   function showLobbyCode() {
     const content = document.getElementById('lobbyContent');
+    if (!content) return;
+    
     content.innerHTML = `
-      <div style="text-align: center; margin-top: 30px;">
+      <div style="text-align: center;">
         <h3 style="color: #34ff86; margin-bottom: 20px;">INVITE CODE</h3>
         <div style="background: #333; border: 2px solid #34ff86; padding: 20px; margin-bottom: 20px; font-size: 32px; letter-spacing: 3px; font-weight: bold;">
           ${currentLobby.inviteCode}
         </div>
         <p style="color: #34ff86; margin-bottom: 20px;">Share this code with your friends</p>
-        <p id="playerCount" style="color: #34ff86; margin-bottom: 20px;">Waiting for players...</p>
         <button id="startBtn" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px;">START GAME</button>
         <button id="backBtn" style="width: 100%; padding: 12px; background: transparent; color: #34ff86; border: 1px solid #34ff86; cursor: pointer; border-radius: 3px;">BACK</button>
       </div>
     `;
     
-    document.getElementById('startBtn').onclick = async () => {
-      const result = await startGame(currentPlayerId);
-      if (result) {
-        startGameFromLobby();
+    setTimeout(() => {
+      const startBtn = document.getElementById('startBtn');
+      const backBtn = document.getElementById('backBtn');
+      
+      if (startBtn) {
+        startBtn.onclick = async () => {
+          const result = await startGame(currentPlayerId);
+          if (result) {
+            startGameFromLobby();
+          }
+        };
       }
-    };
-    
-    document.getElementById('backBtn').onclick = () => {
-      currentLobby = null;
-      document.getElementById('lobbyContent').style.display = 'none';
-    };
+      
+      if (backBtn) {
+        backBtn.onclick = () => {
+          currentLobby = null;
+          showLobbyInterface();
+        };
+      }
+    }, 100);
   }
   
   function showJoinLobby() {
     const content = document.getElementById('lobbyContent');
-    content.style.display = 'block';
+    if (!content) return;
+    
     content.innerHTML = `
-      <div style="text-align: left; margin-top: 30px;">
-        <label style="display: block; margin-bottom: 20px; color: #34ff86;">
-          <div style="margin-bottom: 10px; font-size: 16px;">Enter Invite Code:</div>
-          <input id="codeInput" type="text" placeholder="e.g. ABC123" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 10px; font-family: monospace; font-size: 16px; text-transform: uppercase;">
-        </label>
-        
-        <button id="confirmJoin" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px;">JOIN</button>
-        <button id="backBtn2" style="width: 100%; padding: 12px; background: transparent; color: #34ff86; border: 1px solid #34ff86; cursor: pointer; border-radius: 3px;">BACK</button>
-      </div>
+      <label style="display: block; margin-bottom: 20px; color: #34ff86;">
+        <div style="margin-bottom: 10px; font-size: 16px;">Enter Invite Code:</div>
+        <input id="codeInput" type="text" placeholder="e.g. ABC123" style="width: 100%; background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 10px; font-family: monospace; font-size: 16px; text-transform: uppercase; box-sizing: border-box;">
+      </label>
+      
+      <button id="confirmJoin" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px;">JOIN</button>
+      <button id="backBtn2" style="width: 100%; padding: 12px; background: transparent; color: #34ff86; border: 1px solid #34ff86; cursor: pointer; border-radius: 3px;">BACK</button>
     `;
     
-    document.getElementById('confirmJoin').onclick = async () => {
-      const code = document.getElementById('codeInput').value.trim().toUpperCase();
-      // Find lobby by invite code
-      const lobbies = await getOpenLobbies();
-      const lobby = lobbies.find(l => l.inviteCode === code);
+    setTimeout(() => {
+      const confirmJoinBtn = document.getElementById('confirmJoin');
+      const backBtn2 = document.getElementById('backBtn2');
       
-      if (lobby) {
-        const result = await joinLobby(lobby.id, 'Player');
-        if (result) {
-          showWaitingScreen();
-        }
-      } else {
-        alert('Invalid code!');
+      if (confirmJoinBtn) {
+        confirmJoinBtn.onclick = async () => {
+          const code = document.getElementById('codeInput').value.trim().toUpperCase();
+          console.log('Joining with code:', code);
+          
+          const lobbies = await getOpenLobbies();
+          const lobby = lobbies.find(l => l.inviteCode === code);
+          
+          if (lobby) {
+            const result = await joinLobby(lobby.id, 'Player');
+            if (result) {
+              showWaitingScreen();
+            }
+          } else {
+            alert('Invalid code!');
+          }
+        };
       }
-    };
-    
-    document.getElementById('backBtn2').onclick = () => {
-      document.getElementById('lobbyContent').style.display = 'none';
-    };
+      
+      if (backBtn2) {
+        backBtn2.onclick = () => {
+          showLobbyInterface();
+        };
+      }
+    }, 100);
   }
   
   function showWaitingScreen() {
     const content = document.getElementById('lobbyContent');
+    if (!content) return;
+    
     content.innerHTML = `
-      <div style="text-align: center; margin-top: 30px;">
+      <div style="text-align: center;">
         <h3 style="color: #34ff86; margin-bottom: 20px;">WAITING FOR HOST</h3>
         <p style="color: #34ff86; margin-bottom: 20px;">Players: ${currentLobby.players.length}/${currentLobby.maxPlayers}</p>
-        <p style="color: #aaa; animation: blink 1s infinite;">Waiting...</p>
+        <p style="color: #aaa;">Waiting...</p>
       </div>
     `;
   }
