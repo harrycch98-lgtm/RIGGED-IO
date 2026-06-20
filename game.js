@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   "use strict";
 
   const HUMAN = 0;
@@ -85,14 +85,12 @@
     }
   }
   // ===== LOBBY SYSTEM =====
-  const BACKEND_URL_HTTP = 'https://api.riggedio.com';
-  
   let currentLobby = null;
   let currentPlayerId = Math.random().toString(36).substr(2, 9);
   
   async function createLobby(hostName, mode, difficulty, maxPlayers) {
     try {
-      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/create`, {
+      const res = await fetch(`https://api.riggedio.com:3000/api/lobby/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,7 +112,7 @@
   
   async function getOpenLobbies() {
     try {
-      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobbies`);
+      const res = await fetch(`https://api.riggedio.com:3000/api/lobbies`);
       const lobbies = await res.json();
       return Array.isArray(lobbies) ? lobbies : [];
     } catch (error) {
@@ -125,7 +123,7 @@
   
   async function joinLobby(lobbyId, playerName) {
     try {
-      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/join`, {
+      const res = await fetch(`https://api.riggedio.com:3000/api/lobby/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +146,7 @@
   
   async function startGame(hostId) {
     try {
-      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/start`, {
+      const res = await fetch(`https://api.riggedio.com:3000/api/lobby/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
