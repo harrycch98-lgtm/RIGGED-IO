@@ -200,5 +200,26 @@
 
   <script src="multiplayer-server.js?v=1"></script>
   <script src="game.js?v=183"></script>
+<!-- Multiplayer WebSocket Connection -->
+<script>
+const BACKEND_URL = 'ws://206.81.14.154:3000';
+let ws = null;
+let playerId = Math.random().toString(36).substr(2, 9);
+
+function initMultiplayer() {
+  ws = new WebSocket(BACKEND_URL);
+  ws.onopen = () => console.log('✓ Connected to multiplayer server');
+  ws.onmessage = (e) => console.log('Players:', JSON.parse(e.data));
+  ws.onerror = (e) => console.error('✗ WebSocket error:', e);
+  ws.onclose = () => setTimeout(initMultiplayer, 3000);
+}
+
+// Start after page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMultiplayer);
+} else {
+  initMultiplayer();
+}
+</script>
 </body>
 </html>
