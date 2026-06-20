@@ -2,13 +2,8 @@
 
 Open or upload `index.html` from this folder for the custom-backend multiplayer version.
 
-Before upload, edit `multiplayer-server.js` and replace:
-
-```js
-const BACKEND_URL = 'https://yourdomain-backend.com';
-```
-
-with your real backend URL.
+The production client connects to `https://api.riggedio.com:3000` and
+`wss://api.riggedio.com:3000`. Localhost automatically uses port 3001.
 
 Expected backend routes:
 
