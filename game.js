@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   "use strict";
 
   const HUMAN = 0;
@@ -1099,17 +1099,27 @@
     saveLeaderProfile(selectedLeaderProfile);
     gameStarted = true;
     
+    console.log('Game started, lobbySettings:', window.lobbySettings);
+    
     // If hosting, create lobby with stored settings
     if (window.lobbySettings) {
       const { mode, difficulty, maxPlayers } = window.lobbySettings;
+      console.log('Creating lobby:', { mode, difficulty, maxPlayers });
       createLobby('Host', mode, difficulty, maxPlayers).then(result => {
+        console.log('Lobby creation result:', result);
         if (result && result.lobbyId) {
+          console.log('Showing lobby code');
           showLobbyCode();
+        } else {
+          console.error('No lobbyId in result');
         }
+      }).catch(err => {
+        console.error('Lobby creation error:', err);
       });
       return;
     }
     
+    console.log('Not hosting, no lobbySettings found');
     // Initialize multiplayer WebSocket for joining
     playerId = Math.random().toString(36).substr(2, 9);
     initWebSocket();
