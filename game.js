@@ -90,6 +90,7 @@
   
   async function createLobby(hostName, mode, difficulty, maxPlayers) {
     try {
+      console.log('Creating lobby with:', { hostName, mode, difficulty, maxPlayers });
       const res = await fetch(`https://api.riggedio.com:3000/api/lobby/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,22 +102,37 @@
           maxPlayers: maxPlayers
         })
       });
+      
+      console.log('Create response status:', res.status);
       const data = await res.json();
-      currentLobby = { id: data.lobbyId, inviteCode: data.inviteCode };
+      console.log('Lobby created:', data);
+      
+      if (data.lobbyId) {
+        currentLobby = { id: data.lobbyId, inviteCode: data.inviteCode };
+      }
       return data;
     } catch (error) {
-      console.error('Failed to create lobby:', error);
+      console.error('Failed to create lobby:', error.message, error);
       return null;
     }
   }
   
   async function getOpenLobbies() {
     try {
+      console.log('Fetching lobbies from: https://api.riggedio.com:3000/api/lobbies');
       const res = await fetch(`https://api.riggedio.com:3000/api/lobbies`);
+      console.log('Response status:', res.status);
+      
+      if (!res.ok) {
+        console.error('API error status:', res.status);
+        return [];
+      }
+      
       const lobbies = await res.json();
+      console.log('Lobbies returned:', lobbies);
       return Array.isArray(lobbies) ? lobbies : [];
     } catch (error) {
-      console.error('Failed to get lobbies:', error);
+      console.error('Failed to get lobbies:', error.message, error);
       return [];
     }
   }
