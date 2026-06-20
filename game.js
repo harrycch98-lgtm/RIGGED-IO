@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   "use strict";
 
   const HUMAN = 0;
@@ -247,15 +247,16 @@
           // Store settings
           window.lobbySettings = { mode, difficulty, maxPlayers };
           
-          // Hide lobby screen, show main menu
+          // Hide lobby screen
           const lobbyScreen = document.getElementById('lobbyScreen');
           if (lobbyScreen) {
             lobbyScreen.style.display = 'none';
           }
           
+          // Show main menu - remove is-hidden class
           const mainMenu = document.getElementById('mainMenu');
           if (mainMenu) {
-            mainMenu.style.display = 'block';
+            mainMenu.classList.remove('is-hidden');
           }
         };
       }
