@@ -1,10 +1,10 @@
-(() => {
+﻿(() => {
   "use strict";
 
   const HUMAN = 0;
   
   // ===== WEBSOCKET MULTIPLAYER INTEGRATION =====
-  const BACKEND_URL = 'wss://api.riggedio.com:3000';
+  const BACKEND_URL = 'ws://206.81.14.154:3000';
   let ws = null;
   let playerId = null;
   let lastPositionSync = 0;
