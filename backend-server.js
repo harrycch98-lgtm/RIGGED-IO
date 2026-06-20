@@ -1,109 +1,166 @@
+// Minimal RIGGED multiplayer lobby service for local testing and deployment.
+// Run with: node backend-server.js
 const http = require('http');
+const { randomBytes, randomUUID } = require('crypto');
 
-const PORT = process.env.PORT || 3001;
-const players = new Map();
+const PORT = Number(process.env.PORT || 3001);
+const lobbies = new Map();
+const worldPlayers = new Map();
 
-function sendJson(res, statusCode, data) {
-  const body = JSON.stringify(data);
-  res.writeHead(statusCode, {
+function send(response, status, value) {
+  response.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-    'Content-Length': Buffer.byteLength(body)
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Cache-Control': 'no-store',
+    'Content-Type': 'application/json; charset=utf-8',
   });
-  res.end(body);
+  response.end(JSON.stringify(value));
 }
 
-function readBody(req) {
+function readJson(request) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (chunk) => {
+    request.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 1_000_000) {
-        req.destroy();
-        reject(new Error('Request body too large'));
-      }
+      if (body.length > 100_000) request.destroy();
     });
-    req.on('end', () => {
-      try {
-        resolve(body ? JSON.parse(body) : {});
-      } catch (error) {
-        reject(error);
-      }
+    request.on('end', () => {
+      try { resolve(body ? JSON.parse(body) : {}); }
+      catch (error) { reject(error); }
     });
-    req.on('error', reject);
+    request.on('error', reject);
   });
 }
 
-function cleanOldPlayers() {
-  const now = Date.now();
-  for (const [id, player] of players) {
-    if (now - player.updatedAt > 30000) {
-      players.delete(id);
-    }
+function cleanText(value, fallback, maxLength) {
+  const cleaned = String(value || '').replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, maxLength);
+  return cleaned || fallback;
+}
+
+function inviteCode() {
+  let code = '';
+  do { code = randomBytes(5).toString('base64url').toUpperCase().replace(/[-_]/g, '').slice(0, 6); }
+  while ([...lobbies.values()].some((lobby) => lobby.inviteCode === code));
+  return code;
+}
+
+function publicLobby(lobby) {
+  return {
+    ...lobby,
+    players: lobby.players.map((player) => ({ ...player })),
+  };
+}
+
+function pruneLobbies() {
+  const expiry = Date.now() - 6 * 60 * 60 * 1000;
+  for (const [id, lobby] of lobbies) {
+    if (lobby.updatedAt < expiry) lobbies.delete(id);
   }
 }
 
-const server = http.createServer(async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    sendJson(res, 200, { ok: true });
-    return;
-  }
+const server = http.createServer(async (request, response) => {
+  if (request.method === 'OPTIONS') return send(response, 204, {});
+  const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
 
   try {
-    if (req.method === 'POST' && req.url === '/api/join') {
-      const body = await readBody(req);
-      const id = String(body.id || '');
-      const name = String(body.name || 'Player').slice(0, 32);
-      if (!id) {
-        sendJson(res, 400, { error: 'Missing player id' });
-        return;
-      }
+    if (request.method === 'GET' && url.pathname === '/health') {
+      return send(response, 200, { ok: true, lobbies: lobbies.size });
+    }
 
-      const existing = players.get(id) || {};
-      const player = {
+    if (request.method === 'GET' && url.pathname === '/api/lobbies') {
+      pruneLobbies();
+      const publicOnly = url.searchParams.get('public') === '1';
+      const result = [...lobbies.values()]
+        .filter((lobby) => !publicOnly || (lobby.isPublic && !lobby.started && lobby.players.length < lobby.maxPlayers))
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .map(publicLobby);
+      return send(response, 200, result);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/lobby/create') {
+      const body = await readJson(request);
+      const hostId = cleanText(body.hostId, randomUUID(), 80);
+      const hostName = cleanText(body.hostName, 'Host', 24);
+      const id = randomUUID();
+      const now = Date.now();
+      const lobby = {
         id,
-        name,
-        x: Number(existing.x || 0),
-        y: Number(existing.y || 0),
-        joinedAt: existing.joinedAt || Date.now(),
-        updatedAt: Date.now()
+        lobbyId: id,
+        inviteCode: inviteCode(),
+        lobbyName: cleanText(body.lobbyName, `${hostName}'s Lobby`, 32),
+        isPublic: body.isPublic === true,
+        visibility: body.isPublic === true ? 'public' : 'private',
+        hostId,
+        mode: body.mode === 'majority50' ? 'majority50' : 'campaign100',
+        difficulty: ['easy', 'medium', 'hard'].includes(body.difficulty) ? body.difficulty : 'medium',
+        maxPlayers: Math.max(2, Math.min(5, Number(body.maxPlayers) || 4)),
+        players: [{ id: hostId, name: hostName, host: true, isBot: false }],
+        started: false,
+        status: 'open',
+        createdAt: now,
+        updatedAt: now,
       };
-      players.set(id, player);
-      sendJson(res, 200, { ok: true, player, players: Array.from(players.values()) });
-      return;
+      lobbies.set(id, lobby);
+      return send(response, 201, { lobbyId: id, inviteCode: lobby.inviteCode, lobby: publicLobby(lobby) });
     }
 
-    if (req.method === 'POST' && req.url === '/api/move') {
-      const body = await readBody(req);
-      const id = String(body.id || '');
-      if (!id || !players.has(id)) {
-        sendJson(res, 404, { error: 'Player has not joined yet' });
-        return;
+    if (request.method === 'POST' && url.pathname === '/api/lobby/join') {
+      const body = await readJson(request);
+      const lobby = lobbies.get(String(body.lobbyId || ''));
+      if (!lobby) return send(response, 404, { error: 'Lobby not found' });
+      if (lobby.started) return send(response, 409, { error: 'Game already started' });
+      const playerId = cleanText(body.playerId, randomUUID(), 100);
+      if (!lobby.players.some((player) => player.id === playerId)) {
+        if (lobby.players.length >= lobby.maxPlayers) return send(response, 409, { error: 'Lobby is full' });
+        lobby.players.push({
+          id: playerId,
+          name: cleanText(body.playerName, 'Player', 24),
+          host: false,
+          isBot: body.isBot === true,
+        });
       }
-
-      const player = players.get(id);
-      player.x = Number(body.x || 0);
-      player.y = Number(body.y || 0);
-      player.updatedAt = Date.now();
-      players.set(id, player);
-      sendJson(res, 200, { ok: true, player });
-      return;
+      lobby.updatedAt = Date.now();
+      return send(response, 200, { lobby: publicLobby(lobby) });
     }
 
-    if (req.method === 'GET' && req.url === '/api/players') {
-      cleanOldPlayers();
-      sendJson(res, 200, Array.from(players.values()));
-      return;
+    if (request.method === 'POST' && url.pathname === '/api/lobby/start') {
+      const body = await readJson(request);
+      const lobby = lobbies.get(String(body.lobbyId || ''));
+      if (!lobby) return send(response, 404, { error: 'Lobby not found' });
+      if (String(body.hostId || '') !== lobby.hostId) return send(response, 403, { error: 'Only the host can start' });
+      lobby.started = true;
+      lobby.status = 'started';
+      lobby.updatedAt = Date.now();
+      setTimeout(() => lobbies.delete(lobby.id), 120_000).unref();
+      return send(response, 200, { started: true, lobby: publicLobby(lobby) });
     }
 
-    sendJson(res, 404, { error: 'Route not found' });
+    // Compatibility routes used by multiplayer-server.js.
+    if (request.method === 'POST' && url.pathname === '/api/join') {
+      const body = await readJson(request);
+      const player = { id: cleanText(body.id, randomUUID(), 100), name: cleanText(body.name, 'Player', 24), x: 0, y: 0 };
+      worldPlayers.set(player.id, player);
+      return send(response, 200, player);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/move') {
+      const body = await readJson(request);
+      const player = worldPlayers.get(String(body.id || ''));
+      if (!player) return send(response, 404, { error: 'Player not found' });
+      player.x = Number(body.x) || 0;
+      player.y = Number(body.y) || 0;
+      return send(response, 200, player);
+    }
+    if (request.method === 'GET' && url.pathname === '/api/players') {
+      return send(response, 200, [...worldPlayers.values()]);
+    }
+
+    return send(response, 404, { error: 'Route not found' });
   } catch (error) {
-    sendJson(res, 500, { error: error.message });
+    console.error(error);
+    return send(response, 400, { error: 'Invalid request' });
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`RIGGED backend multiplayer server running on http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`RIGGED lobby server listening on http://localhost:${PORT}`));
+
