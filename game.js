@@ -251,13 +251,17 @@
           const lobbyScreen = document.getElementById('lobbyScreen');
           if (lobbyScreen) {
             lobbyScreen.style.display = 'none';
+            lobbyScreen.style.visibility = 'hidden';
           }
           
-          // Show main menu - remove is-hidden class
+          // Show main menu
           const mainMenu = document.getElementById('mainMenu');
           if (mainMenu) {
-            mainMenu.classList.remove('is-hidden');
+            mainMenu.style.display = 'block';
+            mainMenu.style.visibility = 'visible';
           }
+          
+          console.log('Showing main menu');
         };
       }
       
@@ -6303,7 +6307,15 @@
   // Show lobby interface as first screen
   setTimeout(() => {
     const mainMenu = document.getElementById('mainMenu');
-    if (mainMenu) mainMenu.style.display = 'none';
+    const gameShell = document.getElementById('gameShell');
+    if (mainMenu) {
+      mainMenu.style.display = 'none';
+      mainMenu.style.visibility = 'hidden';
+    }
+    if (gameShell) {
+      gameShell.style.display = 'block';
+      gameShell.style.visibility = 'visible';
+    }
     showLobbyInterface();
   }, 500);
 
