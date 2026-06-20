@@ -1,10 +1,10 @@
-﻿(() => {
+(() => {
   "use strict";
 
   const HUMAN = 0;
   
   // ===== WEBSOCKET MULTIPLAYER INTEGRATION =====
-  const BACKEND_URL = 'wss://api.riggedio.com:3000';
+  const BACKEND_URL = 'ws://206.81.14.154:3000';
   let ws = null;
   let playerId = null;
   let lastPositionSync = 0;
@@ -84,7 +84,228 @@
       }
     }
   }
-  // ===== END WEBSOCKET INTEGRATION =====
+  // ===== LOBBY SYSTEM =====
+  const BACKEND_URL_HTTP = 'https://api.riggedio.com';
+  
+  let currentLobby = null;
+  let currentPlayerId = Math.random().toString(36).substr(2, 9);
+  
+  async function createLobby(hostName, mode, difficulty, maxPlayers) {
+    try {
+      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hostId: currentPlayerId,
+          hostName: hostName,
+          mode: mode,
+          difficulty: difficulty,
+          maxPlayers: maxPlayers
+        })
+      });
+      const data = await res.json();
+      currentLobby = { id: data.lobbyId, inviteCode: data.inviteCode };
+      return data;
+    } catch (error) {
+      console.error('Failed to create lobby:', error);
+      return null;
+    }
+  }
+  
+  async function getOpenLobbies() {
+    try {
+      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobbies`);
+      const lobbies = await res.json();
+      return Array.isArray(lobbies) ? lobbies : [];
+    } catch (error) {
+      console.error('Failed to get lobbies:', error);
+      return [];
+    }
+  }
+  
+  async function joinLobby(lobbyId, playerName) {
+    try {
+      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lobbyId: lobbyId,
+          playerId: currentPlayerId,
+          playerName: playerName
+        })
+      });
+      const data = await res.json();
+      if (data.lobby) {
+        currentLobby = data.lobby;
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to join lobby:', error);
+      return null;
+    }
+  }
+  
+  async function startGame(hostId) {
+    try {
+      const res = await fetch(`${BACKEND_URL_HTTP}:3000/api/lobby/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lobbyId: currentLobby.id,
+          hostId: hostId
+        })
+      });
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to start game:', error);
+      return null;
+    }
+  }
+  
+  function showLobbyInterface() {
+    const shell = document.getElementById('gameShell');
+    const menu = document.getElementById('mainMenu');
+    
+    // Hide main menu, show game shell
+    menu?.classList.add('is-hidden');
+    shell?.classList.remove('is-hidden');
+    
+    // Create lobby UI
+    const lobbyUI = document.createElement('div');
+    lobbyUI.id = 'lobbyScreen';
+    lobbyUI.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+    
+    lobbyUI.innerHTML = `
+      <div style="background: #1a1a1a; border: 2px solid #34ff86; padding: 30px; border-radius: 10px; max-width: 600px; color: #34ff86; font-family: monospace;">
+        <h1 style="text-align: center; margin-bottom: 30px;">⚡ RIGGED LOBBIES</h1>
+        
+        <div style="margin-bottom: 20px;">
+          <button id="createLobbyBtn" style="width: 100%; padding: 10px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; margin-bottom: 10px;">CREATE LOBBY</button>
+          <button id="browseLobbyBtn" style="width: 100%; padding: 10px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold;">BROWSE LOBBIES</button>
+        </div>
+        
+        <div id="lobbyContent" style="min-height: 300px; border: 1px solid #34ff86; padding: 15px; background: rgba(52, 255, 134, 0.05);"></div>
+      </div>
+    `;
+    
+    shell.appendChild(lobbyUI);
+    
+    document.getElementById('createLobbyBtn').onclick = showCreateLobby;
+    document.getElementById('browseLobbyBtn').onclick = showBrowseLobbies;
+  }
+  
+  function showCreateLobby() {
+    const content = document.getElementById('lobbyContent');
+    content.innerHTML = `
+      <h2>Create New Lobby</h2>
+      <div style="margin: 15px 0;">
+        <label style="display: block; margin-bottom: 10px;">
+          Game Mode:
+          <select id="modeSelect" style="background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 5px;">
+            <option value="campaign100">100 Days</option>
+            <option value="majority50">50% Mode</option>
+          </select>
+        </label>
+        
+        <label style="display: block; margin-bottom: 10px;">
+          Difficulty:
+          <select id="diffSelect" style="background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 5px;">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        
+        <label style="display: block; margin-bottom: 10px;">
+          Players:
+          <select id="playerSelect" style="background: #333; color: #34ff86; border: 1px solid #34ff86; padding: 5px;">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+        
+        <button id="confirmCreate" style="width: 100%; padding: 10px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; margin-top: 15px;">CREATE</button>
+      </div>
+    `;
+    
+    document.getElementById('confirmCreate').onclick = async () => {
+      const mode = document.getElementById('modeSelect').value;
+      const difficulty = document.getElementById('diffSelect').value;
+      const maxPlayers = document.getElementById('playerSelect').value;
+      
+      const result = await createLobby('Player', mode, difficulty, maxPlayers);
+      if (result) {
+        showLobbyWait();
+      }
+    };
+  }
+  
+  function showLobbyWait() {
+    const content = document.getElementById('lobbyContent');
+    content.innerHTML = `
+      <h2>Waiting for Players...</h2>
+      <p>Invite Code: <strong>${currentLobby.inviteCode}</strong></p>
+      <p id="lobbyPlayers">Players: 1/4</p>
+      <button id="startBtn" style="width: 100%; padding: 10px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; margin-top: 15px;">START GAME</button>
+      <button id="cancelBtn" style="width: 100%; padding: 10px; background: #ff4444; color: #fff; border: none; cursor: pointer; margin-top: 10px;">CANCEL</button>
+    `;
+    
+    document.getElementById('startBtn').onclick = async () => {
+      const result = await startGame(currentPlayerId);
+      if (result) {
+        startGameFromLobby();
+      }
+    };
+    
+    document.getElementById('cancelBtn').onclick = () => {
+      currentLobby = null;
+      showLobbyInterface();
+    };
+  }
+  
+  async function showBrowseLobbies() {
+    const content = document.getElementById('lobbyContent');
+    const lobbies = await getOpenLobbies();
+    
+    if (lobbies.length === 0) {
+      content.innerHTML = `<p>No open lobbies. <button onclick="location.reload()">Create one</button></p>`;
+      return;
+    }
+    
+    content.innerHTML = '<h2>Open Lobbies</h2>' + lobbies.map((l, i) => `
+      <div style="border-bottom: 1px solid #34ff86; padding: 10px; margin: 10px 0;">
+        <strong>Host:</strong> ${l.hostName}<br>
+        <strong>Players:</strong> ${l.players.length}/${l.maxPlayers}<br>
+        <strong>Mode:</strong> ${l.mode}<br>
+        <strong>Difficulty:</strong> ${l.difficulty}<br>
+        <button id="join${i}" style="background: #34ff86; color: #000; border: none; cursor: pointer; padding: 5px 10px; margin-top: 10px;">JOIN</button>
+      </div>
+    `).join('');
+    
+    lobbies.forEach((l, i) => {
+      document.getElementById(`join${i}`).onclick = async () => {
+        const result = await joinLobby(l.id, 'Player');
+        if (result) {
+          showLobbyWait();
+        }
+      };
+    });
+  }
+  
+  function startGameFromLobby() {
+    const lobbyScreen = document.getElementById('lobbyScreen');
+    if (lobbyScreen) lobbyScreen.remove();
+    gameStarted = true;
+    mainMenu.classList.add('is-hidden');
+    gameShell.classList.remove('is-hidden');
+    playerId = currentPlayerId;
+    initWebSocket();
+    startGame();
+  }
+  // ===== END LOBBY SYSTEM =====
   const MATCH_SECONDS = 1800;
   const CAMPAIGN_TOTAL_DAYS = 100;
   const CAMPAIGN_DAY_SECONDS = MATCH_SECONDS / CAMPAIGN_TOTAL_DAYS;
@@ -762,9 +983,8 @@
     saveLeaderProfile(selectedLeaderProfile);
     gameStarted = true;
     
-    // Initialize multiplayer WebSocket
-    playerId = Math.random().toString(36).substr(2, 9);
-    initWebSocket();
+    // Show lobby interface instead of starting immediately
+    showLobbyInterface();
     
     mainMenu.classList.add("is-hidden");
     gameShell.classList.remove("is-hidden");
