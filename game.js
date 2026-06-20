@@ -228,7 +228,7 @@
         </select>
       </label>
       
-      <button id="confirmHost" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px;">NEXT</button>
+      <button id="confirmHost" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px;">HOST</button>
       <button id="backHostBtn" style="width: 100%; padding: 12px; background: transparent; color: #34ff86; border: 1px solid #34ff86; cursor: pointer; border-radius: 3px; margin-top: 10px;">BACK</button>
     `;
     
@@ -252,6 +252,15 @@
           if (lobbyScreen) {
             lobbyScreen.style.display = 'none';
             lobbyScreen.style.visibility = 'hidden';
+            lobbyScreen.style.zIndex = '0';
+          }
+          
+          // Hide gameShell
+          const gameShell = document.getElementById('gameShell');
+          if (gameShell) {
+            gameShell.style.display = 'none';
+            gameShell.style.visibility = 'hidden';
+            gameShell.style.zIndex = '0';
           }
           
           // Show main menu
@@ -259,6 +268,7 @@
           if (mainMenu) {
             mainMenu.style.display = 'block';
             mainMenu.style.visibility = 'visible';
+            mainMenu.style.zIndex = '1000';
           }
           
           console.log('Showing main menu');
@@ -320,35 +330,49 @@
       
       <button id="confirmJoin" style="width: 100%; padding: 12px; background: #34ff86; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; margin-bottom: 10px;">JOIN</button>
       <button id="backBtn2" style="width: 100%; padding: 12px; background: transparent; color: #34ff86; border: 1px solid #34ff86; cursor: pointer; border-radius: 3px;">BACK</button>
+      <div id="joinStatus" style="color: #ff6666; margin-top: 10px;"></div>
     `;
     
     setTimeout(() => {
       const confirmJoinBtn = document.getElementById('confirmJoin');
       const backBtn2 = document.getElementById('backBtn2');
+      const statusDiv = document.getElementById('joinStatus');
       
       if (confirmJoinBtn) {
         confirmJoinBtn.onclick = async () => {
           const code = document.getElementById('codeInput').value.trim().toUpperCase();
-          console.log('Joining with code:', code);
+          console.log('Attempting to join with code:', code);
+          statusDiv.innerText = 'Joining...';
           
-          const lobbies = await getOpenLobbies();
-          const lobby = lobbies.find(l => l.inviteCode === code);
-          
-          if (lobby) {
-            const result = await joinLobby(lobby.id, 'Player');
-            if (result) {
-              showWaitingScreen();
+          try {
+            const lobbies = await getOpenLobbies();
+            console.log('Available lobbies:', lobbies);
+            
+            const lobby = lobbies.find(l => l.inviteCode === code);
+            console.log('Found lobby:', lobby);
+            
+            if (lobby) {
+              const result = await joinLobby(lobby.id, 'Player');
+              console.log('Join result:', result);
+              
+              if (result) {
+                statusDiv.innerText = 'Joined! Waiting for host...';
+                setTimeout(showWaitingScreen, 500);
+              } else {
+                statusDiv.innerText = 'Failed to join. Try again.';
+              }
+            } else {
+              statusDiv.innerText = 'Invalid code!';
             }
-          } else {
-            alert('Invalid code!');
+          } catch (error) {
+            console.error('Join error:', error);
+            statusDiv.innerText = 'Error: ' + error.message;
           }
         };
       }
       
       if (backBtn2) {
-        backBtn2.onclick = () => {
-          showLobbyInterface();
-        };
+        backBtn2.onclick = showLobbyInterface;
       }
     }, 100);
   }
