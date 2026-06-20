@@ -164,12 +164,15 @@
   
   function showLobbyInterface() {
     const shell = document.getElementById('gameShell');
-    shell.innerHTML = '';
+    
+    // Remove old lobby if exists
+    const oldLobby = document.getElementById('lobbyScreen');
+    if (oldLobby) oldLobby.remove();
     
     // Create lobby UI
     const lobbyUI = document.createElement('div');
     lobbyUI.id = 'lobbyScreen';
-    lobbyUI.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+    lobbyUI.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 99999;';
     
     lobbyUI.innerHTML = `
       <div style="background: #1a1a1a; border: 3px solid #34ff86; padding: 50px; border-radius: 15px; max-width: 500px; color: #34ff86; font-family: monospace; text-align: center;">
@@ -183,7 +186,7 @@
       </div>
     `;
     
-    shell.appendChild(lobbyUI);
+    document.body.appendChild(lobbyUI);
     
     // Add event listeners AFTER elements are created
     setTimeout(() => {
