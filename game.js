@@ -1742,6 +1742,19 @@
   }
 
   async function createMultiplayerLobby(options = {}) {
+    // Check if using new lobby system
+    if (window.lobbySettings) {
+      console.log('Using new lobby system with settings:', window.lobbySettings);
+      const { mode, difficulty, maxPlayers } = window.lobbySettings;
+      const result = await createLobby('Host', mode, difficulty, maxPlayers);
+      console.log('New lobby created:', result);
+      if (result && result.lobbyId) {
+        showLobbyCode();
+        return;
+      }
+    }
+    
+    // Original CrazyGames multiplayer system
     const roomId = makeRoomId();
     multiplayerState.enabled = true;
     multiplayerState.host = true;
