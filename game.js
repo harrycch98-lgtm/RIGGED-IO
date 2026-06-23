@@ -7801,7 +7801,7 @@
     };
   }
   function miniBaseCashDay(level) {
-    return MINI_BASE_CASH_DAY[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0;
+    return (MINI_BASE_CASH_DAY[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0) * 1.2;
   }
   function miniBaseDefense(level) {
     return MINI_BASE_DEFENSE[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0;
