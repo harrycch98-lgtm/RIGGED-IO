@@ -5828,16 +5828,7 @@
   function renderClickbaitTicker() {
     if (!clickbaitTicker) return;
     clickbaitTicker.classList.remove("is-visible", "news-flicker-alert", "is-world-event");
-    if (!latestClickbait || clickbaitTimer <= 0 || !latestClickbait.worldEvent) {
-      clickbaitTicker.innerHTML = "";
-      return;
-    }
-    clickbaitTicker.classList.add("is-visible", "news-flicker-alert");
-    if (latestClickbait.worldEvent) clickbaitTicker.classList.add("is-world-event");
-    clickbaitTicker.innerHTML = `
-      <strong>${escapeHtml(latestClickbait.headline || "LIVE EVENT")}</strong>
-      <span>${escapeHtml(latestClickbait.subtext || "")}</span>
-    `;
+    clickbaitTicker.innerHTML = "";
   }
 
   function showAssassinationBroadcast() {
@@ -6160,8 +6151,8 @@
       }
     }
     eventTicker.textContent = phase === "base" ? "Home base draft" : activeWorldEvent ? "WORLD EVENT: " + activeWorldEvent.title + worldEventDurationLabel() : news ? news.title : "State race live";
-    document.body.classList.toggle("world-event-live", !!activeWorldEvent || (news?.isWorldEvent === true && newsTimer > 0));
-    if (newsPanel) newsPanel.classList.toggle("is-world-event", !!activeWorldEvent || (news?.isWorldEvent === true && newsTimer > 0));
+    document.body.classList.toggle("world-event-live", news?.isWorldEvent === true && newsTimer > 0);
+    if (newsPanel) newsPanel.classList.toggle("is-world-event", news?.isWorldEvent === true && newsTimer > 0);
     if (intelBody) {
       intelBody.innerHTML = players
         .filter((player) => player.id !== HUMAN)
