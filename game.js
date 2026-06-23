@@ -1726,7 +1726,7 @@
     }
   }
   // ===== END LOBBY SYSTEM =====
-  const MATCH_SECONDS = 1200;
+  const MATCH_SECONDS = 960;
   const CAMPAIGN_TOTAL_DAYS = 100;
   const CAMPAIGN_DAY_SECONDS = MATCH_SECONDS / CAMPAIGN_TOTAL_DAYS;
   const MATCH_MODES = {
@@ -2231,6 +2231,8 @@
   let nextWorldEventAt = 0;
   let worldEventCounter = 0;
   let lastCampaignStage = "base";
+  let stageSplashEl = null;
+  let stageSplashTimer = null;
   let latestClickbait = null;
   let clickbaitTimer = 0;
   let activeChannel = 0;
@@ -2272,6 +2274,26 @@
     end1: { src: "bgm-end-game-1.mp3", loop: true },
     end2: { src: "bgm-end-game-2.mp3", loop: true },
     victory: { src: "bgm-victory.mp3", loop: true },
+  };
+  const CAMPAIGN_STAGE_INFO = {
+    early: {
+      name: "KISSING BABIES PHASE",
+      kicker: "PEACEFUL OPENING",
+      effect: "Undecided states love speeches. Speech influence x2.",
+      icon: "baby",
+    },
+    mid: {
+      name: "CABLE NEWS KNIFE FIGHT",
+      kicker: "MEDIA WAR",
+      effect: "Owned channels suppress rivals. 10-20 EV strongholds print cash.",
+      icon: "broadcast",
+    },
+    late: {
+      name: "RIGGED OVERTIME",
+      kicker: "NO MORE PRETENDING",
+      effect: "Small states can gain +2 EV. Mega-states unlock ghost influence.",
+      icon: "ballot",
+    },
   };
   let bgm = {};
   let currentBgm = "";
@@ -3630,6 +3652,8 @@
     elapsed = 0;
     phase = "base";
     lastCampaignStage = "base";
+    window.clearTimeout(stageSplashTimer);
+    if (stageSplashEl) stageSplashEl.classList.remove("is-on");
     baseTimer = HOME_BASE_SECONDS;
     paused = false;
     localPauseRequested = false;
@@ -4396,17 +4420,48 @@
     if (stage === lastCampaignStage) return;
     lastCampaignStage = stage;
     refreshBgm(4.2);
+    showCampaignStageSplash(stage);
     if (!announce) return;
+    const info = CAMPAIGN_STAGE_INFO[stage] || CAMPAIGN_STAGE_INFO.early;
     if (stage === "early") {
-      addAlert("PEACEFUL STAGE: Speeches give 2x influence in states with undecided votes.");
-      broadcast(0, "PEACEFUL STAGE: undecided states are extra receptive. Speeches there give 2x influence.");
+      addAlert(info.name + ": Speeches give 2x influence in states with undecided votes.");
+      broadcast(0, info.name + ": undecided states are extra receptive. Speeches there give 2x influence.");
     } else if (stage === "mid") {
-      addAlert("MEDIA WAR STAGE: Owned news channels suppress rival influence. Mid-size states pay extra cash to dominant parties.");
-      broadcast(0, "MEDIA WAR STAGE: news channels now suppress rivals, and 10-20 EV states fund parties above 60% influence.");
+      addAlert(info.name + ": Owned news channels suppress rival influence. Mid-size states pay extra cash to dominant parties.");
+      broadcast(0, info.name + ": news channels now suppress rivals, and 10-20 EV states fund parties above 60% influence.");
     } else if (stage === "late") {
-      addAlert("RIGGED MODE ON: Small controlled states gain +2 EV. CA/TX/FL/NY can hold ghost influence up to 130% with L3 District Offices.");
-      broadcast(0, "RIGGED MODE ON: small states can gain bonus electoral votes, and mega-states unlock ghost influence with L3 District Offices.");
+      addAlert(info.name + ": Small controlled states gain +2 EV. CA/TX/FL/NY can hold ghost influence up to 130% with L3 District Offices.");
+      broadcast(0, info.name + ": small states can gain bonus electoral votes, and mega-states unlock ghost influence with L3 District Offices.");
     }
+  }
+
+  function showCampaignStageSplash(stage) {
+    const info = CAMPAIGN_STAGE_INFO[stage];
+    if (!info || !mapStage || matchOver) return;
+    if (!stageSplashEl) {
+      stageSplashEl = document.createElement("div");
+      stageSplashEl.className = "campaign-stage-splash";
+      stageSplashEl.setAttribute("aria-live", "polite");
+      mapStage.appendChild(stageSplashEl);
+    }
+    stageSplashEl.className = "campaign-stage-splash is-on is-" + stage;
+    stageSplashEl.innerHTML =
+      '<div class="stage-splash-card">' +
+        '<div class="stage-splash-image stage-splash-image-' + info.icon + '" aria-hidden="true">' +
+          '<span class="stage-splash-sun"></span>' +
+          '<span class="stage-splash-screen"></span>' +
+          '<span class="stage-splash-ballot"></span>' +
+        '</div>' +
+        '<div class="stage-splash-copy">' +
+          '<span>' + info.kicker + '</span>' +
+          '<strong>' + info.name + '</strong>' +
+          '<p>' + info.effect + '</p>' +
+        '</div>' +
+      '</div>';
+    window.clearTimeout(stageSplashTimer);
+    stageSplashTimer = window.setTimeout(() => {
+      if (stageSplashEl) stageSplashEl.classList.remove("is-on");
+    }, 2000);
   }
 
   // The host owns gameplay rules, but guests still advance visual-only timers
