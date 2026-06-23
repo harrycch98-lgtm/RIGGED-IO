@@ -1565,6 +1565,7 @@
       buyChannel: () => buyChannel(lobbyIndex, Number(args[0])),
       upgradeMainBase: () => upgradeMainBase(lobbyIndex),
       assassinate: () => assassinate(lobbyIndex, Number(args[0])),
+      slowDistrictOffices: () => slowDistrictOffices(lobbyIndex, Number(args[0])),
       sabotage: () => sabotage(lobbyIndex, Number(args[0])),
       instigateRiot: () => instigateRiot(lobbyIndex, Number(args[0])),
       disrupt: () => disrupt(lobbyIndex, Number(args[0])),
@@ -2414,6 +2415,10 @@
       if (!card) return;
       event.preventDefault();
       event.stopPropagation();
+      if (armedAction === "officeSlow") {
+        executeLeaderArmed(Number(card.dataset.leaderPlayer));
+        return;
+      }
       inspectLeaderPortrait(Number(card.dataset.leaderPlayer));
     });
     opponentTray.addEventListener("click", (event) => {
@@ -2421,6 +2426,7 @@
       if (!card) return;
       event.preventDefault();
       event.stopPropagation();
+      if (armedAction === "officeSlow") return;
       inspectLeaderPortrait(Number(card.dataset.leaderPlayer));
     });
   }
@@ -2631,24 +2637,15 @@
       updateUi(true);
       return;
     }
-    if (armedAction === "upgradeMiniBase") {
+    if (armedAction === "deployMiniBase" && miniHit) {
       if (miniHit) {
         selectedState = miniHit.state;
         selectedPanelOpen = true;
-        executeArmed(miniHit.state);
+        clearArmed();
+        upgradeMiniBase(HUMAN, miniHit.state);
         updateUi(true);
         return;
       }
-      if (hit >= 0) {
-        selectedState = hit;
-        selectedPanelOpen = true;
-        showToast("Click the District Office icon itself to upgrade it.");
-        updateUi(true);
-        return;
-      }
-      selectedPanelOpen = false;
-      clearArmed();
-      return;
     }
     if (hit >= 0) {
       selectedState = hit;
@@ -3563,6 +3560,8 @@
       cash: (isHumanMember || id === HUMAN ? 15000 : 14000) + botCashBonus({ id, isBot: isBotMember }),
       locked: 0,
       disruptCooldown: 0,
+      officeSlowCooldown: 0,
+      officeInfluenceSlow: 0,
       speechCooldown: 0,
       speechCooldownTotal: 0,
       leaderDeaths: 0,
@@ -4352,6 +4351,8 @@
     players.forEach((player) => {
       player.locked = Math.max(0, player.locked - dt);
       player.disruptCooldown = Math.max(0, Number(player.disruptCooldown || 0) - dt);
+      player.officeSlowCooldown = Math.max(0, Number(player.officeSlowCooldown || 0) - dt);
+      player.officeInfluenceSlow = Math.max(0, Number(player.officeInfluenceSlow || 0) - dt);
       player.speechCooldown = Math.max(0, Number(player.speechCooldown || 0) - dt);
       if (player.speechCooldown <= 0) player.speechCooldownTotal = 0;
       player.signalLeakBoost = Math.max(0, (player.signalLeakBoost || 0) - dt);
@@ -4388,6 +4389,8 @@
     players.forEach((player) => {
       if (!player) return;
       player.disruptCooldown = Math.max(0, Number(player.disruptCooldown || 0) - dt);
+      player.officeSlowCooldown = Math.max(0, Number(player.officeSlowCooldown || 0) - dt);
+      player.officeInfluenceSlow = Math.max(0, Number(player.officeInfluenceSlow || 0) - dt);
       player.speechCooldown = Math.max(0, Number(player.speechCooldown || 0) - dt);
       if (player.speechCooldown <= 0) player.speechCooldownTotal = 0;
       if (!player?.action) return;
@@ -4615,7 +4618,8 @@
     states.forEach((state) => {
       const level = officeLevel(state, player.id);
       if (level > 0) {
-        applyInfluenceGain(state, player.id, level * AD_HUB_RATE, dt, false);
+        const slowMult = player.officeInfluenceSlow > 0 ? 0.5 : 1;
+        applyInfluenceGain(state, player.id, level * AD_HUB_RATE * slowMult, dt, false);
         state.activePulse = 1;
       }
     });
@@ -5020,6 +5024,19 @@
     const channelIndex = bestChannelForPlayer(player.id);
     if (channelIndex >= 0 && player.cash >= channelTakeoverCost(player.id, channels[channelIndex]) + rules.reserve && Math.random() < rules.channel) {
       if (commit("news_channel", () => buyChannel(player.id, channelIndex), 0.5)) return;
+    }
+
+    if ((player.officeSlowCooldown || 0) <= 0 && player.cash >= OFFICE_SLOW_COST + rules.reserve) {
+      const officeSlowTargets = players
+        .filter((candidate) => candidate.id !== player.id && districtOfficeCount(candidate.id) > 0 && (candidate.officeInfluenceSlow || 0) <= 0)
+        .map((candidate) => ({
+          player: candidate,
+          score: districtOfficeCount(candidate.id) * 8 + electoralVotes(candidate.id) * 0.35 + projectedCashPerDay(candidate) * 0.001 + Math.random() * 5,
+        }))
+        .sort((a, b) => b.score - a.score);
+      if (officeSlowTargets.length && Math.random() < 0.08) {
+        if (commit("district_jam", () => slowDistrictOffices(player.id, officeSlowTargets[0].player.id), 1)) return;
+      }
     }
 
     const policeTargets = states
@@ -6912,7 +6929,7 @@
   }
 
   function hitMiniBase(point, ownerId = null) {
-    const hitRadius = armedAction === "togglePolice" ? 18 : MINI_BASE_HIT_RADIUS;
+    const hitRadius = armedAction === "togglePolice" || armedAction === "deployMiniBase" ? 18 : MINI_BASE_HIT_RADIUS;
     for (let i = states.length - 1; i >= 0; i -= 1) {
       const state = states[i];
       const hubs = players.filter((player) => officeLevel(state, player.id) > 0);
@@ -6957,7 +6974,7 @@
     eachMiniBase((state, player, index, total) => {
       const point = miniBasePoint(state, player, index, total);
       const level = officeLevel(state, player.id);
-      if (armedAction === "upgradeMiniBase" && player.id === HUMAN) {
+      if (armedAction === "deployMiniBase" && player.id === HUMAN) {
         drawMiniBaseUpgradeGlow(point.x, point.y, player, level < MINI_BASE_MAX_LEVEL && level + 1 <= player.mainBaseLevel);
       }
       drawMiniBaseIcon(point.x, point.y, player, level);
@@ -8943,6 +8960,9 @@
   const RIOT_SECONDS = 10;
   const DISRUPT_COST = 10000;
   const DISRUPT_STEAL_PER_PARTY = 3000;
+  const OFFICE_SLOW_COST = 6000;
+  const OFFICE_SLOW_DAYS = 3;
+  const OFFICE_SLOW_COOLDOWN_DAYS = 2;
   const POWER_GRAB_BASE_COST = 2000;
   const POWER_GRAB_COST_PER_EV = 1000;
   const POLICE_RIOT_BLOCK_COST = 350;
@@ -9046,6 +9066,38 @@
     const targetNames = targets.map((target) => target.name).join(", ");
     addAlert(player.name + " launched a state-wide DISRUPT against " + targetNames + " in " + state.name + ".");
     triggerClickbait("INCITE_STRIKE", { player: playerId, target: targets[0].id, state: stateIndex, stateName: state.name, factionName: player.name, opponentName: targetNames });
+    return true;
+  }
+
+  function slowDistrictOffices(playerId, targetPlayerId) {
+    if (playerId === HUMAN && routeGuestGameCommand('slowDistrictOffices', [targetPlayerId])) return true;
+    const player = players[playerId];
+    const target = players[targetPlayerId];
+    if (!player || !target || phase !== "play" || paused || matchOver || !canUseCampaignActions(player, playerId)) return false;
+    if (target.id === player.id) {
+      if (playerId === HUMAN) showToast("Pick a rival leader for District Jam.");
+      return false;
+    }
+    if ((player.officeSlowCooldown || 0) > 0) {
+      if (playerId === HUMAN) showToast(`DISTRICT JAM cooldown: ${campaignDaysLabel(player.officeSlowCooldown)} remaining.`);
+      return false;
+    }
+    if (player.cash < OFFICE_SLOW_COST) {
+      if (playerId === HUMAN) showToast("Need " + formatMoney(OFFICE_SLOW_COST) + " to jam District Offices.");
+      return false;
+    }
+    const officeCount = districtOfficeCount(target.id);
+    if (officeCount <= 0) {
+      if (playerId === HUMAN) showToast(target.name + " has no District Offices to slow.");
+      return false;
+    }
+    player.cash -= OFFICE_SLOW_COST;
+    player.officeSlowCooldown = OFFICE_SLOW_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS;
+    target.officeInfluenceSlow = Math.max(Number(target.officeInfluenceSlow || 0), OFFICE_SLOW_DAYS * CAMPAIGN_DAY_SECONDS);
+    addAlert(player.name + " jammed " + target.name + "'s District Office influence for " + OFFICE_SLOW_DAYS + " days.");
+    if (playerId === HUMAN) showToast("DISTRICT JAM — " + target.name + "'s office influence slowed for " + OFFICE_SLOW_DAYS + " days.");
+    if (target.id === HUMAN) showToast("Your District Office influence is slowed for " + OFFICE_SLOW_DAYS + " days.");
+    broadcast(0, "DISTRICT JAM: " + target.name + "'s District Office influence is slowed nationwide for " + OFFICE_SLOW_DAYS + " days.");
     return true;
   }
 
@@ -9290,11 +9342,19 @@
     clearArmed();
     if (a === "deployMiniBase") placeAdHub(HUMAN, stateIndex);
     else if (a === "publicSpeech") startAction(HUMAN, "speech", stateIndex);
-    else if (a === "upgradeMiniBase") upgradeMiniBase(HUMAN, stateIndex);
     else if (a === "disrupt") disrupt(HUMAN, stateIndex);
     else if (a === "powerGrab") powerGrab(HUMAN, stateIndex);
     else if (a === "togglePolice") togglePolice(HUMAN, stateIndex, building || "office");
     else if (a === "assassinate") assassinate(HUMAN, stateIndex);
+    if (typeof updateUi === "function") updateUi(true);
+  }
+  function executeLeaderArmed(targetPlayerId) {
+    const a = armedAction;
+    clearArmed();
+    if (a === "officeSlow") {
+      if (targetPlayerId === HUMAN) showToast("Pick a rival leader for District Jam.");
+      else slowDistrictOffices(HUMAN, targetPlayerId);
+    }
     if (typeof updateUi === "function") updateUi(true);
   }
   function clearArmed() {
@@ -9310,7 +9370,7 @@
     const human = players[HUMAN];
     const hoveredOffice = hitMiniBase(mouseCanvas, HUMAN);
     const hoveredHq = hitMainBase(mouseCanvas, HUMAN);
-    if (armedAction === "upgradeMiniBase") {
+    if (armedAction === "deployMiniBase") {
       if (hoveredOffice && human) {
         const state = states[hoveredOffice.state];
         const nextLevel = hoveredOffice.level + 1;
@@ -9321,8 +9381,15 @@
           ? "\u25B6 UPGRADE " + state.abbr + " OFFICE TO L" + nextLevel + " \u2014 COST " + formatMoney(req.cash) + " + " + req.infl + "% INFLUENCE \u2014 click to confirm"
           : "\u25B6 " + state.abbr + " DISTRICT OFFICE \u2014 MAX LEVEL";
       } else {
-        banner.textContent = "\u25B6 UPGRADE ARMED \u2014 hover a District Office to preview its cost (ESC to cancel)";
+        const state = states[stateIndex];
+        banner.textContent = state
+          ? "\u25B6 DISTRICT OFFICE \u2014 " + state.abbr + " \u00B7 BUILD COST " + formatMoney(adHubCost(human)) + " \u2014 click empty state to build"
+          : "\u25B6 DISTRICT OFFICE ARMED \u2014 click an empty state to build, or your office icon to upgrade";
       }
+      return;
+    }
+    if (armedAction === "officeSlow") {
+      banner.textContent = "\u25B6 DISTRICT JAM \u2014 click a rival leader portrait top-right \u00B7 COST " + formatMoney(OFFICE_SLOW_COST) + " \u00B7 2d cooldown";
       return;
     }
     if (armedAction === "powerGrab") {
@@ -9357,11 +9424,11 @@
 
   const HOTBAR = [
     { key: "1", action: "deployMiniBase", icon: "\u2302", name: "DISTRICT OFFICE", cost: 2000,
-      tip: ["DISTRICT OFFICE", "Build a Level 1 office in half a day.", "Earns cash and passive influence."] },
+      tip: ["DISTRICT OFFICE", "Click empty state to build.", "Click your District Office icon to upgrade.", "Office cap depends on HQ level."] },
     { key: "2", action: "publicSpeech", icon: "\u25C9", name: "SPEECH", cost: 0,
       tip: ["SPEECH", "Gain influence over 1 day.", "Speaking over a rival starts Debate Night.", "Cooldown: 1 day; debate: 2 days."] },
-    { key: "3", action: "upgradeMiniBase", icon: "\u25B3", name: "UPGRADE", cost: null,
-      tip: ["UPGRADE OFFICE", "Raise an office by 1 level.", "Requires cash and local influence.", "Cannot exceed your HQ level."] },
+    { key: "3", action: "officeSlow", icon: "\u25CE", name: "DISTRICT JAM", cost: OFFICE_SLOW_COST,
+      tip: ["DISTRICT JAM", "Click a rival leader portrait top-right.", "Their District Office influence is slowed nationwide for 3 days.", "Cost $6M. Cooldown: 2 days."] },
     { key: "4", action: "disrupt", icon: "\u26A0", name: "DISRUPT", cost: null,
       tip: ["DISRUPT", "Target a state with a rival HQ or office.", "Steals $3M per rival, damages offices, and disrupts upgrades.", "Police can block office damage."] },
     { key: "5", action: "powerGrab", icon: "\u25C6", name: "POWER GRAB", cost: null,
@@ -9378,13 +9445,13 @@
   let hotFinanceEl = null;
   function hotbarCost(slot, human) {
     if (!human) return slot.cost;
-    if (slot.action === "deployMiniBase") return adHubCost(human);
-    if (slot.action === "upgradeMiniBase") {
+    if (slot.action === "deployMiniBase") {
       const state = states[selectedState];
       const level = state ? officeLevel(state, HUMAN) : 0;
       const req = level > 0 && level < MINI_BASE_MAX_LEVEL && level + 1 <= human.mainBaseLevel ? miniBaseUpgradeReq(human, level + 1) : null;
-      return req ? req.cash : null;
+      return req ? req.cash : adHubCost(human);
     }
+    if (slot.action === "officeSlow") return OFFICE_SLOW_COST;
     if (slot.action === "disrupt") {
       const state = states[selectedState];
       return disruptCost(human, disruptTargetsForState(HUMAN, state));
@@ -9479,22 +9546,24 @@
   function hotbarActionAvailable(slot, human, state) {
     if (!slot || !human || !state || phase !== "play" || paused || matchOver || human.locked > 0) return false;
     if (slot.action === "deployMiniBase") {
+      const level = officeLevel(state, HUMAN);
+      if (level > 0) {
+        const req = level < MINI_BASE_MAX_LEVEL && level + 1 <= human.mainBaseLevel ? miniBaseUpgradeReq(human, level + 1) : null;
+        return !!req &&
+          !missions.some((mission) => mission.type === "officeUpgrade" && mission.player === HUMAN && mission.state === state.index) &&
+          human.cash >= req.cash && (state.influence[HUMAN] || 0) >= req.infl;
+      }
       return canBuildMoreDistrictOffices(human) &&
-        officeLevel(state, HUMAN) < 1 &&
         !missions.some((mission) => mission.type === "adDeploy" && mission.player === HUMAN && mission.state === state.index) &&
         human.cash >= adHubCost(human);
     }
     if (slot.action === "publicSpeech") {
       return (human.speechCooldown || 0) <= 0 && !human.action && realSpeechesInState(state.index).length < 2;
     }
-    if (slot.action === "upgradeMiniBase") {
-      const level = officeLevel(state, HUMAN);
-      const req = level > 0 && level < MINI_BASE_MAX_LEVEL && level + 1 <= human.mainBaseLevel
-        ? miniBaseUpgradeReq(human, level + 1)
-        : null;
-      return !!req &&
-        !missions.some((mission) => mission.type === "officeUpgrade" && mission.player === HUMAN && mission.state === state.index) &&
-        human.cash >= req.cash && (state.influence[HUMAN] || 0) >= req.infl;
+    if (slot.action === "officeSlow") {
+      return (human.officeSlowCooldown || 0) <= 0 &&
+        human.cash >= OFFICE_SLOW_COST &&
+        players.some((candidate) => candidate.id !== HUMAN && districtOfficeCount(candidate.id) > 0);
     }
     if (slot.action === "disrupt") {
       const targets = disruptTargetsForState(HUMAN, state);
@@ -9534,6 +9603,9 @@
     if (slot.action === "disrupt" && (human.disruptCooldown || 0) > 0) {
       return { left: human.disruptCooldown, total: DISRUPT_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS };
     }
+    if (slot.action === "officeSlow" && (human.officeSlowCooldown || 0) > 0) {
+      return { left: human.officeSlowCooldown, total: OFFICE_SLOW_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS };
+    }
     if (slot.action === "publicSpeech" && (human.speechCooldown || 0) > 0) {
       return {
         left: human.speechCooldown,
@@ -9563,10 +9635,10 @@
       btn.classList.toggle("is-armed", armedAction === s.action);
       const costEl = btn.querySelector(".hcost");
       if (costEl) {
-        if (s.action === "upgradeMiniBase") {
+        if (s.action === "deployMiniBase") {
           const state = states[selectedState];
           const level = state ? officeLevel(state, HUMAN) : 0;
-          costEl.textContent = level <= 0 ? "NO BASE" : level >= MINI_BASE_MAX_LEVEL ? "MAXED" : formatMoney(cost);
+          costEl.textContent = level <= 0 ? formatMoney(adHubCost(human)) : level >= MINI_BASE_MAX_LEVEL ? "MAXED" : "UP " + formatMoney(cost);
         } else if (s.action === "powerGrab") {
           const state = states[selectedState];
           costEl.textContent = state ? state.abbr + " " + formatMoney(cost) : "BY EV";
@@ -9587,7 +9659,7 @@
       if (cooldown) {
         const remaining = Math.max(0, Math.min(1, cooldown.left / Math.max(0.001, cooldown.total)));
         btn.classList.add("is-cooling-down");
-        btn.classList.toggle("is-action-cooldown", s.action === "publicSpeech" || s.action === "disrupt");
+        btn.classList.toggle("is-action-cooldown", s.action === "publicSpeech" || s.action === "disrupt" || s.action === "officeSlow");
         btn.style.setProperty("--cooldown-remaining", (remaining * 100).toFixed(2) + "%");
         if (cooldownLabel) cooldownLabel.innerHTML = '<strong>COOLDOWN</strong><span>' + campaignDaysLabel(cooldown.left) + '</span>';
         if (cooldownFill) cooldownFill.hidden = false;
