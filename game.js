@@ -1733,7 +1733,7 @@
   };
   const HOME_BASE_SECONDS = 15;
   const NEWS_INTERVAL = 85;
-  const WORLD_EVENT_FIRST_DAY = 15;
+  const WORLD_EVENT_FIRST_DAY = 85;
   const WORLD_EVENT_LAST_DAY_BUFFER = 10;
   const WORLD_EVENT_MIN_GAP_DAYS = 5;
   const WORLD_EVENT_MAX_GAP_DAYS = 10;
@@ -5823,7 +5823,7 @@
   function renderClickbaitTicker() {
     if (!clickbaitTicker) return;
     clickbaitTicker.classList.remove("is-visible", "news-flicker-alert", "is-world-event");
-    if (!latestClickbait || clickbaitTimer <= 0) {
+    if (!latestClickbait || clickbaitTimer <= 0 || !latestClickbait.worldEvent) {
       clickbaitTicker.innerHTML = "";
       return;
     }
