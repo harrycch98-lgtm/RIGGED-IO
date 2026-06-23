@@ -2014,17 +2014,17 @@
   ];
 
   const WORLD_EVENTS = [
-    { id: "foreign_wire", title: "Foreign Wire Transfer", text: "The weakest campaign receives a mysterious $20M donation. Nobody asks questions.", durationDays: 0 },
-    { id: "disaster_relief", title: "Six-State Disaster Relief", text: "Six random states get hit. District Offices above L1 lose one level. Rebuilding there costs more but grants +10% influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "police_strike", title: "Blackout Walkout", text: "Police stop working for 5 days. No police protection, no blocks, no upkeep.", durationDays: WORLD_EVENT_SHORT_DURATION_DAYS },
-    { id: "inflation", title: "Campaign Inflation", text: "District Office upgrades and police daily upkeep cost 10% more.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "irs_audit", title: "IRS Vibe Check", text: "Every campaign immediately loses 20% of its cash. Totally normal paperwork.", durationDays: 0 },
-    { id: "news_multiplier", title: "Ratings Fever", text: "News channels generate triple influence while the cycle is hot.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "debate_royale", title: "Debate Royale", text: "Up to 3 parties can join one Debate Night. The winner gets a bigger victory bonus.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "disrupt_siphon", title: "Total Destruction Week", text: "DISRUPT also steals influence from every targeted rival in that state.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "anti_front_runner", title: "Front-Runner Muzzle", text: "Parties cannot give speeches in states where they already lead.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "martyrdom_cycle", title: "Martyrdom Cycle", text: "Assassinated leaders gain nationwide influence instead of losing it.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "reckless_power_grab", title: "Reckless Mandate", text: "Power Grab gains 10% more influence, but bleeds 5% influence from two random states.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "foreign_wire", title: "Foreign Wire Transfer", text: "Lowest-influence party receives $20M once.", durationDays: 0 },
+    { id: "disaster_relief", title: "Six-State Disaster Relief", text: "Six states are hit. Offices above L1 lose 1 level. Upgrades there cost more and grant +10 influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "police_strike", title: "Blackout Walkout", text: "Police protection is disabled.", durationDays: WORLD_EVENT_SHORT_DURATION_DAYS },
+    { id: "inflation", title: "Campaign Inflation", text: "Office upgrades and police upkeep cost 10% more.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "irs_audit", title: "IRS Vibe Check", text: "Every party loses 20% cash once.", durationDays: 0 },
+    { id: "news_multiplier", title: "Ratings Fever", text: "News channels generate triple influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "debate_royale", title: "Debate Royale", text: "Up to 3 parties can join one debate. Winners get extra bonus influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "disrupt_siphon", title: "Total Destruction Week", text: "DISRUPT steals 5% influence from targeted rivals.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "anti_front_runner", title: "Front-Runner Muzzle", text: "Parties cannot give speeches in states where they lead.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "martyrdom_cycle", title: "Martyrdom Cycle", text: "Assassinated leaders gain influence instead of losing it.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "reckless_power_grab", title: "Reckless Mandate", text: "Power Grab gains 10% more influence but loses 5% influence in two random states.", durationDays: WORLD_EVENT_DURATION_DAYS },
   ];
 
   const CLICKBAIT_TEMPLATES = {
@@ -3662,7 +3662,7 @@
     worldEventCounter = 0;
     activeChannel = 0;
     nextNewsAt = NEWS_INTERVAL;
-    nextWorldEventAt = scheduleNextWorldEventDay(worldEventFirstElapsedDay()) * CAMPAIGN_DAY_SECONDS;
+    nextWorldEventAt = worldEventFirstElapsedDay() * CAMPAIGN_DAY_SECONDS;
     alerts = [];
     missions = [];
     actionEffects = [];
@@ -5411,22 +5411,33 @@
   }
 
   function broadcast(channelIndex, subtitle, options = {}) {
-    latestBroadcastEvent = { id: ++broadcastEventCounter, channelIndex, subtitle, worldEvent: options.worldEvent === true };
+    const worldReport = activeWorldEventReport();
+    const reportIsActive = !!worldReport && options.worldEvent !== true;
+    const finalSubtitle = reportIsActive ? worldReport : subtitle;
+    const finalWorldEvent = options.worldEvent === true || reportIsActive;
+    latestBroadcastEvent = { id: ++broadcastEventCounter, channelIndex, subtitle: finalSubtitle, worldEvent: finalWorldEvent };
     lastPresentedBroadcastEventId = latestBroadcastEvent.id;
-    presentBroadcast(channelIndex, subtitle, options);
+    presentBroadcast(channelIndex, finalSubtitle, { ...options, worldEvent: finalWorldEvent });
   }
 
   function presentBroadcast(channelIndex, subtitle, options = {}) {
     activeChannel = channelIndex;
     const channel = channels[channelIndex] || CHANNELS[channelIndex] || CHANNELS[0];
     const owner = channel.owner >= 0 ? players[channel.owner] : null;
+    const worldReport = activeWorldEventReport();
+    const finalSubtitle = worldReport || subtitle;
+    const finalWorldEvent = options.worldEvent === true || !!worldReport;
     newsPanel.dataset.channel = channel.id;
-    newsPanel.classList.toggle("is-world-event", options.worldEvent === true || (news?.isWorldEvent === true && newsTimer > 0));
+    newsPanel.classList.toggle("is-world-event", finalWorldEvent);
     newsChannelName.textContent = owner ? `${channel.name} - ${owner.name}` : channel.name;
     newsChannelName.style.color = owner ? owner.color : "";
     newsReporter.textContent = owner ? `${channel.reporter} for ${owner.name}` : channel.reporter;
-    newsSubtitle.textContent = subtitle;
-    speakReporter(subtitle);
+    newsSubtitle.textContent = finalSubtitle;
+    speakReporter(finalSubtitle);
+  }
+
+  function activeWorldEventReport() {
+    return news?.isWorldEvent === true && newsTimer > 0 ? `${news.title}: ${news.text}` : "";
   }
 
   function toggleNewsSound() {
@@ -5691,6 +5702,12 @@
     return worldEventTimer > 0 ? " (" + campaignDaysLabel(worldEventTimer) + " remaining)" : "";
   }
 
+  function worldEventReportText(template, detail = "") {
+    const durationDays = Number(template.durationDays || 0);
+    const duration = durationDays > 0 ? ` Lasts ${durationDays} days.` : " One-time event.";
+    return `${template.text}${detail ? " " + detail : ""}${duration}`;
+  }
+
   function tickWorldEvent(dt) {
     if (activeWorldEvent && worldEventTimer > 0) {
       worldEventTimer = Math.max(0, worldEventTimer - dt);
@@ -5754,9 +5771,9 @@
       players.forEach((player) => { player.cash = Math.max(0, player.cash * 0.8); });
       detail = "All campaign cash reserves dropped by 20%.";
     }
-    news = { title: "WORLD EVENT: " + template.title, text: template.text, effect: "world", isWorldEvent: true };
+    const brief = worldEventReportText(template, detail);
+    news = { title: "WORLD EVENT: " + template.title, text: brief, effect: "world", isWorldEvent: true };
     newsTimer = WORLD_EVENT_REPORT_DAYS * CAMPAIGN_DAY_SECONDS;
-    const brief = template.text + (detail ? " " + detail : "");
     latestClickbait = {
       id: `world_${Date.now()}_${Math.floor(Math.random() * 999)}`,
       day: Math.max(1, Math.ceil(campaignDaysElapsed())),
@@ -5768,12 +5785,13 @@
     clickbaitTimer = WORLD_EVENT_REPORT_DAYS * CAMPAIGN_DAY_SECONDS;
     renderClickbaitTicker();
     broadcast(Math.floor(Math.random() * CHANNELS.length), "WORLD EVENT - " + template.title + ": " + brief, { worldEvent: true });
-    addAlert("[WORLD EVENT] " + template.title + ": " + template.text + (detail ? " " + detail : "") + (durationSeconds > 0 ? worldEventDurationLabel() : ""));
+    addAlert("[WORLD EVENT] " + template.title + ": " + brief);
     nextWorldEventAt = scheduleNextWorldEventDay(campaignDaysElapsed()) * CAMPAIGN_DAY_SECONDS;
     return true;
   }
 
   function triggerBreakingNews() {
+    if (activeWorldEventReport()) return;
     news = BREAKING_NEWS[Math.floor(Math.random() * BREAKING_NEWS.length)];
     newsTimer = 42;
     if (news.effect === "jobs") {
