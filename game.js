@@ -2022,8 +2022,8 @@
     { id: "news_multiplier", title: "Ratings Fever", text: "News channels generate triple influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
     { id: "debate_royale", title: "Debate Royale", text: "Up to 3 parties can join one debate. Winners get extra bonus influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
     { id: "disrupt_siphon", title: "Total Destruction Week", text: "DISRUPT steals 5% influence from targeted rivals.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "anti_front_runner", title: "Front-Runner Muzzle", text: "Parties cannot give speeches in states where they lead.", durationDays: WORLD_EVENT_DURATION_DAYS },
-    { id: "martyrdom_cycle", title: "Martyrdom Cycle", text: "Assassinated leaders gain influence instead of losing it.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "anti_front_runner", title: "Martyr Protocol", text: "Parties may self-assassinate a speaking leader for +15 influence nationwide.", durationDays: WORLD_EVENT_DURATION_DAYS },
+    { id: "martyrdom_cycle", title: "Front-Runner Muzzle", text: "Parties cannot give speeches in states where they lead. Speeches give double influence.", durationDays: WORLD_EVENT_DURATION_DAYS },
     { id: "reckless_power_grab", title: "Reckless Mandate", text: "Power Grab gains 10% more influence but loses 5% influence in two random states.", durationDays: WORLD_EVENT_DURATION_DAYS },
   ];
 
@@ -4478,8 +4478,9 @@
       const hypeMult = player.action.hypeBoost || 1;
       const speechRateMult = player.action.speechRateMult || 1;
       const debateSpeechMult = player.action.debateId && hasTalent(player, "prime_time_rhetoric") ? 1.2 : 1;
+      const frontRunnerSpeechMult = worldEventActive("martyrdom_cycle") ? 2 : 1;
       const siphonMult = 1;
-      applyInfluenceGain(state, player.id, SPEECH_RATE * speechRateMult * player.speechBias * speechBoost * echoMult * modelPollingMult * hypeMult * debateSpeechMult, dt, true, siphonMult);
+      applyInfluenceGain(state, player.id, SPEECH_RATE * speechRateMult * player.speechBias * speechBoost * echoMult * modelPollingMult * hypeMult * debateSpeechMult * frontRunnerSpeechMult, dt, true, siphonMult);
       state.activePulse = 1;
     }
     if (player.action.left <= 0) {
@@ -5178,7 +5179,7 @@
     const liveSpeakers = type === "speech" ? realSpeechesInState(stateIndex) : [];
     const debateOpponent = liveSpeakers.find((candidate) => candidate.id !== playerId) || null;
     if (type === "speech") {
-      if (worldEventActive("anti_front_runner") && leadingPlayer(stateIndex) === playerId) {
+      if (worldEventActive("martyrdom_cycle") && leadingPlayer(stateIndex) === playerId) {
         if (playerId === HUMAN) showToast("WORLD EVENT: You cannot speech in a state you already lead.");
         return false;
       }
@@ -6481,6 +6482,10 @@
     ctx.lineWidth = zoomThinLine(owner ? 2.2 : 1, 0.16);
     ctx.stroke();
 
+    if (isDisasterReliefState(state)) {
+      drawDisasterReliefBorder(state);
+    }
+
     if (selected) {
       pathState(state);
       ctx.strokeStyle = "#8dffb6";
@@ -6525,6 +6530,27 @@
     const supportsShareBar = (state.w > 40 && state.h > 26)
       || ["NJ", "DE", "VT", "NH", "MA", "CT", "RI"].includes(state.abbr);
     if (MAP_INFO_MODES[mapInfoMode]?.id !== "flag" && zoomState.shareAlpha > 0.03 && supportsShareBar) drawStateShareBar(state, zoomState.shareAlpha);
+  }
+
+  function isDisasterReliefState(state) {
+    return worldEventActive("disaster_relief") && Array.isArray(activeWorldEvent?.stateIndexes) && activeWorldEvent.stateIndexes.includes(state.index);
+  }
+
+  function drawDisasterReliefBorder(state) {
+    const flash = Math.sin(performance.now() / 115) > 0 ? 1 : 0;
+    pathState(state);
+    ctx.save();
+    ctx.globalAlpha = flash ? 1 : 0.52;
+    ctx.strokeStyle = flash ? "#ff2a2a" : "rgba(255,42,42,0.52)";
+    ctx.lineWidth = zoomThinLine(flash ? 5.6 : 3.8, 0.45);
+    ctx.lineJoin = "round";
+    ctx.shadowColor = "#ff1f1f";
+    ctx.shadowBlur = flash ? 18 : 8;
+    ctx.stroke();
+    ctx.globalAlpha = flash ? 0.14 : 0.06;
+    ctx.fillStyle = "#ff1f1f";
+    ctx.fill();
+    ctx.restore();
   }
 
   function drawStateLabels(zoomState) {
@@ -7644,71 +7670,71 @@
   }
 
   // ===================== PIP-CAMPAIGN 3000 : TALENT TERMINAL =====================
-  const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard"];
+  const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
   const TALENTS = {
-    oligarchy: { name: "CORPORATE OLIGARCHY", sub: "CYBER-PLUTOCRATS", theme: "Fast capital, high-yield extraction, executive defense.", tiers: [
-      { left:{id:"aggressive_portfolio",name:"OFFICE FRANCHISING",desc:"District Offices cost 20% less to deploy.",live:true},
-        right:{id:"hostile_liquidation",name:"TREASURY SIPHON",desc:"DISRUPT siphons 50% extra capital from the rival treasury.",live:true} },
-      { left:{id:"rapid_construction",name:"OFFICE PROCUREMENT",desc:"District Office upgrades cost 30% less cash.",live:true},
-        right:{id:"private_security",name:"POLICE RETAINER",desc:"Police upkeep is cut 50%. Police block assassination and protect District Offices from DISRUPT destruction.",live:true} },
-      { left:{id:"shadow_lobbying",name:"EXECUTIVE DIVIDENDS",desc:"Level 3 HQ income +50% and global state funding yield x1.25.",live:true,ult:true},
-        right:{id:"executive_immunity",name:"RAPID-FIRE RALLIES",desc:"Speeches finish at 2x speed and deliver 2x the normal total influence.",live:true,ult:true} },
+    oligarchy: { name: "CORPORATE OLIGARCHY", sub: "DONOR WAR ROOM", theme: "Cheap expansion builds a cash engine, then converts money into brutal tempo.", tiers: [
+      { left:{id:"aggressive_portfolio",name:"FRANCHISE PERMITS",desc:"District Offices deploy 20% cheaper.",live:true},
+        right:{id:"hostile_liquidation",name:"HOSTILE AUDIT",desc:"DISRUPT steals 50% more cash from rival treasuries.",live:true} },
+      { left:{id:"rapid_construction",name:"PROCUREMENT DESK",desc:"District Office upgrades cost 30% less cash.",live:true},
+        right:{id:"private_security",name:"RETAINER CONTRACTS",desc:"Police upkeep is cut 50%.",live:true} },
+      { left:{id:"shadow_lobbying",name:"BOARDROOM STATE",desc:"Level 3 HQ boosts HQ income by 50% and all state funding by 25%.",live:true,ult:true},
+        right:{id:"executive_immunity",name:"EXECUTIVE BLITZ",desc:"Speeches run at 2x speed, gain extra influence, and finish debates faster.",live:true,ult:true} },
     ]},
-    populist: { name: "POPULIST COALITION", sub: "NEURAL HIVE", theme: "Crowd mobilization, DISRUPT pressure, collective shielding.", tiers: [
-      { left:{id:"echo_chamber",name:"RALLY SURGE",desc:"Public Speeches gain a flat +5% local influence burst.",live:true},
-        right:{id:"crowdsourcing",name:"GRASSROOTS FUNDING",desc:"District Offices earn +1% passive income per 5% local influence you hold.",live:true} },
-      { left:{id:"general_strike",name:"TOTAL DESTRUCTION",desc:"DISRUPT's office-damage component costs 50% less and resolves 25% faster.",live:true},
-        right:{id:"human_shield",name:"ASSASSINATION SURCHARGE",desc:"Assassinating your speaking leader costs rivals $50M instead of $40M.",live:true} },
-      { left:{id:"great_awakening",name:"RALLY RIPPLE",desc:"Completed speeches splash +3% influence into adjacent states.",live:true,ult:true},
-        right:{id:"decentralized_hive",name:"THIRTY-POINT POWER GRAB",desc:"POWER GRAB takes a flat 30% influence instead of 20%.",live:true,ult:true} },
+    populist: { name: "POPULIST COALITION", sub: "STREET HIVE", theme: "Speeches seed crowds, crowds fund offices, offices make Power Grab terrifying.", tiers: [
+      { left:{id:"echo_chamber",name:"CHANT LOOP",desc:"Public Speeches gain +5 local influence and 5% stronger speech output.",live:true},
+        right:{id:"crowdsourcing",name:"DONATION SWARM",desc:"District Offices earn +1% passive income per 5% local influence you hold.",live:true} },
+      { left:{id:"general_strike",name:"PICKET ENGINE",desc:"DISRUPT office damage costs 50% less and resolves 25% faster.",live:true},
+        right:{id:"human_shield",name:"CROWD COVER",desc:"Assassinating your speaking leader costs rivals $50M instead of $40M.",live:true} },
+      { left:{id:"great_awakening",name:"RALLY RIPPLE",desc:"Completed speeches splash +3 influence into adjacent states.",live:true,ult:true},
+        right:{id:"decentralized_hive",name:"MASS MANDATE",desc:"POWER GRAB takes 30 influence instead of 20 and bots favor it more.",live:true,ult:true} },
     ]},
-    syndicate: { name: "TECHNOCRATIC SYNDICATE", sub: "NETRUNNERS", theme: "Invisible operations, system siphoning, data redundancy.", tiers: [
-      { left:{id:"system_overclock",name:"LEAN UPGRADES",desc:"HQ and District Office upgrades require 20% less cash and 20% less local influence.",live:true},
-        right:{id:"signal_scrambler",name:"POLICE BYPASS",desc:"DISRUPT office destruction bypasses enemy Police protection.",live:true} },
-      { left:{id:"backdoor_exploits",name:"UPGRADE HIJACK",desc:"DISRUPT cancels a target's District Office upgrade, forcing them to pay again.",live:true},
-        right:{id:"ghost_servers",name:"DISTRIBUTED ATTACK",desc:"Raises active DISRUPT operations from 1 to 3 and cuts the total DISRUPT cost by $2M.",live:true} },
-      { left:{id:"skynet_protocol",name:"FOUR-WAY DECOY",desc:"Public speeches create 3 synchronized decoys in random states (4 speeches total). Assassinating a decoy wastes the full cost.",live:true,ult:true},
-        right:{id:"blackout_bypass",name:"ZERO-DAY RECOVERY",desc:"Assassination blackout drops from 3 campaign days to 0.",live:true,ult:true} },
+    syndicate: { name: "TECHNOCRATIC SYNDICATE", sub: "NETRUNNERS", theme: "Lower upgrade friction, overload DISRUPT, then weaponize misinformation.", tiers: [
+      { left:{id:"system_overclock",name:"PATCHED BUREAUCRACY",desc:"HQ and Office upgrades require 20% less cash and 20% less local influence.",live:true},
+        right:{id:"signal_scrambler",name:"BLUE-LIGHT BYPASS",desc:"DISRUPT office destruction ignores enemy Police protection.",live:true} },
+      { left:{id:"backdoor_exploits",name:"QUEUE INJECTION",desc:"DISRUPT cancels a target's District Office upgrade, forcing them to pay again.",live:true},
+        right:{id:"ghost_servers",name:"BOTNET OPS",desc:"Active DISRUPT limit rises from 1 to 3, cost drops by $2M, and bots favor it more.",live:true} },
+      { left:{id:"skynet_protocol",name:"PHANTOM CANDIDATE",desc:"Speeches create 3 decoys. Assassinating a decoy wastes the full cost.",live:true,ult:true},
+        right:{id:"blackout_bypass",name:"HOT-SWAP HEIR",desc:"Assassination blackout is reduced from 3 days to 0.",live:true,ult:true} },
     ]},
-    vanguard: { name: "IRON VANGUARD", sub: "CENTRAL AUTHORITY", theme: "Fortification, martial taxes, immediate retribution.", tiers: [
-      { left:{id:"fortified_outposts",name:"HARDENED OFFICES",desc:"Enemy DISRUPT office damage takes 100% longer against your District Offices.",live:true},
-        right:{id:"martial_law_taxes",name:"GUARDED REVENUE",desc:"Police-guarded bases generate +15% extra cash per day.",live:true} },
-      { left:{id:"bureaucratic_hold",name:"CONSTRUCTION LOCKDOWN",desc:"DISRUPT freezes an upgrading enemy base for 2 campaign days.",live:true},
-        right:{id:"checkpoint_grid",name:"DISRUPTION DELAY",desc:"Police-guarded District Offices make enemy DISRUPT operations take 50% longer.",live:true} },
-      { left:{id:"iron_curtain",name:"INFLUENCE FORTRESS",desc:"Level 3 base states are immune to siphoning and cannot drop below 30% influence.",live:true,ult:true},
-        right:{id:"retributive_strike",name:"ASSASSIN'S BARGAIN",desc:"Assassination costs only $25M while any rival is speaking.",live:true,ult:true} },
+    vanguard: { name: "IRON VANGUARD", sub: "CENTRAL AUTHORITY", theme: "Police makes money, delays sabotage, then locks territory or executes rivals.", tiers: [
+      { left:{id:"fortified_outposts",name:"REINFORCED OUTPOSTS",desc:"Enemy DISRUPT office damage takes 100% longer against your District Offices.",live:true},
+        right:{id:"martial_law_taxes",name:"SECURITY LEVY",desc:"Police-guarded HQs and Offices generate +15% extra cash per day.",live:true} },
+      { left:{id:"bureaucratic_hold",name:"PERMIT FREEZE",desc:"DISRUPT freezes an upgrading enemy base for 2 campaign days.",live:true},
+        right:{id:"checkpoint_grid",name:"CHECKPOINT GRID",desc:"Police-guarded District Offices make enemy DISRUPT take 50% longer.",live:true} },
+      { left:{id:"iron_curtain",name:"FORTRESS STATE",desc:"Level 3 HQ state is immune to siphoning and cannot drop below 30 influence.",live:true,ult:true},
+        right:{id:"retributive_strike",name:"EXECUTION WINDOW",desc:"Assassination costs $25M while any rival is speaking, and bots favor assassinations more.",live:true,ult:true} },
     ]},
-    futurist: { name: "CIVIC FUTURISTS", sub: "POLICY LAB", theme: "Scenario planning, policy cascades, resilient messaging.", tiers: [
-      { left:{id:"model_polling",name:"BIG-STATE SPEECH MODEL",desc:"Speeches are 8% stronger in states worth 10+ votes.",live:true},
-        right:{id:"hype_train",name:"SPEECH MOMENTUM",desc:"Finishing a speech supercharges your next speech by 40%.",live:true} },
-      { left:{id:"fast_track_zoning",name:"SIGNAL BOOSTER",desc:"Owned news channels generate 25% more influence across their coverage states.",live:true},
-        right:{id:"prime_time_rhetoric",name:"PRIME-TIME RHETORIC",desc:"Public Speech influence gain is 20% stronger during Debate Night.",live:true} },
-      { left:{id:"cascade_effect",name:"FIVE-POINT CASCADE",desc:"District Office upgrades add +5% influence into nearby states.",live:true,ult:true},
-        right:{id:"continuity_office",name:"ASSASSIN'S CURFEW",desc:"An opponent who successfully assassinates you enters a 2-day campaign blackout.",live:true,ult:true} },
+    futurist: { name: "CIVIC FUTURISTS", sub: "POLICY LAB", theme: "Predict big states, chain speeches, then make upgrades or deaths reshape the map.", tiers: [
+      { left:{id:"model_polling",name:"MEGA-STATE MODEL",desc:"Speeches gain +5 influence and 8% stronger output in states worth 10+ electoral votes.",live:true},
+        right:{id:"hype_train",name:"MOMENTUM SCRIPT",desc:"Finishing a speech supercharges your next speech by 40%.",live:true} },
+      { left:{id:"fast_track_zoning",name:"BROADCAST ZONING",desc:"Owned news channels generate 25% more influence across covered states.",live:true},
+        right:{id:"prime_time_rhetoric",name:"DEBATE PREP",desc:"Speech influence is 20% stronger during Debate Night.",live:true} },
+      { left:{id:"cascade_effect",name:"POLICY CASCADE",desc:"District Office upgrades add +5 influence into nearby states.",live:true,ult:true},
+        right:{id:"continuity_office",name:"SUCCESSION TRAP",desc:"Rivals who assassinate your leader suffer a 2-day blackout.",live:true,ult:true} },
     ]},
-    machine: { name: "CINDER MACHINE", sub: "STRIKE APPARATUS", theme: "Industrial discipline, coordinated disruption, hard territorial lockups.", tiers: [
-      { left:{id:"picket_lines",name:"OFFICE DAMAGE TARIFF",desc:"Rivals pay 25% more for DISRUPT's office-damage component against you.",live:true},
-        right:{id:"wildcat_cells",name:"RAPID DEMOLITION",desc:"DISRUPT's office-damage component resolves 35% faster.",live:true} },
-      { left:{id:"assembly_line",name:"RAPID ASSEMBLY",desc:"District Office deploy and upgrade timers complete 40% faster.",live:true},
-        right:{id:"red_tape_trap",name:"COOLDOWN CUT",desc:"Your sabotage operations leave states on 1 less day of cooldown.",live:true} },
-      { left:{id:"strike_fund",name:"POWER GRAB REBATE",desc:"POWER GRAB costs 15% less.",live:true,ult:true},
-        right:{id:"backlash_cells",name:"REVENUE LOCKOUT",desc:"If rivals DISRUPT your District Office, their cash flow from that state freezes for 3 days.",live:true,ult:true} },
+    machine: { name: "CINDER MACHINE", sub: "STRIKE APPARATUS", theme: "Punish enemy disruption, build faster, then convert labor pressure into map control.", tiers: [
+      { left:{id:"picket_lines",name:"PICKET TAX",desc:"Rivals pay 25% more for DISRUPT office damage against you.",live:true},
+        right:{id:"wildcat_cells",name:"WILDCAT CREWS",desc:"DISRUPT office damage resolves 35% faster.",live:true} },
+      { left:{id:"assembly_line",name:"ASSEMBLY LINE",desc:"District Office deploy and upgrade timers complete 40% faster.",live:true},
+        right:{id:"red_tape_trap",name:"PAPERWORK JAM",desc:"Your DISRUPT leaves states on 1 fewer day of cooldown.",live:true} },
+      { left:{id:"strike_fund",name:"SEIZURE FUND",desc:"POWER GRAB costs 15% less.",live:true,ult:true},
+        right:{id:"backlash_cells",name:"REVENUE LOCKOUT",desc:"Rivals that DISRUPT your Office lose cash flow from that state for 3 days.",live:true,ult:true} },
     ]},
-    signal: { name: "TEAL WIRE ACCORD", sub: "SIGNAL CARTEL", theme: "Broadcast theft, interception, stealthy message control.", tiers: [
-      { left:{id:"dark_fiber",name:"SIPHON DISCOUNT",desc:"DISRUPT's cash-siphon cost component is 25% lower.",live:true},
-        right:{id:"signal_leak",name:"BROADCAST SURGE",desc:"Successful DISRUPT boosts your news channel influence 25% for 1 day.",live:true} },
-      { left:{id:"listening_posts",name:"CIVIC PATROLS",desc:"Each police-guarded HQ or District Office generates +0.5% local influence per day.",live:true},
-        right:{id:"media_magnate",name:"COVERAGE AMPLIFIER",desc:"Owned news channels push 40% more influence across their coverage states.",live:true} },
-      { left:{id:"trend_engine",name:"CHANNEL DIVIDENDS",desc:"Owned news channels push 15% more influence and earn $2M/day each.",live:true,ult:true},
-        right:{id:"broadcast_moat",name:"TAKEOVER TARIFF",desc:"Rivals pay 100% more to take your owned news channels.",live:true,ult:true} },
+    signal: { name: "TEAL WIRE ACCORD", sub: "SIGNAL CARTEL", theme: "DISRUPT feeds broadcasts; broadcasts feed influence; influence protects channels.", tiers: [
+      { left:{id:"dark_fiber",name:"DARK FIBER",desc:"DISRUPT cash-siphon cost component is 25% lower.",live:true},
+        right:{id:"signal_leak",name:"LEAKED SIGNAL",desc:"Successful DISRUPT or sabotage boosts your news channel influence by 25% for 1 day.",live:true} },
+      { left:{id:"listening_posts",name:"LISTENING POSTS",desc:"Each police-guarded HQ or Office generates +0.5 local influence per day.",live:true},
+        right:{id:"media_magnate",name:"COVERAGE STACK",desc:"Owned news channels push 40% more influence across covered states.",live:true} },
+      { left:{id:"trend_engine",name:"TREND ENGINE",desc:"Owned channels push 15% more influence and earn $2M/day each.",live:true,ult:true},
+        right:{id:"broadcast_moat",name:"BROADCAST MOAT",desc:"Rivals pay 100% more to take your owned news channels.",live:true,ult:true} },
     ]},
-    ledger: { name: "IVORY LEDGER CLUB", sub: "BUDGET COMMITTEE", theme: "Quiet money, procedural control, closed-door efficiency.", tiers: [
-      { left:{id:"compliance_forms",name:"OFFICE LAUNCH BOOST",desc:"Starting a District Office grants +5% local influence immediately.",live:true},
-        right:{id:"rainy_day_fund",name:"EMERGENCY RESERVE",desc:"When cash is below $5M, your Main Base generates +$1M/day.",live:true} },
-      { left:{id:"permit_stack",name:"HQ UPGRADE SAVINGS",desc:"Main Base upgrades cost 20% less cash.",live:true},
-        right:{id:"media_retainer",name:"MEDIA DISCOUNT",desc:"News channel buys and takeovers cost 25% less.",live:true} },
-      { left:{id:"budget_surplus",name:"HQ DIVIDENDS",desc:"Main Base passive cash output rises by 25% at every HQ level.",live:true,ult:true},
-        right:{id:"double_demolition",name:"DOUBLE DEMOLITION",desc:"DISRUPT removes 2 District Office levels. Police must pay twice the normal response cost to block it.",live:true,ult:true} },
+    ledger: { name: "IVORY LEDGER CLUB", sub: "BUDGET COMMITTEE", theme: "Efficient paperwork stabilizes money, then turns procedure into demolition.", tiers: [
+      { left:{id:"compliance_forms",name:"OPENING GRANT",desc:"Starting a District Office grants +5 local influence immediately.",live:true},
+        right:{id:"rainy_day_fund",name:"RAINY DAY FUND",desc:"When cash is below $5M, your Main Base generates +$1M/day.",live:true} },
+      { left:{id:"permit_stack",name:"CAPITAL PERMITS",desc:"Main Base upgrades cost 20% less cash.",live:true},
+        right:{id:"media_retainer",name:"MEDIA RETAINER",desc:"News channel buys and takeovers cost 25% less.",live:true} },
+      { left:{id:"budget_surplus",name:"BUDGET SURPLUS",desc:"Main Base passive cash output rises by 25% at every HQ level.",live:true,ult:true},
+        right:{id:"double_demolition",name:"AUDIT DEMOLITION",desc:"DISRUPT removes 2 Office levels. Police pay double to block it.",live:true,ult:true} },
     ]},
   };
 
@@ -8056,6 +8082,7 @@
     const state = states[stateIndex];
     if (!player || !state || phase !== "play" || matchOver || !canUseCampaignActions(player, playerId)) return false;
     if (player.action?.type === "speech") {
+      if (canSelfAssassinateForMuzzle(player, stateIndex)) return selfAssassinateForMuzzle(playerId, stateIndex);
       if (playerId === HUMAN) showToast(player.action.debateId
         ? "You cannot authorize an assassination during a debate."
         : "You cannot authorize an assassination while giving a speech.");
@@ -8168,6 +8195,46 @@
       opponentName: victims.map((victim) => victim.name).join(" and "),
       level: "EXTREME",
     });
+    return true;
+  }
+
+  function canSelfAssassinateForMuzzle(player, stateIndex) {
+    return !!player &&
+      worldEventActive("anti_front_runner") &&
+      player.action?.type === "speech" &&
+      !player.action.debateId &&
+      player.action.state === stateIndex &&
+      canInterruptAction(player);
+  }
+
+  function selfAssassinateForMuzzle(playerId, stateIndex) {
+    const player = players[playerId];
+    const state = states[stateIndex];
+    if (!player || !state || !canSelfAssassinateForMuzzle(player, stateIndex)) return false;
+    const casualty = replaceDeadLeader(player);
+    player.action = null;
+    const blackoutDays = hasTalent(player, "blackout_bypass") ? 0 : ASSASSINATE_BLACKOUT_DAYS;
+    player.locked = Math.max(player.locked, blackoutDays * CAMPAIGN_DAY_SECONDS);
+    let totalGain = 0;
+    states.forEach((campaignState) => {
+      totalGain += grantFlatStateInfluence(campaignState, player.id, 15);
+    });
+    state.activePulse = 1;
+    latestAssassinationEvent = {
+      id: ++assassinationEventCounter,
+      assassinId: player.id,
+      targetId: player.id,
+      targetIds: [player.id],
+      selfAssassination: true,
+      stateIndex,
+      playAt: Date.now() + 800,
+    };
+    lastPresentedAssassinationEventId = latestAssassinationEvent.id;
+    presentAssassinationEvent(latestAssassinationEvent);
+    refreshTalentInterfaces();
+    addAlert(player.name + " self-assassinated under Martyr Protocol and gained +15 influence nationwide.");
+    if (playerId === HUMAN) showToast("MARTYR PROTOCOL — +15 influence nationwide. New leader deployed.");
+    broadcast(0, "MARTYR PROTOCOL in " + state.name + ": " + casualty.oldLeader + " was sacrificed; " + casualty.newLeader + " takes over. +" + Math.round(totalGain) + " total influence gained nationwide.");
     return true;
   }
 
@@ -9298,6 +9365,7 @@
     }
     if (slot.action === "powerGrab") return powerGrabCost(human, states[selectedState]);
     if (slot.action === "togglePolice") return 0;
+    if (slot.action === "assassinate" && states[selectedState] && canSelfAssassinateForMuzzle(human, states[selectedState].index)) return 0;
     if (slot.action === "assassinate") return ASSASSINATE_COST;
     return slot.cost;
   }
@@ -9420,6 +9488,7 @@
       return alreadyGuarded || ((ownsHq || ownsOffice) && human.cash >= cheapestUpkeep);
     }
     if (slot.action === "assassinate") {
+      if (canSelfAssassinateForMuzzle(human, state.index)) return true;
       if (human.action?.type === "speech") return false;
       const target = players.find((candidate) =>
         candidate.id !== HUMAN && isSpeaking(candidate) && canInterruptAction(candidate) &&
