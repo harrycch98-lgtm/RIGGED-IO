@@ -4914,7 +4914,7 @@
     const homeState = states[player.homeBase];
     const hqUpgradePending = missions.some((mission) => mission.type === "baseUpgrade" && mission.player === player.id);
     const offices = states.filter((state) => officeLevel(state, player.id) > 0);
-    const pendingOfficeDeployments = missions.filter((mission) => mission.type === "adDeploy" && mission.player === player.id).length;
+    const pendingOfficeDeployments = pendingDistrictOfficeCount(player.id);
 
     if (player.mainBaseLevel < 2 && !hqUpgradePending && homeState) {
       const nextLevel = player.mainBaseLevel + 1;
@@ -4940,7 +4940,7 @@
         score: adjustedInfluence(state, player.id) * 0.55 + state.ev * 0.45 + (state.index === player.homeBase ? 30 : 0) + Math.random() * 3,
       }))
       .sort((a, b) => b.score - a.score)[0]?.state;
-    if (offices.length + pendingOfficeDeployments < officeTarget && deployTarget && player.cash >= deployCost + hqReserve) {
+    if (canBuildMoreDistrictOffices(player) && offices.length + pendingOfficeDeployments < officeTarget && deployTarget && player.cash >= deployCost + hqReserve) {
       return commit("economy_office_deploy", () => placeAdHub(player.id, deployTarget.index), 0.45);
     }
 
@@ -5095,7 +5095,7 @@
     const targetState = states[stateIndex];
     const officeLvl = officeLevel(targetState, player.id);
     const deployPending = missions.some((mission) => mission.type === "adDeploy" && mission.player === player.id && mission.state === stateIndex);
-    if (officeLvl < 1 && !deployPending && player.cash >= adHubCost(player) + rules.reserve && Math.random() < rules.office) {
+    if (canBuildMoreDistrictOffices(player) && officeLvl < 1 && !deployPending && player.cash >= adHubCost(player) + rules.reserve && Math.random() < rules.office) {
       if (commit("office_deploy", () => placeAdHub(player.id, stateIndex), 0.6)) return;
     }
 
@@ -5253,6 +5253,10 @@
     }
     if (officeLevel(state, playerId) >= 1) {
       if (playerId === HUMAN) showToast(`${state.abbr} already has your District Office.`);
+      return false;
+    }
+    if (!canBuildMoreDistrictOffices(player)) {
+      if (playerId === HUMAN) showToast(`District Office limit reached: ${districtOfficeCount(playerId) + pendingDistrictOfficeCount(playerId)}/${districtOfficeCap(player)}. Upgrade HQ to build more.`);
       return false;
     }
     if (missions.some((mission) => mission.type === "adDeploy" && mission.player === playerId && mission.state === stateIndex)) {
@@ -6537,17 +6541,26 @@
   }
 
   function drawDisasterReliefBorder(state) {
-    const flash = Math.sin(performance.now() / 115) > 0 ? 1 : 0;
+    const flash = Math.sin(performance.now() / 95) > 0 ? 1 : 0;
     pathState(state);
     ctx.save();
-    ctx.globalAlpha = flash ? 1 : 0.52;
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(0,0,0,0.96)";
+    ctx.lineWidth = zoomThinLine(9.5, 0.78);
+    ctx.lineJoin = "round";
+    ctx.shadowColor = "#000000";
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    pathState(state);
+    ctx.globalAlpha = flash ? 1 : 0.72;
     ctx.strokeStyle = flash ? "#ff2a2a" : "rgba(255,42,42,0.52)";
-    ctx.lineWidth = zoomThinLine(flash ? 5.6 : 3.8, 0.45);
+    ctx.lineWidth = zoomThinLine(flash ? 7.4 : 5.4, 0.56);
     ctx.lineJoin = "round";
     ctx.shadowColor = "#ff1f1f";
-    ctx.shadowBlur = flash ? 18 : 8;
+    ctx.shadowBlur = flash ? 30 : 14;
     ctx.stroke();
-    ctx.globalAlpha = flash ? 0.14 : 0.06;
+    pathState(state);
+    ctx.globalAlpha = flash ? 0.24 : 0.1;
     ctx.fillStyle = "#ff1f1f";
     ctx.fill();
     ctx.restore();
@@ -7795,6 +7808,19 @@
   }
   function officeLevel(state, playerId) {
     return Math.max(0, Number(state?.offices?.[playerId] || 0));
+  }
+  function districtOfficeCap(player) {
+    return Math.max(0, Math.min(3, Number(player?.mainBaseLevel || 0))) * 10;
+  }
+  function districtOfficeCount(playerId) {
+    return states.reduce((sum, state) => sum + (officeLevel(state, playerId) > 0 ? 1 : 0), 0);
+  }
+  function pendingDistrictOfficeCount(playerId) {
+    return missions.filter((mission) => mission.type === "adDeploy" && mission.player === playerId).length;
+  }
+  function canBuildMoreDistrictOffices(player) {
+    if (!player) return false;
+    return districtOfficeCount(player.id) + pendingDistrictOfficeCount(player.id) < districtOfficeCap(player);
   }
   function policeAssignment(state, playerId) {
     const value = state?.police?.[playerId];
@@ -9453,7 +9479,8 @@
   function hotbarActionAvailable(slot, human, state) {
     if (!slot || !human || !state || phase !== "play" || paused || matchOver || human.locked > 0) return false;
     if (slot.action === "deployMiniBase") {
-      return officeLevel(state, HUMAN) < 1 &&
+      return canBuildMoreDistrictOffices(human) &&
+        officeLevel(state, HUMAN) < 1 &&
         !missions.some((mission) => mission.type === "adDeploy" && mission.player === HUMAN && mission.state === state.index) &&
         human.cash >= adHubCost(human);
     }
