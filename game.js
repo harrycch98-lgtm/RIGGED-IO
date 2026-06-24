@@ -4362,10 +4362,10 @@
       visor: '<rect x="20" y="17" width="40" height="7" fill="var(--party)"/><rect x="51" y="23" width="18" height="5" fill="var(--party)"/><rect x="25" y="13" width="30" height="4" fill="var(--accent)"/>',
     }[p.hat] || "") : "";
     const eyewear = p ? ({
-      aviators: '<rect x="24" y="38" width="13" height="10" rx="2" fill="#0a1612" opacity=".92"/><rect x="43" y="38" width="13" height="10" rx="2" fill="#0a1612" opacity=".92"/><rect x="37" y="41" width="6" height="2" fill="#8ff7c4"/><rect x="22" y="41" width="2" height="2" fill="#8ff7c4"/><rect x="56" y="41" width="2" height="2" fill="#8ff7c4"/>',
+      aviators: '<rect x="24" y="38" width="13" height="10" rx="2" fill="#dffcf0" opacity=".12" stroke="#c7f9de" stroke-width="2"/><rect x="43" y="38" width="13" height="10" rx="2" fill="#dffcf0" opacity=".12" stroke="#c7f9de" stroke-width="2"/><rect x="37" y="41" width="6" height="2" fill="#8ff7c4"/><rect x="27" y="40" width="7" height="2" fill="#ffffff" opacity=".18"/><rect x="46" y="40" width="7" height="2" fill="#ffffff" opacity=".18"/>',
       wireframes: '<rect x="24" y="39" width="13" height="9" rx="2" fill="none" stroke="#c7f9de" stroke-width="2"/><rect x="43" y="39" width="13" height="9" rx="2" fill="none" stroke="#c7f9de" stroke-width="2"/><rect x="37" y="42" width="6" height="2" fill="#c7f9de"/>',
-      visor_scope: '<rect x="20" y="36" width="40" height="11" rx="3" fill="#0b1913" stroke="var(--party)" stroke-width="2"/><rect x="25" y="39" width="11" height="5" fill="var(--accent)" opacity=".7"/><rect x="39" y="39" width="16" height="5" fill="#eafff2" opacity=".24"/>',
-      square_frames: '<rect x="23" y="38" width="14" height="11" fill="none" stroke="#0d2218" stroke-width="3"/><rect x="43" y="38" width="14" height="11" fill="none" stroke="#0d2218" stroke-width="3"/><rect x="37" y="42" width="6" height="3" fill="#0d2218"/>',
+      visor_scope: '<rect x="20" y="36" width="40" height="11" rx="3" fill="#dffcf0" opacity=".08" stroke="var(--party)" stroke-width="2"/><rect x="25" y="39" width="11" height="5" fill="var(--accent)" opacity=".45"/><rect x="39" y="39" width="16" height="5" fill="#eafff2" opacity=".18"/>',
+      square_frames: '<rect x="23" y="38" width="14" height="11" fill="#dffcf0" opacity=".08" stroke="#0d2218" stroke-width="3"/><rect x="43" y="38" width="14" height="11" fill="#dffcf0" opacity=".08" stroke="#0d2218" stroke-width="3"/><rect x="37" y="42" width="6" height="3" fill="#0d2218"/>',
     }[p.eyewear] || "") : "";
     const torsoX = p?.gender === "fem" ? 21 : p?.gender === "masc" ? 16 : 18;
     const torsoW = p?.gender === "fem" ? 38 : p?.gender === "masc" ? 48 : 44;
