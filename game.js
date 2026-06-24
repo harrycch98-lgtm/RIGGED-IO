@@ -6688,10 +6688,10 @@
       opponentTray.innerHTML = players
         .map((player) => `
           <button class="opponent-chip${player.id === HUMAN ? " is-human" : ""}${player.locked > 0 ? " is-blackout" : ""}${player.officeInfluenceSlow > 0 ? " is-jammed" : ""}${isSpeaking(player) ? " is-speaking" : ""}${assassinatedToday(player) ? " is-assassin" : ""}" type="button" data-leader-player="${player.id}" aria-label="${player.id === HUMAN ? "Open your talent terminal" : `Inspect ${escapeHtml(player.name)} talent tree`}">
-            <span class="leader-portrait-frame">
-              ${leaderPortraitMarkup(player, "leader-portrait")}
-              ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
-            </span>
+              <span class="leader-portrait-frame">
+               ${leaderPortraitMarkup(player, "leader-portrait leader-portrait-mini")}
+                ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
+              </span>
             ${player.locked > 0 ? '<span class="leader-blackout-mark">X</span>' : ""}
             ${player.officeInfluenceSlow > 0 ? '<span class="leader-jam-mark">JAM</span>' : ""}
             ${isSpeaking(player) ? '<span class="leader-speaking-mark">LIVE</span>' : ""}
