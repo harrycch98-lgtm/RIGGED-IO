@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const LOCAL = window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname);
   const API_URL = LOCAL ? 'http://localhost:3001' : 'https://api.riggedio.com:3000';
   const TOKEN_KEY = 'rigged.authToken';
   const USER_KEY = 'rigged.authUser';
