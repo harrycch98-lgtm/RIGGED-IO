@@ -2055,11 +2055,13 @@
     { id: "flag_bar", label: "Flag Bar", desc: "Compact patriotic service bar." },
     { id: "signal_chip", label: "Signal Chip", desc: "Futurist campaign-network transponder." },
   ];
-  const LEADER_BACKDROPS = [
-    { id: "grid", label: "Grid Feed", desc: "Standard terminal grid portrait." },
-    { id: "seal", label: "War Room Seal", desc: "Campaign-seal backdrop with command framing." },
-    { id: "rays", label: "Broadcast Rays", desc: "Victory rays for a louder portrait." },
-    { id: "columns", label: "Capital Columns", desc: "Institutional background with authority." },
+  const LEADER_EXPRESSIONS = [
+    { id: "neutral", label: "Neutral", desc: "Calm campaign face for the default look." },
+    { id: "smile", label: "Smile", desc: "Friendly confident grin for the cameras." },
+    { id: "smirk", label: "Smirk", desc: "A sly side-smile for smug debate moments." },
+    { id: "angry", label: "Angry", desc: "Sharp brows and a hard mouth for pressure." },
+    { id: "frown", label: "Frown", desc: "Worried downturn that reads more serious." },
+    { id: "surprised", label: "Surprised", desc: "Raised brows and an open mouth reaction." },
   ];
   const PARTY_FLAGS = [
     { id: "campaign_stripes", label: "Campaign Stripes", desc: "US campaign bunting." },
@@ -4037,8 +4039,8 @@
     return LEADER_PINS.find((item) => item.id === id) || LEADER_PINS[0];
   }
 
-  function backdropById(id) {
-    return LEADER_BACKDROPS.find((item) => item.id === id) || LEADER_BACKDROPS[0];
+  function expressionById(id) {
+    return LEADER_EXPRESSIONS.find((item) => item.id === id) || LEADER_EXPRESSIONS[0];
   }
 
   function normalizeLeaderProfile(profile) {
@@ -4052,7 +4054,7 @@
       outfit: LEADER_OUTFITS.some((item) => item.id === profile?.outfit) ? profile.outfit : "campaign_suit",
       eyewear: eyewearById(profile?.eyewear).id,
       pin: pinById(profile?.pin).id,
-      backdrop: backdropById(profile?.backdrop).id,
+      expression: expressionById(profile?.expression).id,
       flag: flagById(profile?.flag).id,
       facialLocked: !!visual.forceFacial,
     };
@@ -4091,7 +4093,7 @@
       outfit: pickFrom(LEADER_OUTFITS).id,
       eyewear: Math.random() < 0.42 ? pickFrom(LEADER_EYEWEAR.slice(1)).id : "none",
       pin: Math.random() < 0.55 ? pickFrom(LEADER_PINS.slice(1)).id : "none",
-      backdrop: pickFrom(LEADER_BACKDROPS).id,
+      expression: pickFrom(LEADER_EXPRESSIONS).id,
       flag: pickFrom(PARTY_FLAGS).id,
     });
   }
@@ -4112,7 +4114,7 @@
       outfit: pickFrom(LEADER_OUTFITS).id,
       eyewear: Math.random() < 0.3 ? pickFrom(LEADER_EYEWEAR.slice(1)).id : "none",
       pin: Math.random() < 0.6 ? pickFrom(LEADER_PINS.slice(1)).id : "none",
-      backdrop: LEADER_BACKDROPS[id % LEADER_BACKDROPS.length].id,
+      expression: LEADER_EXPRESSIONS[id % LEADER_EXPRESSIONS.length].id,
       flag: PARTY_FLAGS[((faction.factionIndex ?? id) + id) % PARTY_FLAGS.length].id,
     });
   }
@@ -4213,7 +4215,7 @@
     const outfit = LEADER_OUTFITS.find((item) => item.id === profile.outfit) || LEADER_OUTFITS[0];
     const eyewear = eyewearById(profile.eyewear);
     const pin = pinById(profile.pin);
-    const backdrop = backdropById(profile.backdrop);
+    const expression = expressionById(profile.expression);
     const flag = flagById(profile.flag);
     const palette = faction.portrait || FACTIONS[index].portrait;
     const tiers = tree.tiers.map((tier, tierIndex) => {
@@ -4254,15 +4256,15 @@
           <div>
             <strong>Leader Appearance</strong>
             <span>${escapeHtml(flag.label)} - ${escapeHtml(visual.label)} - ${escapeHtml(hat.label)} - ${escapeHtml(outfit.label)}</span>
-            <span>${escapeHtml(eyewear.label)} - ${escapeHtml(pin.label)} - ${escapeHtml(backdrop.label)}</span>
-            <span>${escapeHtml(flag.desc)} - ${escapeHtml(visual.desc)} - ${escapeHtml(outfit.desc)}</span>
+            <span>${escapeHtml(eyewear.label)} - ${escapeHtml(pin.label)} - ${escapeHtml(expression.label)}</span>
+            <span>${escapeHtml(flag.desc)} - ${escapeHtml(visual.desc)} - ${escapeHtml(expression.desc)}</span>
             <em>${profile.facialLocked ? "Facial hair locked: " + FACIAL_HAIR.find((item) => item.id === profile.facialHair).label : "Facial hair unlocked"}</em>
           </div>
         </div>
         <div class="leader-custom-controls">
           <label><span>Flag</span><select data-leader-custom="flag">${optionsHtml(PARTY_FLAGS, profile.flag)}</select></label>
           <label><span>Hat</span><select data-leader-custom="hat">${optionsHtml(LEADER_HATS, profile.hat)}</select></label>
-          <label><span>Backdrop</span><select data-leader-custom="backdrop">${optionsHtml(LEADER_BACKDROPS, profile.backdrop)}</select></label>
+          <label><span>Face Expression</span><select data-leader-custom="expression">${optionsHtml(LEADER_EXPRESSIONS, profile.expression)}</select></label>
           <label><span>Skin</span><select data-leader-custom="skin">${skinOptionsHtml(profile.skin)}</select></label>
           <label><span>Hairstyle</span><select data-leader-custom="hairstyle">${optionsHtml(LEADER_VISUALS, profile.hairstyle)}</select></label>
           <label><span>Eyewear</span><select data-leader-custom="eyewear">${optionsHtml(LEADER_EYEWEAR, profile.eyewear)}</select></label>
@@ -4411,20 +4413,29 @@
       flag_bar: '<rect x="53" y="69" width="12" height="5" fill="#f0eadc"/><rect x="53" y="69" width="4" height="5" fill="var(--party)"/><rect x="57" y="69" width="4" height="5" fill="var(--accent)"/><rect x="61" y="69" width="4" height="5" fill="#0a1610"/>',
       signal_chip: '<rect x="54" y="68" width="10" height="10" fill="#07140d" stroke="var(--party)" stroke-width="2"/><rect x="57" y="71" width="4" height="4" fill="var(--accent)"/>',
     }[p.pin] || "") : "";
-    const backdrop = p ? ({
-      seal: '<circle cx="40" cy="37" r="24" fill="var(--party)" opacity=".12"/><circle cx="40" cy="37" r="18" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".45"/><path d="M40 23 L43 31 L51 31 L45 36 L48 44 L40 39 L32 44 L35 36 L29 31 L37 31 Z" fill="var(--accent)" opacity=".35"/>',
-      rays: '<path d="M40 4 V90 M8 12 L72 82 M72 12 L8 82 M4 37 H76 M12 4 L68 90 M68 4 L12 90" stroke="var(--party)" stroke-width="2" opacity=".12"/>',
-      columns: '<rect x="12" y="18" width="8" height="54" fill="var(--party)" opacity=".12"/><rect x="60" y="18" width="8" height="54" fill="var(--party)" opacity=".12"/><rect x="10" y="14" width="12" height="5" fill="var(--accent)" opacity=".18"/><rect x="58" y="14" width="12" height="5" fill="var(--accent)" opacity=".18"/>',
-    }[p.backdrop] || '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M12 66 H68 M12 78 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".1"/>') : '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M12 66 H68 M12 78 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".1"/>';
-    const brow = p?.gender === "fem"
-      ? '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="35" width="10" height="2" fill="#09140d"/>'
-      : '<rect x="26" y="34" width="12" height="3" fill="#09140d"/><rect x="42" y="34" width="12" height="3" fill="#09140d"/>';
-    const mouth = '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/>';
+    const expression = p?.expression || "neutral";
+    const brow = ({
+      smile: '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="35" width="10" height="2" fill="#09140d"/>',
+      smirk: '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="34" width="10" height="2" fill="#09140d"/>',
+      angry: '<rect x="26" y="36" width="11" height="2" fill="#09140d" transform="rotate(-10 31.5 37)"/><rect x="43" y="36" width="11" height="2" fill="#09140d" transform="rotate(10 48.5 37)"/>',
+      frown: '<rect x="27" y="34" width="10" height="2" fill="#09140d"/><rect x="43" y="34" width="10" height="2" fill="#09140d"/>',
+      surprised: '<rect x="27" y="32" width="10" height="2" fill="#09140d"/><rect x="43" y="32" width="10" height="2" fill="#09140d"/>',
+      neutral: p?.gender === "fem"
+        ? '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="35" width="10" height="2" fill="#09140d"/>'
+        : '<rect x="26" y="34" width="12" height="3" fill="#09140d"/><rect x="42" y="34" width="12" height="3" fill="#09140d"/>',
+    }[expression] || '<rect x="26" y="34" width="12" height="3" fill="#09140d"/><rect x="42" y="34" width="12" height="3" fill="#09140d"/>');
+    const mouth = ({
+      smile: '<path d="M32 53 Q40 60 48 53" fill="none" stroke="#8c3840" stroke-width="3" stroke-linecap="square"/>',
+      smirk: '<path d="M33 54 Q39 56 47 52" fill="none" stroke="#8c3840" stroke-width="3" stroke-linecap="square"/>',
+      angry: '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/>',
+      frown: '<path d="M32 57 Q40 51 48 57" fill="none" stroke="#8c3840" stroke-width="3" stroke-linecap="square"/>',
+      surprised: '<rect x="36" y="52" width="8" height="8" rx="3" fill="#8c3840"/>',
+      neutral: '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/>',
+    }[expression] || '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/>');
     const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/>';
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
         <rect x="6" y="6" width="68" height="84" fill="rgba(255,255,255,0.03)" stroke="var(--party)" stroke-width="3"/>
-        ${backdrop}
         <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".03"/>
         ${outfit}
         ${neck}
@@ -4494,28 +4505,40 @@
       flag_bar: '<rect x="54" y="66" width="11" height="4" fill="#f0eadc"/><rect x="54" y="66" width="4" height="4" fill="var(--party)"/><rect x="58" y="66" width="3" height="4" fill="var(--accent)"/><rect x="61" y="66" width="4" height="4" fill="#0a1610"/>',
       signal_chip: '<rect x="55" y="65" width="8" height="8" fill="#07140d" stroke="var(--party)" stroke-width="2"/><rect x="58" y="68" width="2" height="2" fill="var(--accent)"/>',
     }[p.pin] || "") : "";
-    const backdrop = p ? ({
-      seal: '<circle cx="40" cy="34" r="20" fill="var(--party)" opacity=".12"/><circle cx="40" cy="34" r="15" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".4"/>',
-      rays: '<path d="M40 8 V84 M10 16 L70 76 M70 16 L10 76 M8 34 H72" stroke="var(--party)" stroke-width="2" opacity=".1"/>',
-      columns: '<rect x="14" y="18" width="7" height="48" fill="var(--party)" opacity=".11"/><rect x="59" y="18" width="7" height="48" fill="var(--party)" opacity=".11"/><rect x="12" y="14" width="11" height="4" fill="var(--accent)" opacity=".15"/><rect x="57" y="14" width="11" height="4" fill="var(--accent)" opacity=".15"/>',
-    }[p.backdrop] || '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".08"/>') : '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".08"/>';
+    const expression = p?.expression || "neutral";
+    const miniBrow = ({
+      smile: '<rect x="26" y="29" width="10" height="2" fill="#09140d"/><rect x="44" y="29" width="10" height="2" fill="#09140d"/>',
+      smirk: '<rect x="26" y="29" width="10" height="2" fill="#09140d"/><rect x="44" y="28" width="10" height="2" fill="#09140d"/>',
+      angry: '<rect x="26" y="30" width="10" height="2" fill="#09140d" transform="rotate(-10 31 31)"/><rect x="44" y="30" width="10" height="2" fill="#09140d" transform="rotate(10 49 31)"/>',
+      frown: '<rect x="26" y="28" width="10" height="2" fill="#09140d"/><rect x="44" y="28" width="10" height="2" fill="#09140d"/>',
+      surprised: '<rect x="26" y="26" width="10" height="2" fill="#09140d"/><rect x="44" y="26" width="10" height="2" fill="#09140d"/>',
+      neutral: '<rect x="26" y="29" width="10" height="2" fill="#09140d"/><rect x="44" y="29" width="10" height="2" fill="#09140d"/>',
+    }[expression] || '<rect x="26" y="29" width="10" height="2" fill="#09140d"/><rect x="44" y="29" width="10" height="2" fill="#09140d"/>');
+    const miniMouth = ({
+      smile: '<path d="M34 46 Q40 51 46 46" fill="none" stroke="#94444b" stroke-width="3" stroke-linecap="square"/>',
+      smirk: '<path d="M34 47 Q39 49 46 45" fill="none" stroke="#94444b" stroke-width="3" stroke-linecap="square"/>',
+      angry: '<rect x="34" y="46" width="12" height="3" fill="#94444b"/>',
+      frown: '<path d="M34 49 Q40 44 46 49" fill="none" stroke="#94444b" stroke-width="3" stroke-linecap="square"/>',
+      surprised: '<rect x="37" y="44" width="6" height="7" rx="3" fill="#94444b"/>',
+      neutral: '<rect x="34" y="46" width="12" height="3" fill="#94444b"/>',
+    }[expression] || '<rect x="34" y="46" width="12" height="3" fill="#94444b"/>');
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
         <rect x="8" y="8" width="64" height="80" fill="#f2fff7" opacity=".05" stroke="var(--party)" stroke-width="2"/>
-        ${backdrop}
         <rect x="16" y="56" width="48" height="24" fill="var(--suit)"/>
         <rect x="34" y="56" width="12" height="24" fill="var(--accent)" opacity=".78"/>
         <rect x="31" y="51" width="18" height="8" fill="var(--skin)"/>
         <rect x="20" y="20" width="40" height="32" fill="var(--skin)"/>
         ${hairBand}
         ${hat}
+        ${miniBrow}
         <rect x="29" y="34" width="6" height="6" fill="#08140d"/>
         <rect x="45" y="34" width="6" height="6" fill="#08140d"/>
         <rect x="31" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
         <rect x="47" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
         ${eyewear}
         ${facial}
-        <rect x="34" y="46" width="12" height="3" fill="#94444b"/>
+        ${miniMouth}
         ${pin}
         <rect x="14" y="74" width="52" height="5" fill="var(--party)"/>
       </svg>
