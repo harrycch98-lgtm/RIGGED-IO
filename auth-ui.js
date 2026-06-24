@@ -71,7 +71,7 @@
         <strong>Signed in</strong>
         <div class="auth-card-user">${escapeHtml(currentUser.username)}</div>
         <div class="auth-card-actions">
-          <button class="auth-submit" type="button" data-auth-open-profile>View profile</button>
+          <button class="auth-submit" type="button" data-auth-open-profile onclick="window.RiggedAuth && window.RiggedAuth.openProfile && window.RiggedAuth.openProfile()">View profile</button>
           <button class="auth-link" type="button" data-auth-logout>Logout</button>
         </div>
       </section>
@@ -180,6 +180,8 @@
     fetch: apiFetch,
     getToken: () => localStorage.getItem(TOKEN_KEY),
     getUser: () => currentUser,
+    closeProfile: closeProfileModal,
+    openProfile: openProfileModal,
     refresh: render,
     requireAccount: async () => currentUser || loadMe(),
   };
