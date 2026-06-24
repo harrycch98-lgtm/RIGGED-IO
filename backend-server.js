@@ -6,7 +6,7 @@ const { attachAuthToRequest, handleAuthRoute, requireAuth } = require('./auth');
 const { initDb } = require('./db');
 
 const PORT = Number(process.env.PORT || 3001);
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://riggedio.com,https://www.riggedio.com,https://harrycch98-lgtm.github.io';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://riggedio.com,https://www.riggedio.com';
 const LOBBY_HEARTBEAT_TIMEOUT = 20_000;
 const GAME_PRESENCE_TIMEOUT = 8_000;
 const lobbies = new Map();
@@ -62,6 +62,15 @@ function cleanLeaderProfile(value) {
     facialHair: cleanText(source.facialHair, 'none', 24),
     hat: cleanText(source.hat, 'none', 24),
     flag: cleanText(source.flag, 'campaign_stripes', 32),
+  };
+}
+
+function cleanLobbyEmote(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  return {
+    id: cleanText(source.id, '', 24),
+    icon: cleanText(source.icon, '', 8),
+    until: Math.max(0, Number(source.until) || 0),
   };
 }
 
@@ -313,21 +322,22 @@ const server = http.createServer(async (request, response) => {
       return send(response, 200, { success: true, lobby: publicLobby(lobby) });
     }
 
-    if (request.method === 'POST' && url.pathname === '/api/lobby/player') {
-      const body = await readJson(request);
-      const lobby = lobbies.get(String(body.lobbyId || ''));
-      if (!lobby) return send(response, 404, { error: 'Lobby not found' });
-      const player = lobby.players.find((entry) => entry.id === body.playerId && !entry.isBot);
+      if (request.method === 'POST' && url.pathname === '/api/lobby/player') {
+        const body = await readJson(request);
+        const lobby = lobbies.get(String(body.lobbyId || ''));
+        if (!lobby) return send(response, 404, { error: 'Lobby not found' });
+        const player = lobby.players.find((entry) => entry.id === body.playerId && !entry.isBot);
       if (!player) return send(response, 404, { error: 'Player not found' });
       player.name = cleanText(body.name, player.name || 'Player', 20);
       player.factionIndex = Math.max(0, Math.min(7, Number(body.factionIndex) || 0));
-      player.party = cleanText(body.party, 'Party', 28);
-      player.leader = cleanText(body.leader, 'Leader', 28);
-      player.color = /^#[0-9a-f]{3,8}$/i.test(String(body.color || '')) ? String(body.color) : '#34ff86';
-      player.leaderProfile = cleanLeaderProfile(body.leaderProfile);
-      lobby.updatedAt = Date.now();
-      return send(response, 200, { success: true, lobby: publicLobby(lobby) });
-    }
+        player.party = cleanText(body.party, 'Party', 28);
+        player.leader = cleanText(body.leader, 'Leader', 28);
+        player.color = /^#[0-9a-f]{3,8}$/i.test(String(body.color || '')) ? String(body.color) : '#34ff86';
+        player.leaderProfile = cleanLeaderProfile(body.leaderProfile);
+        player.emote = cleanLobbyEmote(body.emote);
+        lobby.updatedAt = Date.now();
+        return send(response, 200, { success: true, lobby: publicLobby(lobby) });
+      }
 
     if (request.method === 'POST' && url.pathname === '/api/lobby/bot/remove') {
       const body = await readJson(request);

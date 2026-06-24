@@ -284,8 +284,16 @@
       hostName: metadata?.hostName || source.hostName || fallback.hostName || 'Host',
       players: sourcePlayers.map((player, index) => {
         const playerMetadata = lobbyMetadata(player.name || player.playerName);
-        if (!playerMetadata) return player;
-        return { ...player, name: index === 0 ? playerMetadata.hostName : (player.name || player.playerName) };
+        const normalizedPlayer = {
+          ...player,
+          emote: {
+            id: String(player?.emote?.id || ""),
+            icon: String(player?.emote?.icon || ""),
+            until: Math.max(0, Number(player?.emote?.until) || 0),
+          },
+        };
+        if (!playerMetadata) return normalizedPlayer;
+        return { ...normalizedPlayer, name: index === 0 ? playerMetadata.hostName : (player.name || player.playerName) };
       }),
     };
   }
@@ -348,7 +356,97 @@
     const faction = factionForMenu(factionIndex);
     const profile = player.leaderProfile ? normalizeLeaderProfile(player.leaderProfile) : null;
     const palette = faction.portrait;
-    return `<span class="leader-portrait" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>`;
+    const lobbyEmote = player?.emote?.until > Date.now() && player?.emote?.icon ? `<span class="leader-emote-bubble">${escapeHtml(player.emote.icon)}</span>` : "";
+    return `<span class="leader-portrait-frame"><span class="leader-portrait" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
+  }
+
+  function currentLobbyPlayer() {
+    if (!currentLobby?.players || !currentPlayerId) return null;
+    return currentLobby.players.find((player) => String(player.id) === String(currentPlayerId)) || null;
+  }
+
+  function canUseEmotes() {
+    if (matchOver || pipOpen || settingsOpen || (gameStarted && paused)) return false;
+    if (currentLobby?.id && !gameStarted) return true;
+    if (!gameStarted) return false;
+    return phase === "base" || phase === "play";
+  }
+
+  function applyLobbyEmote(playerId, emoteId) {
+    if (!currentLobby?.players) return false;
+    const lobbyPlayer = currentLobby.players.find((player) => String(player.id) === String(playerId));
+    const option = emoteOptionById(emoteId);
+    if (!lobbyPlayer || !option) return false;
+    lobbyPlayer.emote = {
+      id: option.id,
+      icon: option.icon,
+      until: Date.now() + EMOTE_DURATION * 1000,
+    };
+    renderLobbyLeaderStrip();
+    window.setTimeout(() => {
+      if (!currentLobby?.players) return;
+      const latest = currentLobby.players.find((player) => String(player.id) === String(playerId));
+      if (!latest?.emote?.until || latest.emote.until > Date.now()) return;
+      renderLobbyLeaderStrip();
+    }, Math.ceil(EMOTE_DURATION * 1000) + 80);
+    return true;
+  }
+
+  async function publishLobbyEmote(emoteId) {
+    if (!currentLobby?.id || !currentPlayerId) return false;
+    const faction = factionForMenu(selectedParty);
+    const option = emoteOptionById(emoteId);
+    if (!option) return false;
+    applyLobbyEmote(currentPlayerId, emoteId);
+    try {
+      const res = await lobbyFetch(`${REST_BACKEND_URL}/api/lobby/player`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lobbyId: currentLobby.id,
+          playerId: currentPlayerId,
+          name: playerDisplayName(),
+          factionIndex: selectedParty,
+          party: faction.name,
+          leader: faction.leader,
+          color: faction.color,
+          leaderProfile: normalizeLeaderProfile(selectedLeaderProfile),
+          emote: {
+            id: option.id,
+            icon: option.icon,
+            until: Date.now() + EMOTE_DURATION * 1000,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error(`Lobby emote update failed: ${res.status}`);
+      const data = await res.json();
+      if (data.lobby) currentLobby = normalizeServerLobby(data.lobby, currentLobby);
+      renderLobbyLeaderStrip();
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  async function addBotFromLeaderSlot() {
+    if (!currentLobby?.id) {
+      const settings = window.lobbySettings || {};
+      const result = await createLobby(
+        playerDisplayName(),
+        matchModeInput?.value || settings.mode || 'campaign100',
+        difficultyInput?.value || settings.difficulty || 'medium',
+        Number(playerCountInput?.value || settings.maxPlayers || 4),
+        settings.lobbyName || "Host's Lobby",
+        settings.isPublic === true,
+      );
+      if (!result?.lobbyId) return false;
+      startServerLobbyPolling(renderServerLobbyInMainMenu);
+    }
+    const added = await addBotToServerLobby();
+    renderServerLobbyInMainMenu();
+    syncMainMenuAddBotButton();
+    return added;
   }
 
   function renderLobbyLeaderStrip() {
@@ -363,7 +461,7 @@
       if (!source) {
         const canAddBot = pending || isCurrentServerLobbyHost(lobby);
         if (canAddBot) {
-          return `<button class="lobby-leader-slot is-empty is-add-bot" type="button" data-add-lobby-bot data-slot-index="${index}" title="Add an anonymous bot to this open slot"><span class="lobby-leader-player is-placeholder">Empty Slot</span>${anonymousLobbyPortraitMarkup('Add anonymous bot')}<span class="lobby-add-bot-plus" aria-hidden="true">+</span><span class="lobby-leader-party">Anonymous Party</span><span class="lobby-leader-name">Add Bot</span><span class="lobby-leader-state">Click to Fill</span></button>`;
+          return `<button class="lobby-leader-slot is-empty is-add-bot" type="button" data-add-lobby-bot data-slot-index="${index}" onclick="window.riggedAddBotFromSlot && window.riggedAddBotFromSlot(this)" title="Add an anonymous bot to this open slot"><span class="lobby-leader-player is-placeholder">Empty Slot</span>${anonymousLobbyPortraitMarkup('Add anonymous bot')}<span class="lobby-add-bot-plus" aria-hidden="true">+</span><span class="lobby-leader-party">Anonymous Party</span><span class="lobby-leader-name">Add Bot</span><span class="lobby-leader-state">Click to Fill</span></button>`;
         }
         return `<article class="lobby-leader-slot is-empty"><span class="lobby-leader-player is-placeholder">Empty Slot</span>${anonymousLobbyPortraitMarkup('Open player slot')}<span class="lobby-leader-party">No Party</span><span class="lobby-leader-name">Open Slot</span><span class="lobby-leader-state">Waiting</span></article>`;
       }
@@ -373,6 +471,8 @@
         Object.assign(player, { factionIndex: selectedParty, party: faction.name, leader: faction.leader, color: faction.color, leaderProfile: selectedLeaderProfile });
         player.name = playerDisplayName();
         player.ready = player.host ? true : multiplayerState.localReady;
+        const livePlayer = currentLobbyPlayer();
+        if (livePlayer?.emote) player.emote = { ...livePlayer.emote };
       }
       player.isBot = player.isBot === true || /^Bot\b/i.test(player.name || player.playerName || '');
       const ready = player.isBot || player.host || player.ready === true;
@@ -532,6 +632,7 @@
       serverLobbyPlayerUpdateTimer = null;
       const faction = factionForMenu(selectedParty);
       try {
+        const localEmote = currentLobbyPlayer()?.emote;
         const res = await lobbyFetch(`${REST_BACKEND_URL}/api/lobby/player`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -544,6 +645,7 @@
             leader: faction.leader,
             color: faction.color,
             leaderProfile: normalizeLeaderProfile(selectedLeaderProfile),
+            emote: localEmote && localEmote.until > Date.now() ? localEmote : { id: "", icon: "", until: 0 },
           }),
         });
         if (!res.ok) throw new Error(`Player selection update failed: ${res.status}`);
@@ -1597,7 +1699,12 @@
   }
 
   function sendEmote(emoteId) {
-    if (!gameStarted || phase !== "play" || matchOver) return false;
+    if (!canUseEmotes()) return false;
+    if (currentLobby?.id && !gameStarted) {
+      void publishLobbyEmote(emoteId);
+      closeEmoteWheel();
+      return true;
+    }
     if (HUMAN !== undefined && isServerLobbyGuest() && routeGuestGameCommand("emitEmote", [emoteId])) {
       closeEmoteWheel();
       return true;
@@ -1933,6 +2040,26 @@
     { id: "tech_blazer", label: "Tech Blazer", desc: "Asymmetric neon trim for terminal politics." },
     { id: "ceremonial_uniform", label: "Ceremonial Uniform", desc: "Command tunic with bright epaulettes." },
   ];
+  const LEADER_EYEWEAR = [
+    { id: "none", label: "None", desc: "No eyewear equipped." },
+    { id: "aviators", label: "Aviators", desc: "Power optics with mirrored lenses." },
+    { id: "wireframes", label: "Wireframes", desc: "Thin policy-wonk spectacles." },
+    { id: "visor_scope", label: "Visor Scope", desc: "Broadcast-grade tactical display." },
+    { id: "square_frames", label: "Square Frames", desc: "Heavy campaign office frames." },
+  ];
+  const LEADER_PINS = [
+    { id: "none", label: "None", desc: "No chest cosmetic equipped." },
+    { id: "party_star", label: "Party Star", desc: "Bright party insignia pinned to the lapel." },
+    { id: "victory_ribbon", label: "Victory Ribbon", desc: "A stitched ribbon from last cycle." },
+    { id: "flag_bar", label: "Flag Bar", desc: "Compact patriotic service bar." },
+    { id: "signal_chip", label: "Signal Chip", desc: "Futurist campaign-network transponder." },
+  ];
+  const LEADER_BACKDROPS = [
+    { id: "grid", label: "Grid Feed", desc: "Standard terminal grid portrait." },
+    { id: "seal", label: "War Room Seal", desc: "Campaign-seal backdrop with command framing." },
+    { id: "rays", label: "Broadcast Rays", desc: "Victory rays for a louder portrait." },
+    { id: "columns", label: "Capital Columns", desc: "Institutional background with authority." },
+  ];
   const PARTY_FLAGS = [
     { id: "campaign_stripes", label: "Campaign Stripes", desc: "US campaign bunting." },
     { id: "red_disc", label: "Red Disc Banner", desc: "Fascist rally banners, fictionalized." },
@@ -2253,27 +2380,27 @@
   const talentPreview = document.querySelector("#talentPreview");
 
   function ensureEmoteWheel() {
-    let wheel = document.getElementById("emoteWheel");
-    if (wheel) return wheel;
-    wheel = document.createElement("section");
-    wheel.id = "emoteWheel";
-    wheel.className = "emote-wheel";
-    wheel.setAttribute("aria-label", "Emote wheel");
-    wheel.innerHTML = `
-      <div class="emote-wheel-head">
-        <strong>Emote Wheel</strong>
-        <span>Press C or ESC to close</span>
-      </div>
-      <div class="emote-wheel-grid">
-        ${EMOTE_OPTIONS.map((option, index) => `
-          <button class="emote-wheel-option" type="button" data-emote-id="${option.id}">
-            <span class="emote-wheel-key">${index + 1}</span>
-            <span class="emote-wheel-icon">${option.icon}</span>
-            <span class="emote-wheel-label">${option.label}</span>
-          </button>
-        `).join("")}
-      </div>
-    `;
+      let wheel = document.getElementById("emoteWheel");
+      if (wheel) return wheel;
+      wheel = document.createElement("section");
+      wheel.id = "emoteWheel";
+      wheel.className = "emote-wheel";
+      wheel.setAttribute("aria-label", "Emote wheel");
+      wheel.innerHTML = `
+        <div class="emote-wheel-ring">
+          ${EMOTE_OPTIONS.map((option, index) => `
+            <button class="emote-wheel-option emote-wheel-option-${index + 1}" type="button" data-emote-id="${option.id}">
+              <span class="emote-wheel-key">${index + 1}</span>
+              <span class="emote-wheel-icon">${option.icon}</span>
+              <span class="emote-wheel-label">${option.label}</span>
+            </button>
+          `).join("")}
+          <div class="emote-wheel-core">
+            <strong>C</strong>
+            <span>HOLD</span>
+          </div>
+        </div>
+      `;
     mapStage?.appendChild(wheel);
     wheel.querySelectorAll("[data-emote-id]").forEach((button) => {
       button.addEventListener("click", () => sendEmote(String(button.dataset.emoteId || "")));
@@ -2287,7 +2414,7 @@
   }
 
   function toggleEmoteWheel(force = null) {
-    if (!gameStarted || phase !== "play" || pipOpen || settingsOpen || matchOver) return;
+    if (!canUseEmotes()) return;
     emoteWheelOpen = force === null ? !emoteWheelOpen : !!force;
     ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen);
   }
@@ -3703,9 +3830,9 @@
       officeInfluenceSlow: 0,
       speechCooldown: 0,
       speechCooldownTotal: 0,
-      emoteId: "",
-      emoteIcon: "",
-      emoteUntil: 0,
+      emoteId: lobbyMember?.emote?.until > Date.now() ? String(lobbyMember.emote.id || "") : "",
+      emoteIcon: lobbyMember?.emote?.until > Date.now() ? String(lobbyMember.emote.icon || "") : "",
+      emoteUntil: lobbyMember?.emote?.until > Date.now() ? Math.max(0, (Number(lobbyMember.emote.until) - Date.now()) / 1000) : 0,
       leaderDeaths: 0,
       assassinDay: -1,
       assassinationsToday: 0,
@@ -3874,6 +4001,18 @@
     return PARTY_FLAGS.find((item) => item.id === id) || PARTY_FLAGS[0];
   }
 
+  function eyewearById(id) {
+    return LEADER_EYEWEAR.find((item) => item.id === id) || LEADER_EYEWEAR[0];
+  }
+
+  function pinById(id) {
+    return LEADER_PINS.find((item) => item.id === id) || LEADER_PINS[0];
+  }
+
+  function backdropById(id) {
+    return LEADER_BACKDROPS.find((item) => item.id === id) || LEADER_BACKDROPS[0];
+  }
+
   function normalizeLeaderProfile(profile) {
     const visual = visualById(profile?.hairstyle);
     return {
@@ -3883,6 +4022,9 @@
       facialHair: visual.forceFacial || (FACIAL_HAIR.some((item) => item.id === profile?.facialHair) ? profile.facialHair : "none"),
       hat: LEADER_HATS.some((item) => item.id === profile?.hat) ? profile.hat : "none",
       outfit: LEADER_OUTFITS.some((item) => item.id === profile?.outfit) ? profile.outfit : "campaign_suit",
+      eyewear: eyewearById(profile?.eyewear).id,
+      pin: pinById(profile?.pin).id,
+      backdrop: backdropById(profile?.backdrop).id,
       flag: flagById(profile?.flag).id,
       facialLocked: !!visual.forceFacial,
     };
@@ -3919,6 +4061,9 @@
       facialHair: pickFrom(FACIAL_HAIR).id,
       hat: pickFrom(LEADER_HATS).id,
       outfit: pickFrom(LEADER_OUTFITS).id,
+      eyewear: Math.random() < 0.42 ? pickFrom(LEADER_EYEWEAR.slice(1)).id : "none",
+      pin: Math.random() < 0.55 ? pickFrom(LEADER_PINS.slice(1)).id : "none",
+      backdrop: pickFrom(LEADER_BACKDROPS).id,
       flag: pickFrom(PARTY_FLAGS).id,
     });
   }
@@ -3937,6 +4082,9 @@
       facialHair: pickFrom(FACIAL_HAIR).id,
       hat: Math.random() < 0.45 ? pickFrom(LEADER_HATS).id : "none",
       outfit: pickFrom(LEADER_OUTFITS).id,
+      eyewear: Math.random() < 0.3 ? pickFrom(LEADER_EYEWEAR.slice(1)).id : "none",
+      pin: Math.random() < 0.6 ? pickFrom(LEADER_PINS.slice(1)).id : "none",
+      backdrop: LEADER_BACKDROPS[id % LEADER_BACKDROPS.length].id,
       flag: PARTY_FLAGS[((faction.factionIndex ?? id) + id) % PARTY_FLAGS.length].id,
     });
   }
@@ -4035,6 +4183,9 @@
     const visual = visualById(profile.hairstyle);
     const hat = LEADER_HATS.find((item) => item.id === profile.hat) || LEADER_HATS[0];
     const outfit = LEADER_OUTFITS.find((item) => item.id === profile.outfit) || LEADER_OUTFITS[0];
+    const eyewear = eyewearById(profile.eyewear);
+    const pin = pinById(profile.pin);
+    const backdrop = backdropById(profile.backdrop);
     const flag = flagById(profile.flag);
     const palette = faction.portrait || FACTIONS[index].portrait;
     const tiers = tree.tiers.map((tier, tierIndex) => {
@@ -4075,6 +4226,7 @@
           <div>
             <strong>Leader Appearance</strong>
             <span>${escapeHtml(flag.label)} - ${escapeHtml(visual.label)} - ${escapeHtml(hat.label)} - ${escapeHtml(outfit.label)}</span>
+            <span>${escapeHtml(eyewear.label)} - ${escapeHtml(pin.label)} - ${escapeHtml(backdrop.label)}</span>
             <span>${escapeHtml(flag.desc)} - ${escapeHtml(visual.desc)} - ${escapeHtml(outfit.desc)}</span>
             <em>${profile.facialLocked ? "Facial hair locked: " + FACIAL_HAIR.find((item) => item.id === profile.facialHair).label : "Facial hair unlocked"}</em>
           </div>
@@ -4082,9 +4234,12 @@
         <div class="leader-custom-controls">
           <label><span>Flag</span><select data-leader-custom="flag">${optionsHtml(PARTY_FLAGS, profile.flag)}</select></label>
           <label><span>Hat</span><select data-leader-custom="hat">${optionsHtml(LEADER_HATS, profile.hat)}</select></label>
+          <label><span>Backdrop</span><select data-leader-custom="backdrop">${optionsHtml(LEADER_BACKDROPS, profile.backdrop)}</select></label>
           <label><span>Skin</span><select data-leader-custom="skin">${skinOptionsHtml(profile.skin)}</select></label>
           <label><span>Hairstyle</span><select data-leader-custom="hairstyle">${optionsHtml(LEADER_VISUALS, profile.hairstyle)}</select></label>
+          <label><span>Eyewear</span><select data-leader-custom="eyewear">${optionsHtml(LEADER_EYEWEAR, profile.eyewear)}</select></label>
           <label><span>Facial Hair</span><select data-leader-custom="facialHair" ${profile.facialLocked ? "disabled" : ""}>${optionsHtml(FACIAL_HAIR, profile.facialHair)}</select></label>
+          <label><span>Lapel Pin</span><select data-leader-custom="pin">${optionsHtml(LEADER_PINS, profile.pin)}</select></label>
           <label><span>Outfit</span><select data-leader-custom="outfit">${optionsHtml(LEADER_OUTFITS, profile.outfit)}</select></label>
         </div>
       </section>
@@ -4206,6 +4361,12 @@
       military_cap: '<rect x="20" y="14" width="40" height="13" fill="#1f3b2d"/><rect x="55" y="24" width="14" height="5" fill="#1f3b2d"/><rect x="36" y="17" width="8" height="7" fill="var(--accent)"/>',
       visor: '<rect x="20" y="17" width="40" height="7" fill="var(--party)"/><rect x="51" y="23" width="18" height="5" fill="var(--party)"/><rect x="25" y="13" width="30" height="4" fill="var(--accent)"/>',
     }[p.hat] || "") : "";
+    const eyewear = p ? ({
+      aviators: '<rect x="24" y="38" width="13" height="10" rx="2" fill="#0a1612" opacity=".92"/><rect x="43" y="38" width="13" height="10" rx="2" fill="#0a1612" opacity=".92"/><rect x="37" y="41" width="6" height="2" fill="#8ff7c4"/><rect x="22" y="41" width="2" height="2" fill="#8ff7c4"/><rect x="56" y="41" width="2" height="2" fill="#8ff7c4"/>',
+      wireframes: '<rect x="24" y="39" width="13" height="9" rx="2" fill="none" stroke="#c7f9de" stroke-width="2"/><rect x="43" y="39" width="13" height="9" rx="2" fill="none" stroke="#c7f9de" stroke-width="2"/><rect x="37" y="42" width="6" height="2" fill="#c7f9de"/>',
+      visor_scope: '<rect x="20" y="36" width="40" height="11" rx="3" fill="#0b1913" stroke="var(--party)" stroke-width="2"/><rect x="25" y="39" width="11" height="5" fill="var(--accent)" opacity=".7"/><rect x="39" y="39" width="16" height="5" fill="#eafff2" opacity=".24"/>',
+      square_frames: '<rect x="23" y="38" width="14" height="11" fill="none" stroke="#0d2218" stroke-width="3"/><rect x="43" y="38" width="14" height="11" fill="none" stroke="#0d2218" stroke-width="3"/><rect x="37" y="42" width="6" height="3" fill="#0d2218"/>',
+    }[p.eyewear] || "") : "";
     const torsoX = p?.gender === "fem" ? 21 : p?.gender === "masc" ? 16 : 18;
     const torsoW = p?.gender === "fem" ? 38 : p?.gender === "masc" ? 48 : 44;
     const outfit = p ? ({
@@ -4216,18 +4377,56 @@
       tech_blazer: '<rect x="17" y="60" width="46" height="24" fill="var(--suit)"/><path d="M17 60 H36 L48 84 H36 Z" fill="var(--party)" opacity=".72"/><path d="M63 60 H45 L36 84 H48 Z" fill="var(--accent)" opacity=".58"/><rect x="21" y="64" width="4" height="15" fill="var(--accent)"/><rect x="55" y="64" width="4" height="15" fill="var(--party)"/>',
       ceremonial_uniform: '<rect x="15" y="60" width="50" height="24" fill="var(--suit)"/><rect x="12" y="59" width="20" height="6" fill="var(--accent)"/><rect x="48" y="59" width="20" height="6" fill="var(--accent)"/><rect x="38" y="60" width="4" height="24" fill="var(--party)"/><rect x="24" y="68" width="7" height="4" fill="#ffd76a"/><rect x="49" y="68" width="7" height="4" fill="#ffd76a"/><rect x="24" y="76" width="32" height="3" fill="var(--accent)"/>',
     }[p.outfit] || '') : '<rect x="' + torsoX + '" y="60" width="' + torsoW + '" height="24" fill="var(--suit)"/><rect x="32" y="60" width="16" height="24" fill="var(--accent)" opacity="0.85"/>';
+    const pin = p ? ({
+      party_star: '<path d="M58 69 L60 74 L66 74 L61 77 L63 83 L58 79 L53 83 L55 77 L50 74 L56 74 Z" fill="#ffd76a" stroke="#24180a" stroke-width="1"/>',
+      victory_ribbon: '<rect x="54" y="68" width="8" height="7" fill="#f0eadc"/><path d="M55 75 L58 82 L61 75" fill="var(--party)"/>',
+      flag_bar: '<rect x="53" y="69" width="12" height="5" fill="#f0eadc"/><rect x="53" y="69" width="4" height="5" fill="var(--party)"/><rect x="57" y="69" width="4" height="5" fill="var(--accent)"/><rect x="61" y="69" width="4" height="5" fill="#0a1610"/>',
+      signal_chip: '<rect x="54" y="68" width="10" height="10" fill="#07140d" stroke="var(--party)" stroke-width="2"/><rect x="57" y="71" width="4" height="4" fill="var(--accent)"/>',
+    }[p.pin] || "") : "";
+    const backdrop = p ? ({
+      seal: '<circle cx="40" cy="37" r="24" fill="var(--party)" opacity=".12"/><circle cx="40" cy="37" r="18" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".45"/><path d="M40 23 L43 31 L51 31 L45 36 L48 44 L40 39 L32 44 L35 36 L29 31 L37 31 Z" fill="var(--accent)" opacity=".35"/>',
+      rays: '<path d="M40 4 V90 M8 12 L72 82 M72 12 L8 82 M4 37 H76 M12 4 L68 90 M68 4 L12 90" stroke="var(--party)" stroke-width="2" opacity=".12"/>',
+      columns: '<rect x="12" y="18" width="8" height="54" fill="var(--party)" opacity=".12"/><rect x="60" y="18" width="8" height="54" fill="var(--party)" opacity=".12"/><rect x="10" y="14" width="12" height="5" fill="var(--accent)" opacity=".18"/><rect x="58" y="14" width="12" height="5" fill="var(--accent)" opacity=".18"/>',
+    }[p.backdrop] || '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M12 66 H68 M12 78 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".1"/>') : '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M12 66 H68 M12 78 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".1"/>';
+    const brow = p?.gender === "fem"
+      ? '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="35" width="10" height="2" fill="#09140d"/>'
+      : '<rect x="26" y="34" width="12" height="3" fill="#09140d"/><rect x="42" y="34" width="12" height="3" fill="#09140d"/>';
+    const mouth = p?.gender === "fem"
+      ? '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/><rect x="35" y="53" width="10" height="1" fill="#d98990" opacity=".55"/>'
+      : '<rect x="34" y="54" width="12" height="3" fill="#7a2f2f"/>';
+    const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/><rect x="33" y="63" width="14" height="3" fill="#000" opacity=".08"/>';
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
+        <defs>
+          <linearGradient id="riggedPortraitSkinShade" x1="0" x2="1">
+            <stop offset="0" stop-color="var(--skin)"/>
+            <stop offset="1" stop-color="#000000" stop-opacity=".13"/>
+          </linearGradient>
+        </defs>
         <rect x="6" y="6" width="68" height="84" fill="rgba(0,0,0,0.28)" stroke="var(--party)" stroke-width="3"/>
+        ${backdrop}
+        <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".06"/>
         ${outfit}
-        <rect x="22" y="24" width="36" height="38" fill="var(--skin)"/>
+        ${neck}
+        <rect x="19" y="28" width="6" height="14" fill="var(--skin)" opacity=".88"/>
+        <rect x="55" y="28" width="6" height="14" fill="var(--skin)" opacity=".88"/>
+        <rect x="22" y="24" width="36" height="38" fill="url(#riggedPortraitSkinShade)"/>
+        <rect x="24" y="26" width="32" height="8" fill="#ffffff" opacity=".06"/>
         ${hair}
         ${hat}
+        ${brow}
         <rect x="29" y="40" width="5" height="5" fill="#06120c"/>
         <rect x="46" y="40" width="5" height="5" fill="#06120c"/>
+        <rect x="30" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
+        <rect x="47" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
+        <rect x="38" y="43" width="4" height="9" fill="#000" opacity=".09"/>
+        <rect x="37" y="49" width="6" height="2" fill="#000" opacity=".12"/>
+        ${eyewear}
         ${facial}
-        <rect x="34" y="53" width="12" height="4" fill="#7a2f2f"/>
+        ${mouth}
+        ${pin}
         <rect x="12" y="78" width="56" height="6" fill="var(--party)"/>
+        <rect x="12" y="82" width="56" height="2" fill="#ffffff" opacity=".18"/>
       </svg>
     `;
   }
@@ -6462,8 +6661,10 @@
       opponentTray.innerHTML = players
         .map((player) => `
           <button class="opponent-chip${player.id === HUMAN ? " is-human" : ""}${player.locked > 0 ? " is-blackout" : ""}${player.officeInfluenceSlow > 0 ? " is-jammed" : ""}${isSpeaking(player) ? " is-speaking" : ""}${assassinatedToday(player) ? " is-assassin" : ""}" type="button" data-leader-player="${player.id}" aria-label="${player.id === HUMAN ? "Open your talent terminal" : `Inspect ${escapeHtml(player.name)} talent tree`}">
-            ${leaderPortraitMarkup(player, "leader-portrait")}
-            ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
+            <span class="leader-portrait-frame">
+              ${leaderPortraitMarkup(player, "leader-portrait")}
+              ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
+            </span>
             ${player.locked > 0 ? '<span class="leader-blackout-mark">X</span>' : ""}
             ${player.officeInfluenceSlow > 0 ? '<span class="leader-jam-mark">JAM</span>' : ""}
             ${isSpeaking(player) ? '<span class="leader-speaking-mark">LIVE</span>' : ""}
@@ -6530,7 +6731,7 @@
     document.body.classList.toggle("player-blackout", !!human && human.locked > 0 && gameStarted && !matchOver);
     document.body.classList.toggle("game-paused", paused && gameStarted && !matchOver);
     if (pauseOverlay) pauseOverlay.classList.toggle("is-visible", paused && gameStarted && !matchOver);
-    ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen && gameStarted && phase === "play" && !paused && !matchOver && !pipOpen && !settingsOpen);
+    ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen && canUseEmotes() && (!gameStarted || !paused));
   }
 
   function renderDebatePowerOverlay(human) {
@@ -10118,14 +10319,13 @@
   }
 
   document.addEventListener("keydown", (event) => {
-    if (!gameStarted || pipOpen) return;
+    if ((!gameStarted && !currentLobby?.id) || pipOpen) return;
     if (event.key === "Escape" && settingsOpen) { event.preventDefault(); closeSettingsPanel(); return; }
     const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "select" || tag === "textarea") return;
     if (String(event.key || "").toLowerCase() === "c") {
       event.preventDefault();
-      if (event.repeat) return;
-      toggleEmoteWheel();
+      toggleEmoteWheel(true);
       return;
     }
     if (emoteWheelOpen) {
@@ -10151,10 +10351,37 @@
     armSlot(idx);
   }, true);
 
+  document.addEventListener("keyup", (event) => {
+    const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (String(event.key || "").toLowerCase() === "c") {
+      event.preventDefault();
+      closeEmoteWheel();
+    }
+  });
+
   selectMenuParty(selectedParty, true);
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", buildHotbar);
   else buildHotbar();
+
+  window.riggedAddBotFromSlot = async (button) => {
+    if (!button || button.disabled) return false;
+    button.disabled = true;
+    button.classList.add('is-adding');
+    const stateLabel = button.querySelector('.lobby-leader-state');
+    const previousLabel = stateLabel?.textContent || '';
+    if (stateLabel) stateLabel.textContent = 'Adding...';
+    try {
+      return await addBotFromLeaderSlot();
+    } finally {
+      if (button.isConnected) {
+        button.disabled = false;
+        button.classList.remove('is-adding');
+        if (stateLabel) stateLabel.textContent = previousLabel || 'Click to Fill';
+      }
+    }
+  };
 
   document.addEventListener("pointerdown", (event) => {
     const wheel = document.getElementById("emoteWheel");
