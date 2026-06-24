@@ -4238,11 +4238,10 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   z-index: 0;
   border-radius: 3px;
   background:
-    radial-gradient(circle at 50% 40%, rgba(248,255,252,0.82) 0, rgba(240,255,248,0.62) 34%, rgba(187,255,221,0.26) 70%, rgba(120,255,183,0.08) 100%),
-    linear-gradient(180deg, rgba(248,255,252,0.34), rgba(170,255,214,0.14));
+    linear-gradient(180deg, rgba(246,255,250,0.88), rgba(214,255,232,0.76));
   box-shadow:
-    0 0 14px rgba(210,255,230,0.32),
-    inset 0 0 12px rgba(255,255,255,0.22);
+    0 0 12px rgba(210,255,230,0.28),
+    inset 0 0 10px rgba(255,255,255,0.28);
   pointer-events: none;
 }
 
