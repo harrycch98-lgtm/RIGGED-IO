@@ -358,7 +358,7 @@
     const profile = player.leaderProfile ? normalizeLeaderProfile(player.leaderProfile) : null;
     const palette = faction.portrait;
     const lobbyEmote = player?.emote?.until > Date.now() && player?.emote?.icon ? `<span class="leader-emote-bubble">${escapeHtml(player.emote.icon)}</span>` : "";
-    return `<span class="leader-portrait-frame"><span class="leader-portrait leader-portrait-mini" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitMiniSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
+    return `<span class="leader-portrait-frame"><span class="leader-portrait" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
   }
 
   function currentLobbyPlayer() {
@@ -6764,7 +6764,7 @@
         .map((player) => `
           <button class="opponent-chip${player.id === HUMAN ? " is-human" : ""}${player.locked > 0 ? " is-blackout" : ""}${player.officeInfluenceSlow > 0 ? " is-jammed" : ""}${isSpeaking(player) ? " is-speaking" : ""}${assassinatedToday(player) ? " is-assassin" : ""}" type="button" data-leader-player="${player.id}" aria-label="${player.id === HUMAN ? "Open your talent terminal" : `Inspect ${escapeHtml(player.name)} talent tree`}">
               <span class="leader-portrait-frame">
-               ${leaderPortraitMarkup(player, "leader-portrait leader-portrait-mini")}
+               ${leaderPortraitMarkup(player, "leader-portrait")}
                 ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
               </span>
             ${player.locked > 0 ? '<span class="leader-blackout-mark">X</span>' : ""}
