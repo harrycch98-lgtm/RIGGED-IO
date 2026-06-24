@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node backend-server.js",
-    "test": "node backend-server.test.js"
+    "test": "node backend-server.test.js",
+    "test:auth": "node auth-routes.test.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
