@@ -4231,6 +4231,26 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   line-height: 0;
 }
 
+.leader-portrait-frame-bright::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(236,255,245,0.45) 0, rgba(236,255,245,0.28) 36%, rgba(157,255,206,0.12) 68%, transparent 100%),
+    linear-gradient(180deg, rgba(238,255,245,0.18), rgba(120,255,183,0.08));
+  box-shadow:
+    0 0 10px rgba(210,255,230,0.18),
+    inset 0 0 8px rgba(255,255,255,0.12);
+  pointer-events: none;
+}
+
+.leader-portrait-frame-bright .leader-portrait {
+  position: relative;
+  z-index: 1;
+}
+
 .lobby-leader-slot.is-picking {
   opacity: .42;
   filter: grayscale(.78) brightness(.58);
