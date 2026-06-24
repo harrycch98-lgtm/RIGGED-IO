@@ -311,17 +311,36 @@
 }
 
 .auth-form,
-.auth-profile {
+.auth-profile,
+.auth-card {
   display: grid;
   gap: 10px;
 }
 
 .auth-form > strong,
-.auth-profile > strong {
+.auth-profile > strong,
+.auth-card > strong {
   color: #34ff86;
   font: 20px/1 "VT323", monospace;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+.auth-card-user {
+  color: #e8fff0;
+  font: 28px/1 "VT323", monospace;
+  letter-spacing: 1px;
+}
+
+.auth-card-actions,
+.auth-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-card-actions > *,
+.auth-modal-actions > * {
+  flex: 1 1 0;
 }
 
 .auth-form label {
@@ -405,6 +424,57 @@
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.auth-modal-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(3px);
+}
+
+.auth-modal {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(52,255,134,.45);
+  background: linear-gradient(180deg, rgba(7, 23, 14, .98), rgba(1, 8, 4, .98));
+  box-shadow: 0 0 0 1px rgba(52,255,134,.08), 0 22px 60px rgba(0,0,0,.62);
+}
+
+.auth-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auth-modal-head strong {
+  color: #34ff86;
+  font: 28px/1 "VT323", monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.auth-modal-close {
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid rgba(52,255,134,.35);
+  color: #78d99b;
+  background: transparent;
+  font: 28px/1 "VT323", monospace;
 }
 
 .lobby-entry-actions header > span {

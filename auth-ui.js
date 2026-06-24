@@ -67,14 +67,35 @@
   function accountMarkup() {
     if (!currentUser) return formMarkup('login');
     return `
-      <section class="auth-profile">
-        <strong>Account</strong>
-        <dl>
+      <section class="auth-card">
+        <strong>Signed in</strong>
+        <div class="auth-card-user">${escapeHtml(currentUser.username)}</div>
+        <div class="auth-card-actions">
+          <button class="auth-submit" type="button" data-auth-open-profile>View profile</button>
+          <button class="auth-link" type="button" data-auth-logout>Logout</button>
+        </div>
+      </section>
+    `;
+  }
+
+  function profileModalMarkup() {
+    if (!currentUser) return '';
+    return `
+      <div class="auth-modal-backdrop" data-auth-close></div>
+      <section class="auth-modal" role="dialog" aria-modal="true" aria-label="Account profile">
+        <header class="auth-modal-head">
+          <strong>Personal Profile</strong>
+          <button class="auth-modal-close" type="button" data-auth-close aria-label="Close profile">×</button>
+        </header>
+        <dl class="auth-profile">
           <div><dt>Username</dt><dd>${escapeHtml(currentUser.username)}</dd></div>
           <div><dt>Email</dt><dd>${escapeHtml(currentUser.email)}</dd></div>
           <div><dt>Created</dt><dd>${new Date(currentUser.created_at).toLocaleDateString()}</dd></div>
         </dl>
-        <button class="auth-submit" type="button" data-auth-logout>Logout</button>
+        <div class="auth-modal-actions">
+          <button class="auth-link" type="button" data-auth-close>Back</button>
+          <button class="auth-submit" type="button" data-auth-logout>Logout</button>
+        </div>
       </section>
     `;
   }
@@ -89,6 +110,19 @@
     if (!mount) return;
     mount.innerHTML = mode ? formMarkup(mode) : accountMarkup();
     if (status) status.textContent = currentUser ? currentUser.username : 'Guest';
+  }
+
+  function closeProfileModal() {
+    document.querySelector('.auth-modal-shell')?.remove();
+  }
+
+  function openProfileModal() {
+    if (!currentUser) return;
+    closeProfileModal();
+    const shell = document.createElement('div');
+    shell.className = 'auth-modal-shell';
+    shell.innerHTML = profileModalMarkup();
+    document.body.appendChild(shell);
   }
 
   async function submitAuth(form) {
@@ -121,8 +155,11 @@
   document.addEventListener('click', async (event) => {
     const modeButton = event.target.closest('[data-auth-mode]');
     if (modeButton) render(modeButton.dataset.authMode);
+    if (event.target.closest('[data-auth-open-profile]')) openProfileModal();
+    if (event.target.closest('[data-auth-close]')) closeProfileModal();
     if (event.target.closest('[data-auth-logout]')) {
       await apiFetch('/auth/logout', { method: 'POST' }).catch(() => {});
+      closeProfileModal();
       setSession(null, null);
     }
   });
