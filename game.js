@@ -4419,19 +4419,10 @@
     const brow = p?.gender === "fem"
       ? '<rect x="27" y="35" width="10" height="2" fill="#09140d"/><rect x="43" y="35" width="10" height="2" fill="#09140d"/>'
       : '<rect x="26" y="34" width="12" height="3" fill="#09140d"/><rect x="42" y="34" width="12" height="3" fill="#09140d"/>';
-    const mouth = p?.gender === "fem"
-      ? '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/><rect x="35" y="53" width="10" height="1" fill="#d98990" opacity=".55"/>'
-      : '<rect x="34" y="54" width="12" height="3" fill="#7a2f2f"/>';
-    const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/><rect x="33" y="63" width="14" height="2" fill="#000" opacity=".03"/>';
+    const mouth = '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/>';
+    const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/>';
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
-          <defs>
-            <linearGradient id="riggedPortraitSkinShade" x1="0" x2="1">
-              <stop offset="0" stop-color="var(--skin)"/>
-              <stop offset=".82" stop-color="var(--skin)"/>
-              <stop offset="1" stop-color="#000000" stop-opacity=".05"/>
-            </linearGradient>
-          </defs>
         <rect x="6" y="6" width="68" height="84" fill="rgba(255,255,255,0.03)" stroke="var(--party)" stroke-width="3"/>
         ${backdrop}
         <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".03"/>
@@ -4439,8 +4430,7 @@
         ${neck}
         <rect x="19" y="28" width="6" height="14" fill="var(--skin)" opacity=".96"/>
         <rect x="55" y="28" width="6" height="14" fill="var(--skin)" opacity=".96"/>
-        <rect x="22" y="24" width="36" height="38" fill="url(#riggedPortraitSkinShade)"/>
-        <rect x="24" y="26" width="32" height="8" fill="#ffffff" opacity=".1"/>
+        <rect x="22" y="24" width="36" height="38" fill="var(--skin)"/>
         ${hair}
         ${hat}
         ${brow}
@@ -4517,7 +4507,6 @@
         <rect x="34" y="56" width="12" height="24" fill="var(--accent)" opacity=".78"/>
         <rect x="31" y="51" width="18" height="8" fill="var(--skin)"/>
         <rect x="20" y="20" width="40" height="32" fill="var(--skin)"/>
-        <rect x="22" y="22" width="36" height="6" fill="#ffffff" opacity=".12"/>
         ${hairBand}
         ${hat}
         <rect x="29" y="34" width="6" height="6" fill="#08140d"/>
