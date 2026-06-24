@@ -358,7 +358,7 @@
     const profile = player.leaderProfile ? normalizeLeaderProfile(player.leaderProfile) : null;
     const palette = faction.portrait;
     const lobbyEmote = player?.emote?.until > Date.now() && player?.emote?.icon ? `<span class="leader-emote-bubble">${escapeHtml(player.emote.icon)}</span>` : "";
-    return `<span class="leader-portrait-frame"><span class="leader-portrait" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
+    return `<span class="leader-portrait-frame"><span class="leader-portrait leader-portrait-mini" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitMiniSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
   }
 
   function currentLobbyPlayer() {
