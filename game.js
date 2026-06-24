@@ -4394,24 +4394,25 @@
     const mouth = p?.gender === "fem"
       ? '<rect x="34" y="54" width="12" height="3" fill="#8c3840"/><rect x="35" y="53" width="10" height="1" fill="#d98990" opacity=".55"/>'
       : '<rect x="34" y="54" width="12" height="3" fill="#7a2f2f"/>';
-    const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/><rect x="33" y="63" width="14" height="3" fill="#000" opacity=".08"/>';
+    const neck = '<rect x="33" y="58" width="14" height="8" fill="var(--skin)"/><rect x="33" y="63" width="14" height="2" fill="#000" opacity=".03"/>';
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
-        <defs>
-          <linearGradient id="riggedPortraitSkinShade" x1="0" x2="1">
-            <stop offset="0" stop-color="var(--skin)"/>
-            <stop offset="1" stop-color="#000000" stop-opacity=".13"/>
-          </linearGradient>
-        </defs>
+          <defs>
+            <linearGradient id="riggedPortraitSkinShade" x1="0" x2="1">
+              <stop offset="0" stop-color="var(--skin)"/>
+              <stop offset=".82" stop-color="var(--skin)"/>
+              <stop offset="1" stop-color="#000000" stop-opacity=".05"/>
+            </linearGradient>
+          </defs>
         <rect x="6" y="6" width="68" height="84" fill="rgba(0,0,0,0.28)" stroke="var(--party)" stroke-width="3"/>
         ${backdrop}
         <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".06"/>
         ${outfit}
         ${neck}
-        <rect x="19" y="28" width="6" height="14" fill="var(--skin)" opacity=".88"/>
-        <rect x="55" y="28" width="6" height="14" fill="var(--skin)" opacity=".88"/>
+        <rect x="19" y="28" width="6" height="14" fill="var(--skin)" opacity=".96"/>
+        <rect x="55" y="28" width="6" height="14" fill="var(--skin)" opacity=".96"/>
         <rect x="22" y="24" width="36" height="38" fill="url(#riggedPortraitSkinShade)"/>
-        <rect x="24" y="26" width="32" height="8" fill="#ffffff" opacity=".06"/>
+        <rect x="24" y="26" width="32" height="8" fill="#ffffff" opacity=".1"/>
         ${hair}
         ${hat}
         ${brow}
@@ -4419,8 +4420,8 @@
         <rect x="46" y="40" width="5" height="5" fill="#06120c"/>
         <rect x="30" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
         <rect x="47" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
-        <rect x="38" y="43" width="4" height="9" fill="#000" opacity=".09"/>
-        <rect x="37" y="49" width="6" height="2" fill="#000" opacity=".12"/>
+        <rect x="38" y="43" width="4" height="9" fill="#000" opacity=".04"/>
+        <rect x="37" y="49" width="6" height="2" fill="#000" opacity=".06"/>
         ${eyewear}
         ${facial}
         ${mouth}
