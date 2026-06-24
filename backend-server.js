@@ -6,7 +6,7 @@ const { attachAuthToRequest, handleAuthRoute, requireAuth } = require('./auth');
 const { initDb } = require('./db');
 
 const PORT = Number(process.env.PORT || 3001);
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://riggedio.com,https://www.riggedio.com';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://riggedio.com,https://www.riggedio.com,https://harrycch98-lgtm.github.io';
 const LOBBY_HEARTBEAT_TIMEOUT = 20_000;
 const GAME_PRESENCE_TIMEOUT = 8_000;
 const lobbies = new Map();
