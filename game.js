@@ -799,7 +799,6 @@
           <div class="lobby-entry-logo"><img src="rigged-logo.png?v=2" alt="" aria-hidden="true"><strong>RIGGED</strong></div>
           <h1><span>Your vote matters</span><em>Unless we disagree</em></h1>
           <section class="lobby-entry-account-slot" aria-label="Account access">
-            <div class="auth-strip"><span>Account</span><strong id="authStatus">Guest</strong></div>
             <div id="authPanel" class="auth-panel"></div>
           </section>
         </section>
@@ -823,6 +822,12 @@
             <b>→</b>
           </button>
 
+          <button id="browseBtn" class="lobby-route" type="button">
+            <span class="lobby-route-icon">◎</span>
+            <span><strong>Browse Public Lobbies</strong><small>Scan live public rooms and join instantly</small></span>
+            <b>→</b>
+          </button>
+
           <div id="lobbyContent" class="lobby-entry-content" hidden></div>
           <footer><span>RIGGED://MATCHMAKING</span><span>BUILD 31.2</span></footer>
         </section>
@@ -836,9 +841,11 @@
     setTimeout(() => {
       const hostBtn = document.getElementById('hostBtn');
       const joinBtn = document.getElementById('joinBtn');
+      const browseBtn = document.getElementById('browseBtn');
       const lobbySoundToggle = document.getElementById('lobbySoundToggle');
       if (hostBtn) hostBtn.onclick = showHostLobby;
       if (joinBtn) joinBtn.onclick = showJoinLobby;
+      if (browseBtn) browseBtn.onclick = showBrowseLobbies;
       if (lobbySoundToggle) lobbySoundToggle.onclick = toggleNewsSound;
       bindPlayerNameInput();
       syncSoundButtons();

@@ -85,7 +85,6 @@
       <section class="auth-modal" role="dialog" aria-modal="true" aria-label="Account profile">
         <header class="auth-modal-head">
           <strong>Personal Profile</strong>
-          <button class="auth-modal-close" type="button" data-auth-close aria-label="Close profile">×</button>
         </header>
         <dl class="auth-profile">
           <div><dt>Username</dt><dd>${escapeHtml(currentUser.username)}</dd></div>
