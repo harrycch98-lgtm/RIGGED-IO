@@ -4420,8 +4420,6 @@
         <rect x="46" y="40" width="5" height="5" fill="#06120c"/>
         <rect x="30" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
         <rect x="47" y="41" width="2" height="2" fill="#effff4" opacity=".5"/>
-        <rect x="38" y="43" width="4" height="9" fill="#000" opacity=".04"/>
-        <rect x="37" y="49" width="6" height="2" fill="#000" opacity=".06"/>
         ${eyewear}
         ${facial}
         ${mouth}
