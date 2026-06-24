@@ -4458,6 +4458,51 @@
     `;
   }
 
+  function leaderPortraitMiniSvg(index, profile = null) {
+    const p = profile ? normalizeLeaderProfile(profile) : null;
+    const hairBand = p ? ({
+      mogul: '<rect x="18" y="14" width="44" height="10" fill="var(--hair)"/><rect x="40" y="10" width="18" height="6" fill="var(--hair)"/>',
+      supreme: '<rect x="24" y="10" width="32" height="16" fill="var(--hair)"/>',
+      secretary: '<rect x="18" y="15" width="44" height="9" fill="var(--hair)"/><rect x="18" y="24" width="8" height="12" fill="var(--hair)"/>',
+      strongman: '<rect x="24" y="17" width="32" height="6" fill="var(--hair)"/>',
+      chancellor: '<rect x="17" y="15" width="46" height="9" fill="var(--hair)"/><rect x="17" y="24" width="9" height="18" fill="var(--hair)"/><rect x="54" y="24" width="9" height="18" fill="var(--hair)"/>',
+      disruptor: '<rect x="16" y="12" width="48" height="12" fill="var(--hair)"/><rect x="18" y="24" width="8" height="11" fill="var(--hair)"/><rect x="54" y="24" width="8" height="11" fill="var(--hair)"/>',
+      anarcho: '<rect x="14" y="12" width="52" height="12" fill="var(--hair)"/><rect x="14" y="24" width="11" height="20" fill="var(--hair)"/><rect x="55" y="24" width="11" height="20" fill="var(--hair)"/>',
+      iron_helmet: '<rect x="16" y="12" width="48" height="16" fill="var(--hair)"/><rect x="20" y="28" width="40" height="7" fill="var(--hair)"/>',
+      charmer: '<rect x="18" y="15" width="44" height="8" fill="var(--hair)"/><rect x="33" y="11" width="21" height="6" fill="var(--hair)"/>',
+      academic: '<rect x="16" y="24" width="8" height="18" fill="var(--hair)"/><rect x="56" y="24" width="8" height="18" fill="var(--hair)"/>',
+      orator: '<rect x="22" y="18" width="36" height="5" fill="var(--hair)"/>',
+      generalissimo: '<rect x="17" y="13" width="46" height="10" fill="var(--hair)"/><rect x="24" y="9" width="32" height="4" fill="var(--accent)"/>',
+      demagogue: '<rect x="17" y="16" width="46" height="7" fill="var(--hair)"/>',
+      steel: '<rect x="16" y="13" width="48" height="10" fill="var(--hair)"/><rect x="22" y="9" width="36" height="6" fill="var(--hair)"/>',
+    }[p.hairstyle] || '<rect x="18" y="15" width="44" height="8" fill="var(--hair)"/>') : '<rect x="18" y="15" width="44" height="8" fill="var(--hair)"/>';
+    const facial = p ? ({
+      toothbrush: '<rect x="35" y="46" width="10" height="3" fill="var(--hair)"/>',
+      walrus: '<rect x="28" y="45" width="24" height="4" fill="var(--hair)"/>',
+      mustache: '<rect x="30" y="45" width="20" height="3" fill="var(--hair)"/>',
+      goatee: '<rect x="35" y="46" width="10" height="3" fill="var(--hair)"/><rect x="37" y="50" width="6" height="6" fill="var(--hair)"/>',
+      beard: '<rect x="26" y="45" width="28" height="11" fill="var(--hair)" opacity=".88"/>',
+    }[p.facialHair] || "") : "";
+    return `
+      <svg viewBox="0 0 80 96" aria-hidden="true">
+        <rect x="8" y="8" width="64" height="80" fill="#f2fff7" opacity=".05" stroke="var(--party)" stroke-width="2"/>
+        <rect x="16" y="56" width="48" height="24" fill="var(--suit)"/>
+        <rect x="34" y="56" width="12" height="24" fill="var(--accent)" opacity=".78"/>
+        <rect x="31" y="51" width="18" height="8" fill="var(--skin)"/>
+        <rect x="20" y="20" width="40" height="32" fill="var(--skin)"/>
+        <rect x="22" y="22" width="36" height="6" fill="#ffffff" opacity=".12"/>
+        ${hairBand}
+        <rect x="29" y="34" width="6" height="6" fill="#08140d"/>
+        <rect x="45" y="34" width="6" height="6" fill="#08140d"/>
+        <rect x="31" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
+        <rect x="47" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
+        ${facial}
+        <rect x="34" y="46" width="12" height="3" fill="#94444b"/>
+        <rect x="14" y="74" width="52" height="5" fill="var(--party)"/>
+      </svg>
+    `;
+  }
+
   function makePartyNameDraw() {
     const used = new Set();
     return FACTIONS.map((_, index) => {
@@ -9132,7 +9177,10 @@
     const factionIndex = Number.isFinite(player.factionIndex) ? player.factionIndex : 0;
     const profile = player.leaderProfile ? normalizeLeaderProfile(player.leaderProfile) : null;
     const skin = profile?.skin || palette.skin;
-    return `<span class="${className}" style="--party:${player.color};--skin:${skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>`;
+    const svg = String(className || "").includes("leader-portrait-mini")
+      ? leaderPortraitMiniSvg(factionIndex, profile)
+      : leaderPortraitSvg(factionIndex, profile);
+    return `<span class="${className}" style="--party:${player.color};--skin:${skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${svg}</span>`;
   }
 
   function pipMascot(player) {

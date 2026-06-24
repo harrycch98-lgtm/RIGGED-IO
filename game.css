@@ -4427,7 +4427,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 }
 
 .leader-portrait-mini svg {
-  filter: brightness(1.55) saturate(0.92) contrast(0.9);
+  filter: brightness(1.15) saturate(0.98) contrast(1);
 }
 
 .party-card-visual,
