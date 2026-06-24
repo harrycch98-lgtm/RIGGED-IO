@@ -187,6 +187,7 @@
   let lastPresentedBroadcastEventId = 0;
   let victoryPresentationToken = 0;
   let emoteWheelOpen = false;
+  let emoteWheelPointer = { x: 180, y: 180 };
 
   function stopPublicLobbyPolling() {
     if (publicLobbyPollTimer) window.clearInterval(publicLobbyPollTimer);
@@ -2402,10 +2403,28 @@
         </div>
       `;
     mapStage?.appendChild(wheel);
-    wheel.querySelectorAll("[data-emote-id]").forEach((button) => {
-      button.addEventListener("click", () => sendEmote(String(button.dataset.emoteId || "")));
-    });
-    return wheel;
+      wheel.querySelectorAll("[data-emote-id]").forEach((button) => {
+        button.addEventListener("click", () => sendEmote(String(button.dataset.emoteId || "")));
+      });
+      return wheel;
+    }
+
+  function positionEmoteWheel() {
+    const wheel = document.getElementById("emoteWheel");
+    if (!wheel || !mapStage) return;
+    const stageRect = mapStage.getBoundingClientRect();
+    const wheelSize = Math.min(360, Math.max(220, Math.min(stageRect.width, stageRect.height, window.innerWidth) - 32));
+    const half = wheelSize / 2;
+    const minX = 12 + half;
+    const maxX = Math.max(minX, stageRect.width - 12 - half);
+    const minY = 12 + half;
+    const maxY = Math.max(minY, stageRect.height - 12 - half);
+    const localX = Math.max(minX, Math.min(maxX, Number(emoteWheelPointer.x) || stageRect.width / 2));
+    const localY = Math.max(minY, Math.min(maxY, Number(emoteWheelPointer.y) || stageRect.height / 2));
+    wheel.style.width = `${wheelSize}px`;
+    wheel.style.height = `${wheelSize}px`;
+    wheel.style.left = `${localX}px`;
+    wheel.style.top = `${localY}px`;
   }
 
   function closeEmoteWheel() {
@@ -2416,6 +2435,7 @@
   function toggleEmoteWheel(force = null) {
     if (!canUseEmotes()) return;
     emoteWheelOpen = force === null ? !emoteWheelOpen : !!force;
+    if (emoteWheelOpen) positionEmoteWheel();
     ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen);
   }
 
@@ -2957,12 +2977,20 @@
     }
   });
   canvas.addEventListener("mousemove", (event) => {
-    const screen = canvasScreenPoint(event);
-    mouseScreen = screen;
-    if (Camera.isDragging) {
-      const nextX = screen.x - Camera.startX;
-      const nextY = screen.y - Camera.startY;
-      if (Math.abs(nextX - Camera.offsetX) + Math.abs(nextY - Camera.offsetY) > 2) Camera.dragMoved = true;
+      const screen = canvasScreenPoint(event);
+      mouseScreen = screen;
+      if (mapStage) {
+        const stageRect = mapStage.getBoundingClientRect();
+        emoteWheelPointer = {
+          x: event.clientX - stageRect.left,
+          y: event.clientY - stageRect.top,
+        };
+        if (emoteWheelOpen) positionEmoteWheel();
+      }
+      if (Camera.isDragging) {
+        const nextX = screen.x - Camera.startX;
+        const nextY = screen.y - Camera.startY;
+        if (Math.abs(nextX - Camera.offsetX) + Math.abs(nextY - Camera.offsetY) > 2) Camera.dragMoved = true;
       Camera.offsetX = nextX;
       Camera.offsetY = nextY;
       clampCamera();
@@ -4404,9 +4432,9 @@
               <stop offset="1" stop-color="#000000" stop-opacity=".05"/>
             </linearGradient>
           </defs>
-        <rect x="6" y="6" width="68" height="84" fill="rgba(0,0,0,0.28)" stroke="var(--party)" stroke-width="3"/>
+        <rect x="6" y="6" width="68" height="84" fill="rgba(255,255,255,0.03)" stroke="var(--party)" stroke-width="3"/>
         ${backdrop}
-        <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".06"/>
+        <rect x="10" y="10" width="60" height="76" fill="var(--accent)" opacity=".03"/>
         ${outfit}
         ${neck}
         <rect x="19" y="28" width="6" height="14" fill="var(--skin)" opacity=".96"/>
