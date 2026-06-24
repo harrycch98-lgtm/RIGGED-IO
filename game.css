@@ -1044,7 +1044,7 @@ canvas:focus-visible {
 
 .player-row {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) auto;
+  grid-template-columns: 14px minmax(0, 1fr) auto auto;
   gap: 7px;
   align-items: center;
   padding: 6px;
@@ -1071,6 +1071,16 @@ canvas:focus-visible {
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.player-emote {
+  min-width: 28px;
+  padding: 1px 5px;
+  border: 1px solid rgba(52,255,134,.28);
+  color: #e8fff0;
+  background: rgba(52,255,134,.08);
+  font: 15px/1 "VT323", "Share Tech Mono", monospace;
+  text-align: center;
 }
 
 .player-row:nth-child(n + 6) {
@@ -1464,6 +1474,94 @@ canvas:focus-visible {
   font-size:22px;
   line-height:1;
   text-shadow:0 0 8px rgba(255,90,61,.8), 1px 1px 0 #020202;
+}
+.leader-emote-bubble{
+  position:absolute;
+  left:50%;
+  top:-8px;
+  z-index:5;
+  min-width:28px;
+  padding:1px 6px 2px;
+  border:1px solid rgba(52,255,134,.55);
+  background:rgba(3,16,8,.94);
+  color:#effff4;
+  font:16px/1 "VT323","Share Tech Mono",monospace;
+  text-align:center;
+  transform:translateX(-50%);
+  text-shadow:0 0 8px rgba(52,255,134,.45);
+  box-shadow:0 0 14px rgba(52,255,134,.18);
+}
+
+.emote-wheel{
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  z-index:230;
+  width:min(440px, calc(100% - 32px));
+  display:none;
+  gap:12px;
+  padding:14px;
+  border:1px solid rgba(52,255,134,.45);
+  background:linear-gradient(180deg, rgba(6,24,13,.96), rgba(1,9,5,.96));
+  box-shadow:0 0 24px rgba(52,255,134,.22), inset 0 0 14px rgba(52,255,134,.08);
+  transform:translateX(-50%);
+}
+
+.emote-wheel.is-open{
+  display:grid;
+}
+
+.emote-wheel-head{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.emote-wheel-head strong{
+  color:#34ff86;
+  font:24px/1 "VT323","Share Tech Mono",monospace;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.emote-wheel-head span{
+  color:#7eb893;
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.emote-wheel-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:10px;
+}
+
+.emote-wheel-option{
+  min-height:72px;
+  display:grid;
+  place-items:center;
+  gap:4px;
+  padding:8px !important;
+}
+
+.emote-wheel-key{
+  color:#7eb893;
+  font-size:10px;
+  letter-spacing:1px;
+}
+
+.emote-wheel-icon{
+  color:#effff4;
+  font:26px/1 "VT323","Share Tech Mono",monospace;
+}
+
+.emote-wheel-label{
+  color:#34ff86;
+  font-size:11px;
+  letter-spacing:.8px;
+  text-transform:uppercase;
 }
 .leader-intel-tip{
   width:260px;

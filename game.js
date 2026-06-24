@@ -12,6 +12,15 @@
   const REST_BACKEND_URL = String(URL_PARAMS.get('api') || CONFIG.apiUrl || localStorage.getItem('rigged.apiUrl') || DEFAULT_REST_BACKEND_URL).replace(/\/+$/, '');
   const BACKEND_URL = String(URL_PARAMS.get('ws') || CONFIG.wsUrl || localStorage.getItem('rigged.wsUrl') || DEFAULT_WS_BACKEND_URL).replace(/\/+$/, '');
   const NETWORK_PAUSE_X = -987654321;
+  const EMOTE_DURATION = 3.2;
+  const EMOTE_OPTIONS = [
+    { id: "cheer", label: "Cheer", icon: "★" },
+    { id: "laugh", label: "Laugh", icon: "☻" },
+    { id: "rage", label: "Rage", icon: "⚡" },
+    { id: "sus", label: "Sus", icon: "?" },
+    { id: "gg", label: "GG", icon: "GG" },
+    { id: "rip", label: "RIP", icon: "RIP" },
+  ];
   let ws = null;
   let playerId = null;
   let lastPositionSync = 0;
@@ -177,6 +186,7 @@
   let latestBroadcastEvent = null;
   let lastPresentedBroadcastEventId = 0;
   let victoryPresentationToken = 0;
+  let emoteWheelOpen = false;
 
   function stopPublicLobbyPolling() {
     if (publicLobbyPollTimer) window.clearInterval(publicLobbyPollTimer);
@@ -1571,6 +1581,32 @@
     return true;
   }
 
+  function emoteOptionById(id) {
+    return EMOTE_OPTIONS.find((option) => option.id === id) || null;
+  }
+
+  function triggerEmote(playerId, emoteId) {
+    const player = players[playerId];
+    const option = emoteOptionById(emoteId);
+    if (!player || !option) return false;
+    player.emoteId = option.id;
+    player.emoteIcon = option.icon;
+    player.emoteUntil = EMOTE_DURATION;
+    if (playerId === HUMAN) showToast(`Emote sent: ${option.label}`, "compact");
+    return true;
+  }
+
+  function sendEmote(emoteId) {
+    if (!gameStarted || phase !== "play" || matchOver) return false;
+    if (HUMAN !== undefined && isServerLobbyGuest() && routeGuestGameCommand("emitEmote", [emoteId])) {
+      closeEmoteWheel();
+      return true;
+    }
+    const sent = triggerEmote(HUMAN, emoteId);
+    if (sent) closeEmoteWheel();
+    return sent;
+  }
+
   function executeRemoteGameCommand(entry) {
     const lobbyIndex = currentLobby?.players?.findIndex((player) => player.id === entry.playerId) ?? -1;
     if (lobbyIndex < 0 || !players[lobbyIndex] || players[lobbyIndex].isBot) return;
@@ -1601,6 +1637,7 @@
         if (paused) hydrateSettingsControls();
         if (pauseButton) pauseButton.textContent = paused ? 'Resume Everyone' : 'Pause';
       },
+      emitEmote: () => triggerEmote(lobbyIndex, String(args[0] || "")),
     };
     const handler = handlers[entry.command?.type];
     if (!handler) return;
@@ -2214,6 +2251,46 @@
   const toast = document.querySelector("#toast");
   const partyRoster = document.querySelector("#partyRoster");
   const talentPreview = document.querySelector("#talentPreview");
+
+  function ensureEmoteWheel() {
+    let wheel = document.getElementById("emoteWheel");
+    if (wheel) return wheel;
+    wheel = document.createElement("section");
+    wheel.id = "emoteWheel";
+    wheel.className = "emote-wheel";
+    wheel.setAttribute("aria-label", "Emote wheel");
+    wheel.innerHTML = `
+      <div class="emote-wheel-head">
+        <strong>Emote Wheel</strong>
+        <span>Press C or ESC to close</span>
+      </div>
+      <div class="emote-wheel-grid">
+        ${EMOTE_OPTIONS.map((option, index) => `
+          <button class="emote-wheel-option" type="button" data-emote-id="${option.id}">
+            <span class="emote-wheel-key">${index + 1}</span>
+            <span class="emote-wheel-icon">${option.icon}</span>
+            <span class="emote-wheel-label">${option.label}</span>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    mapStage?.appendChild(wheel);
+    wheel.querySelectorAll("[data-emote-id]").forEach((button) => {
+      button.addEventListener("click", () => sendEmote(String(button.dataset.emoteId || "")));
+    });
+    return wheel;
+  }
+
+  function closeEmoteWheel() {
+    emoteWheelOpen = false;
+    ensureEmoteWheel()?.classList.remove("is-open");
+  }
+
+  function toggleEmoteWheel(force = null) {
+    if (!gameStarted || phase !== "play" || pipOpen || settingsOpen || matchOver) return;
+    emoteWheelOpen = force === null ? !emoteWheelOpen : !!force;
+    ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen);
+  }
 
   function updatePlayerIdentityLabel() {
     if (!playerIdentityLabel) return;
@@ -3626,6 +3703,9 @@
       officeInfluenceSlow: 0,
       speechCooldown: 0,
       speechCooldownTotal: 0,
+      emoteId: "",
+      emoteIcon: "",
+      emoteUntil: 0,
       leaderDeaths: 0,
       assassinDay: -1,
       assassinationsToday: 0,
@@ -4421,6 +4501,11 @@
       player.officeInfluenceSlow = Math.max(0, Number(player.officeInfluenceSlow || 0) - dt);
       player.speechCooldown = Math.max(0, Number(player.speechCooldown || 0) - dt);
       if (player.speechCooldown <= 0) player.speechCooldownTotal = 0;
+      player.emoteUntil = Math.max(0, Number(player.emoteUntil || 0) - dt);
+      if (player.emoteUntil <= 0) {
+        player.emoteId = "";
+        player.emoteIcon = "";
+      }
       player.signalLeakBoost = Math.max(0, (player.signalLeakBoost || 0) - dt);
       tickFunding(player, dt);
       tickAction(player, dt);
@@ -4510,6 +4595,11 @@
       player.officeInfluenceSlow = Math.max(0, Number(player.officeInfluenceSlow || 0) - dt);
       player.speechCooldown = Math.max(0, Number(player.speechCooldown || 0) - dt);
       if (player.speechCooldown <= 0) player.speechCooldownTotal = 0;
+      player.emoteUntil = Math.max(0, Number(player.emoteUntil || 0) - dt);
+      if (player.emoteUntil <= 0) {
+        player.emoteId = "";
+        player.emoteIcon = "";
+      }
       if (!player?.action) return;
       player.action.left = Math.max(0, Number(player.action.left || 0) - dt);
       if (player.action.vulnerableLeft !== undefined) {
@@ -6373,6 +6463,7 @@
         .map((player) => `
           <button class="opponent-chip${player.id === HUMAN ? " is-human" : ""}${player.locked > 0 ? " is-blackout" : ""}${player.officeInfluenceSlow > 0 ? " is-jammed" : ""}${isSpeaking(player) ? " is-speaking" : ""}${assassinatedToday(player) ? " is-assassin" : ""}" type="button" data-leader-player="${player.id}" aria-label="${player.id === HUMAN ? "Open your talent terminal" : `Inspect ${escapeHtml(player.name)} talent tree`}">
             ${leaderPortraitMarkup(player, "leader-portrait")}
+            ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
             ${player.locked > 0 ? '<span class="leader-blackout-mark">X</span>' : ""}
             ${player.officeInfluenceSlow > 0 ? '<span class="leader-jam-mark">JAM</span>' : ""}
             ${isSpeaking(player) ? '<span class="leader-speaking-mark">LIVE</span>' : ""}
@@ -6384,6 +6475,7 @@
       <div class="player-row">
         <span class="player-dot" style="background:${player.color}"></span>
         <span class="player-name">${player.name}</span>
+        ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="player-emote">${escapeHtml(player.emoteIcon)}</span>` : ""}
         <span class="player-count">${player.homeBase >= 0 ? states[player.homeBase].abbr : "--"}</span>
       </div>
     `).join("");
@@ -6438,6 +6530,7 @@
     document.body.classList.toggle("player-blackout", !!human && human.locked > 0 && gameStarted && !matchOver);
     document.body.classList.toggle("game-paused", paused && gameStarted && !matchOver);
     if (pauseOverlay) pauseOverlay.classList.toggle("is-visible", paused && gameStarted && !matchOver);
+    ensureEmoteWheel()?.classList.toggle("is-open", emoteWheelOpen && gameStarted && phase === "play" && !paused && !matchOver && !pipOpen && !settingsOpen);
   }
 
   function renderDebatePowerOverlay(human) {
@@ -10029,7 +10122,22 @@
     if (event.key === "Escape" && settingsOpen) { event.preventDefault(); closeSettingsPanel(); return; }
     const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (String(event.key || "").toLowerCase() === "c") {
+      event.preventDefault();
+      if (event.repeat) return;
+      toggleEmoteWheel();
+      return;
+    }
+    if (emoteWheelOpen) {
+      const numericIndex = Number.parseInt(String(event.key || ""), 10);
+      if (numericIndex >= 1 && numericIndex <= EMOTE_OPTIONS.length) {
+        event.preventDefault();
+        sendEmote(EMOTE_OPTIONS[numericIndex - 1].id);
+        return;
+      }
+    }
     if (event.key === "Escape" && rivalTalentPlayerId >= 0) { event.preventDefault(); closeRivalTalentViewer(); return; }
+    if (event.key === "Escape" && emoteWheelOpen) { event.preventDefault(); closeEmoteWheel(); return; }
     if (event.key === "Escape" && armedAction) { event.preventDefault(); clearArmed(); return; }
     if (event.key === "Escape") {
       event.preventDefault();
@@ -10047,6 +10155,13 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", buildHotbar);
   else buildHotbar();
+
+  document.addEventListener("pointerdown", (event) => {
+    const wheel = document.getElementById("emoteWheel");
+    if (!emoteWheelOpen || !wheel) return;
+    if (wheel.contains(event.target)) return;
+    closeEmoteWheel();
+  });
 
   // Render matchmaking before the browser's first paint. Keeping the party
   // selector hidden until a lobby route opens prevents a startup flash.
