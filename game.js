@@ -4483,21 +4483,51 @@
       goatee: '<rect x="35" y="46" width="10" height="3" fill="var(--hair)"/><rect x="37" y="50" width="6" height="6" fill="var(--hair)"/>',
       beard: '<rect x="26" y="45" width="28" height="11" fill="var(--hair)" opacity=".88"/>',
     }[p.facialHair] || "") : "";
+    const hat = p ? ({
+      keffiyeh: '<rect x="18" y="12" width="44" height="14" fill="#eef3ea"/><rect x="16" y="22" width="10" height="22" fill="#eef3ea"/><rect x="54" y="22" width="10" height="22" fill="#eef3ea"/><rect x="21" y="15" width="38" height="4" fill="var(--party)" opacity=".74"/>',
+      campaign_cap: '<rect x="22" y="12" width="36" height="11" fill="var(--party)"/><rect x="52" y="21" width="14" height="4" fill="var(--party)"/><rect x="35" y="15" width="10" height="5" fill="var(--accent)"/>',
+      fedora: '<rect x="15" y="19" width="50" height="5" fill="var(--hair)"/><rect x="24" y="10" width="32" height="13" fill="var(--hair)"/><rect x="25" y="18" width="30" height="3" fill="var(--accent)"/>',
+      beret: '<rect x="18" y="12" width="42" height="12" fill="var(--party)"/><rect x="47" y="9" width="10" height="6" fill="var(--party)"/><rect x="33" y="11" width="5" height="3" fill="var(--accent)"/>',
+      cowboy: '<rect x="12" y="20" width="56" height="5" fill="#8b5a2b"/><rect x="26" y="10" width="28" height="14" fill="#9b6a36"/><rect x="30" y="18" width="20" height="3" fill="var(--accent)"/>',
+      military_cap: '<rect x="20" y="12" width="40" height="11" fill="#1f3b2d"/><rect x="53" y="21" width="13" height="4" fill="#1f3b2d"/><rect x="36" y="15" width="8" height="5" fill="var(--accent)"/>',
+      visor: '<rect x="20" y="14" width="40" height="6" fill="var(--party)"/><rect x="50" y="20" width="16" height="4" fill="var(--party)"/><rect x="26" y="10" width="28" height="3" fill="var(--accent)"/>',
+    }[p.hat] || "") : "";
+    const eyewear = p ? ({
+      aviators: '<rect x="24" y="31" width="12" height="8" rx="2" fill="#e8fff0" opacity=".14" stroke="#d2ffe8" stroke-width="2"/><rect x="44" y="31" width="12" height="8" rx="2" fill="#e8fff0" opacity=".14" stroke="#d2ffe8" stroke-width="2"/><rect x="36" y="34" width="8" height="2" fill="#baf7d6"/>',
+      wireframes: '<rect x="24" y="31" width="12" height="8" rx="2" fill="none" stroke="#d2ffe8" stroke-width="2"/><rect x="44" y="31" width="12" height="8" rx="2" fill="none" stroke="#d2ffe8" stroke-width="2"/><rect x="36" y="34" width="8" height="2" fill="#d2ffe8"/>',
+      visor_scope: '<rect x="20" y="30" width="40" height="10" rx="3" fill="#e8fff0" opacity=".08" stroke="var(--party)" stroke-width="2"/><rect x="25" y="33" width="12" height="4" fill="var(--accent)" opacity=".42"/>',
+      square_frames: '<rect x="23" y="31" width="13" height="8" fill="#e8fff0" opacity=".08" stroke="#0d2218" stroke-width="3"/><rect x="44" y="31" width="13" height="8" fill="#e8fff0" opacity=".08" stroke="#0d2218" stroke-width="3"/><rect x="36" y="34" width="8" height="2" fill="#0d2218"/>',
+    }[p.eyewear] || "") : "";
+    const pin = p ? ({
+      party_star: '<path d="M58 66 L60 70 L65 70 L61 73 L63 78 L58 75 L53 78 L55 73 L51 70 L56 70 Z" fill="#ffd76a" stroke="#24180a" stroke-width="1"/>',
+      victory_ribbon: '<rect x="55" y="65" width="7" height="6" fill="#f0eadc"/><path d="M56 71 L58 76 L61 71" fill="var(--party)"/>',
+      flag_bar: '<rect x="54" y="66" width="11" height="4" fill="#f0eadc"/><rect x="54" y="66" width="4" height="4" fill="var(--party)"/><rect x="58" y="66" width="3" height="4" fill="var(--accent)"/><rect x="61" y="66" width="4" height="4" fill="#0a1610"/>',
+      signal_chip: '<rect x="55" y="65" width="8" height="8" fill="#07140d" stroke="var(--party)" stroke-width="2"/><rect x="58" y="68" width="2" height="2" fill="var(--accent)"/>',
+    }[p.pin] || "") : "";
+    const backdrop = p ? ({
+      seal: '<circle cx="40" cy="34" r="20" fill="var(--party)" opacity=".12"/><circle cx="40" cy="34" r="15" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".4"/>',
+      rays: '<path d="M40 8 V84 M10 16 L70 76 M70 16 L10 76 M8 34 H72" stroke="var(--party)" stroke-width="2" opacity=".1"/>',
+      columns: '<rect x="14" y="18" width="7" height="48" fill="var(--party)" opacity=".11"/><rect x="59" y="18" width="7" height="48" fill="var(--party)" opacity=".11"/><rect x="12" y="14" width="11" height="4" fill="var(--accent)" opacity=".15"/><rect x="57" y="14" width="11" height="4" fill="var(--accent)" opacity=".15"/>',
+    }[p.backdrop] || '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".08"/>') : '<path d="M12 18 H68 M12 30 H68 M12 42 H68 M12 54 H68 M22 10 V86 M40 10 V86 M58 10 V86" stroke="var(--party)" stroke-width="2" opacity=".08"/>';
     return `
       <svg viewBox="0 0 80 96" aria-hidden="true">
         <rect x="8" y="8" width="64" height="80" fill="#f2fff7" opacity=".05" stroke="var(--party)" stroke-width="2"/>
+        ${backdrop}
         <rect x="16" y="56" width="48" height="24" fill="var(--suit)"/>
         <rect x="34" y="56" width="12" height="24" fill="var(--accent)" opacity=".78"/>
         <rect x="31" y="51" width="18" height="8" fill="var(--skin)"/>
         <rect x="20" y="20" width="40" height="32" fill="var(--skin)"/>
         <rect x="22" y="22" width="36" height="6" fill="#ffffff" opacity=".12"/>
         ${hairBand}
+        ${hat}
         <rect x="29" y="34" width="6" height="6" fill="#08140d"/>
         <rect x="45" y="34" width="6" height="6" fill="#08140d"/>
         <rect x="31" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
         <rect x="47" y="35" width="2" height="2" fill="#ffffff" opacity=".55"/>
+        ${eyewear}
         ${facial}
         <rect x="34" y="46" width="12" height="3" fill="#94444b"/>
+        ${pin}
         <rect x="14" y="74" width="52" height="5" fill="var(--party)"/>
       </svg>
     `;
