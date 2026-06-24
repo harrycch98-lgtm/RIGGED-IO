@@ -110,14 +110,13 @@
     setSession(data.user, data.token);
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const actions = document.querySelector('.lobby-entry-actions');
-    if (actions && !document.getElementById('authPanel')) {
-      actions.insertAdjacentHTML('afterbegin', '<div class="auth-strip"><span>Account</span><strong id="authStatus">Guest</strong></div><div id="authPanel" class="auth-panel"></div>');
-    }
+  function initAuthUi() {
     render();
     loadMe().catch(() => render());
-  });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAuthUi, { once: true });
+  else initAuthUi();
 
   document.addEventListener('click', async (event) => {
     const modeButton = event.target.closest('[data-auth-mode]');
@@ -144,6 +143,7 @@
     fetch: apiFetch,
     getToken: () => localStorage.getItem(TOKEN_KEY),
     getUser: () => currentUser,
+    refresh: render,
     requireAccount: async () => currentUser || loadMe(),
   };
 })();

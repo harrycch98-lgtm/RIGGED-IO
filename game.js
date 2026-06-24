@@ -798,13 +798,10 @@
           <div class="lobby-entry-kicker"><span></span> Multiplayer Command Network</div>
           <div class="lobby-entry-logo"><img src="rigged-logo.png?v=2" alt="" aria-hidden="true"><strong>RIGGED</strong></div>
           <h1><span>Your vote matters</span><em>Unless we disagree</em></h1>
-          <p>Assemble your campaign crew, choose a leader, and fight for every electoral vote in a live shared match.</p>
-          <div class="lobby-entry-status">
-            <div><span class="status-pulse"></span><small>Network</small><strong>Online</strong></div>
-            <div><small>Protocol</small><strong>Realtime</strong></div>
-            <div><small>Access</small><strong>Invite Code</strong></div>
-          </div>
-          <div class="lobby-entry-signal" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <section class="lobby-entry-account-slot" aria-label="Account access">
+            <div class="auth-strip"><span>Account</span><strong id="authStatus">Guest</strong></div>
+            <div id="authPanel" class="auth-panel"></div>
+          </section>
         </section>
 
         <section class="lobby-entry-actions">
@@ -833,6 +830,7 @@
     `;
     
     document.body.appendChild(lobbyUI);
+    window.RiggedAuth?.refresh?.();
     
     // Add event listeners AFTER elements are created
     setTimeout(() => {
