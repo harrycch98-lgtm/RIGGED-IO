@@ -1889,15 +1889,15 @@
     }
   }
   // ===== END LOBBY SYSTEM =====
-  const MATCH_SECONDS = 960;
-  const CAMPAIGN_TOTAL_DAYS = 100;
+  const MATCH_SECONDS = 900;
+  const CAMPAIGN_TOTAL_DAYS = 90;
   const CAMPAIGN_DAY_SECONDS = MATCH_SECONDS / CAMPAIGN_TOTAL_DAYS;
   const MATCH_MODES = {
-    campaign100: { id: "campaign100", label: "100 Days", timed: true, days: 100, seconds: MATCH_SECONDS },
+    campaign100: { id: "campaign100", label: "90 Days", timed: true, days: 90, seconds: MATCH_SECONDS },
   };
   const HOME_BASE_SECONDS = 60;
   const NEWS_INTERVAL = 85;
-  const WORLD_EVENT_FIRST_DAYS_TO_ELECTION = 87;
+  const WORLD_EVENT_FIRST_DAYS_TO_ELECTION = 79;
   const WORLD_EVENT_LAST_DAY_BUFFER = 10;
   const WORLD_EVENT_MIN_GAP_DAYS = 5;
   const WORLD_EVENT_MAX_GAP_DAYS = 10;
@@ -1916,8 +1916,8 @@
   const DEBATE_SECONDS = CAMPAIGN_DAY_SECONDS * 0.5;
   const DEBATE_WIN_BONUS = 15;
   const WORLD_DEBATE_WIN_BONUS = 22;
-  const EARLY_STAGE_DAYS_LEFT = 66;
-  const LATE_STAGE_DAYS_LEFT = 33;
+  const EARLY_STAGE_DAYS_LEFT = 79;
+  const LATE_STAGE_DAYS_LEFT = 40;
   const MID_STAGE_MONEY_MIN_EV = 10;
   const MID_STAGE_MONEY_MAX_EV = 20;
   const MID_STAGE_MONEY_PER_EV_DAY = 150;
@@ -6309,8 +6309,8 @@
   }
 
   function bgmTrackForCampaignStage(stage = campaignStage()) {
-    if (stage === "late") return "end2";
-    if (stage === "mid") return "mid2";
+    if (stage === "late") return "end1";
+    if (stage === "mid") return "mid1";
     return "early";
   }
 
@@ -6957,7 +6957,6 @@
     renderUpgradeStatus(human);
     renderDebatePowerOverlay(human);
     renderTalentDraftOverlay();
-    renderHomeBaseConfirmOverlay();
     if (calendarCountdown) {
       const calendarCard = calendarCountdown.closest(".election-calendar");
       if (calendarCard) calendarCard.style.display = "block";
