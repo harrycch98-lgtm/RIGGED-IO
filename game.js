@@ -487,11 +487,142 @@
       const partyName = player.isBot ? 'Anonymous Party' : (player.party || faction.name || 'Unnamed Party');
       const role = player.isBot ? 'BOT' : player.host ? 'HOST' : ready ? 'READY' : 'PICKING';
       const stateClass = player.isBot ? 'is-bot' : ready ? 'is-ready' : 'is-picking';
+      const isSelfLobbyPlayer = !player.isBot && player.id === currentPlayerId;
+      const menuOpen = isSelfLobbyPlayer && lobbyLeaderMenuPlayerId === String(player.id);
       const botAction = player.isBot && isCurrentServerLobbyHost(lobby)
         ? `<button class="lobby-bot-open" type="button" data-remove-lobby-bot="${escapeHtml(player.id)}">Empty Slot</button>`
         : '';
-      return `<article class="lobby-leader-slot ${stateClass}" style="--slot-color:${color}" title="${escapeHtml(playerName)} — ${escapeHtml(partyName)}"><span class="lobby-leader-player">${escapeHtml(playerName)}</span>${lobbyLeaderPortraitMarkup(player, factionIndex)}<span class="lobby-leader-party">${escapeHtml(partyName)}</span><span class="lobby-leader-name">${escapeHtml(leaderName)}</span><span class="lobby-leader-state">${role}</span>${botAction}</article>`;
+      const portraitMarkup = isSelfLobbyPlayer
+        ? `<button class="lobby-leader-portrait-button" type="button" data-lobby-self-portrait="${escapeHtml(String(player.id))}" aria-expanded="${menuOpen ? "true" : "false"}" title="Open appearance actions">${lobbyLeaderPortraitMarkup(player, factionIndex)}<span class="lobby-portrait-edit-hint">Edit</span></button>`
+        : lobbyLeaderPortraitMarkup(player, factionIndex);
+      const menuMarkup = menuOpen
+        ? `<div class="lobby-leader-popout"><button class="lobby-leader-popout-button" type="button" data-lobby-edit-appearance="${escapeHtml(String(player.id))}">Edit Appearance</button></div>`
+        : '';
+      return `<article class="lobby-leader-slot ${stateClass}${menuOpen ? " is-menu-open" : ""}" style="--slot-color:${color}" title="${escapeHtml(playerName)} — ${escapeHtml(partyName)}"><span class="lobby-leader-player">${escapeHtml(playerName)}</span>${portraitMarkup}<span class="lobby-leader-party">${escapeHtml(partyName)}</span><span class="lobby-leader-name">${escapeHtml(leaderName)}</span><span class="lobby-leader-state">${role}</span>${botAction}${menuMarkup}</article>`;
     }).join('');
+  }
+
+  function lobbyAppearanceEditorMarkup(index = selectedParty) {
+    const faction = factionForMenu(index);
+    const profile = normalizeLeaderProfile(selectedLeaderProfile);
+    selectedLeaderProfile = profile;
+    const visual = visualById(profile.hairstyle);
+    const hat = LEADER_HATS.find((item) => item.id === profile.hat) || LEADER_HATS[0];
+    const outfit = LEADER_OUTFITS.find((item) => item.id === profile.outfit) || LEADER_OUTFITS[0];
+    const eyewear = eyewearById(profile.eyewear);
+    const pin = pinById(profile.pin);
+    const expression = expressionById(profile.expression);
+    const flag = flagById(profile.flag);
+    const palette = faction.portrait || FACTIONS[index].portrait;
+    return `
+      <div class="lobby-appearance-shell">
+        <div class="lobby-appearance-head">
+          <div>
+            <span>Lobby // Appearance Editor</span>
+            <strong>${escapeHtml(playerDisplayName())}</strong>
+            <p>You stay in the current lobby while editing your leader look.</p>
+          </div>
+          <button class="secondary-button" type="button" data-lobby-appearance-close>Back to Lobby</button>
+        </div>
+        <section class="leader-customizer" aria-label="Lobby leader appearance editor">
+          <div class="leader-custom-preview">
+            <span class="leader-custom-visual">
+              ${partyFlagSvg(index, profile.flag)}
+              <span class="leader-portrait" style="--party:${faction.color};--skin:${profile.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">
+                ${leaderPortraitSvg(index, profile)}
+              </span>
+              <button class="secondary-button leader-random-button" type="button" data-lobby-appearance-randomize title="Random appearance and flag" aria-label="Random appearance and flag">&#8635;</button>
+            </span>
+            <div>
+              <strong>Leader Appearance</strong>
+              <span>${escapeHtml(flag.label)} - ${escapeHtml(visual.label)} - ${escapeHtml(hat.label)} - ${escapeHtml(outfit.label)}</span>
+              <span>${escapeHtml(eyewear.label)} - ${escapeHtml(pin.label)} - ${escapeHtml(expression.label)}</span>
+              <span>${escapeHtml(flag.desc)} - ${escapeHtml(visual.desc)} - ${escapeHtml(expression.desc)}</span>
+              <em>${profile.facialLocked ? "Facial hair locked: " + FACIAL_HAIR.find((item) => item.id === profile.facialHair).label : "Facial hair unlocked"}</em>
+            </div>
+          </div>
+          <div class="leader-custom-controls">
+            <label><span>Flag</span><select data-lobby-leader-custom="flag">${optionsHtml(PARTY_FLAGS, profile.flag)}</select></label>
+            <label><span>Hat</span><select data-lobby-leader-custom="hat">${optionsHtml(LEADER_HATS, profile.hat)}</select></label>
+            <label><span>Face Expression</span><select data-lobby-leader-custom="expression">${optionsHtml(LEADER_EXPRESSIONS, profile.expression)}</select></label>
+            <label><span>Skin</span><select data-lobby-leader-custom="skin">${skinOptionsHtml(profile.skin)}</select></label>
+            <label><span>Hairstyle</span><select data-lobby-leader-custom="hairstyle">${optionsHtml(LEADER_VISUALS, profile.hairstyle)}</select></label>
+            <label><span>Eyewear</span><select data-lobby-leader-custom="eyewear">${optionsHtml(LEADER_EYEWEAR, profile.eyewear)}</select></label>
+            <label><span>Facial Hair</span><select data-lobby-leader-custom="facialHair" ${profile.facialLocked ? "disabled" : ""}>${optionsHtml(FACIAL_HAIR, profile.facialHair)}</select></label>
+            <label><span>Lapel Pin</span><select data-lobby-leader-custom="pin">${optionsHtml(LEADER_PINS, profile.pin)}</select></label>
+            <label><span>Outfit</span><select data-lobby-leader-custom="outfit">${optionsHtml(LEADER_OUTFITS, profile.outfit)}</select></label>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  function ensureLobbyAppearanceOverlay() {
+    if (lobbyAppearanceOverlay?.isConnected) return lobbyAppearanceOverlay;
+    lobbyAppearanceOverlay = document.createElement("div");
+    lobbyAppearanceOverlay.className = "lobby-appearance-overlay";
+    lobbyAppearanceOverlay.hidden = true;
+    lobbyAppearanceOverlay.innerHTML = `
+      <div class="lobby-appearance-backdrop" data-lobby-appearance-close></div>
+      <div class="lobby-appearance-panel" role="dialog" aria-modal="true" aria-label="Edit your lobby appearance"></div>
+    `;
+    lobbyAppearanceOverlay.addEventListener("click", (event) => {
+      if (event.target.closest("[data-lobby-appearance-close]")) {
+        closeLobbyAppearanceEditor();
+        return;
+      }
+      if (event.target.closest("[data-lobby-appearance-randomize]")) {
+        selectedLeaderProfile = createRandomLeaderProfile();
+        renderPartyRoster();
+        renderTalentPreview(selectedParty);
+        renderLobbyLeaderStrip();
+        renderLobbyAppearanceEditor();
+        scheduleServerLobbyPlayerUpdate();
+      }
+    });
+    lobbyAppearanceOverlay.addEventListener("change", (event) => {
+      const control = event.target.closest("[data-lobby-leader-custom]");
+      if (!control) return;
+      selectedLeaderProfile = normalizeLeaderProfile({
+        ...selectedLeaderProfile,
+        [control.dataset.lobbyLeaderCustom]: control.value,
+      });
+      if (multiplayerState.enabled) {
+        if (multiplayerState.host && multiplayerState.countdown > 0) cancelLobbyCountdown("Countdown canceled. Leader changed.");
+        multiplayerState.localReady = false;
+      }
+      if (isServerLobbyGuest()) multiplayerState.localReady = false;
+      renderPartyRoster();
+      renderTalentPreview(selectedParty);
+      renderLobbyLeaderStrip();
+      renderLobbyAppearanceEditor();
+      if (multiplayerState.enabled) publishLobbyPresence("select");
+      scheduleServerLobbyPlayerUpdate();
+    });
+    document.body.appendChild(lobbyAppearanceOverlay);
+    return lobbyAppearanceOverlay;
+  }
+
+  function renderLobbyAppearanceEditor() {
+    const overlay = ensureLobbyAppearanceOverlay();
+    const panel = overlay.querySelector(".lobby-appearance-panel");
+    if (panel) panel.innerHTML = lobbyAppearanceEditorMarkup(selectedParty);
+  }
+
+  function openLobbyAppearanceEditor() {
+    lobbyLeaderMenuPlayerId = "";
+    renderLobbyLeaderStrip();
+    renderLobbyAppearanceEditor();
+    if (lobbyAppearanceOverlay) {
+      lobbyAppearanceOverlay.hidden = false;
+      lobbyAppearanceOverlay.classList.add("is-open");
+    }
+  }
+
+  function closeLobbyAppearanceEditor() {
+    if (!lobbyAppearanceOverlay) return;
+    lobbyAppearanceOverlay.classList.remove("is-open");
+    lobbyAppearanceOverlay.hidden = true;
   }
 
   async function removeBotFromServerLobby(botId) {
@@ -2498,6 +2629,8 @@
   let partyNameDraw = makePartyNameDraw();
   let customPartyNames = {};
   let selectedLeaderProfile = normalizeLeaderProfile(loadLeaderProfile() || { gender: "neutral", skin: SKIN_PRESETS[1], hairstyle: "charmer", facialHair: "none", hat: "none", outfit: "campaign_suit" });
+  let lobbyLeaderMenuPlayerId = "";
+  let lobbyAppearanceOverlay = null;
   let selectedState = 2;
   let armedAction = null;
   let selectedPanelOpen = true;
@@ -2708,6 +2841,18 @@
   }
   if (lobbyLeaderStrip) {
     lobbyLeaderStrip.addEventListener('click', async (event) => {
+      const selfPortrait = event.target.closest('[data-lobby-self-portrait]');
+      if (selfPortrait) {
+        const playerId = String(selfPortrait.dataset.lobbySelfPortrait || "");
+        lobbyLeaderMenuPlayerId = lobbyLeaderMenuPlayerId === playerId ? "" : playerId;
+        renderLobbyLeaderStrip();
+        return;
+      }
+      const appearanceButton = event.target.closest('[data-lobby-edit-appearance]');
+      if (appearanceButton) {
+        openLobbyAppearanceEditor();
+        return;
+      }
       const addButton = event.target.closest('[data-add-lobby-bot]');
       if (addButton && !addButton.disabled) {
         addButton.disabled = true;
@@ -2740,7 +2885,13 @@
         return;
       }
       const button = event.target.closest('[data-remove-lobby-bot]');
-      if (!button || button.disabled) return;
+      if (!button || button.disabled) {
+        if (lobbyLeaderMenuPlayerId) {
+          lobbyLeaderMenuPlayerId = "";
+          renderLobbyLeaderStrip();
+        }
+        return;
+      }
       button.disabled = true;
       const removed = await removeBotFromServerLobby(button.dataset.removeLobbyBot);
       if (!removed && button.isConnected) button.disabled = false;
@@ -4360,6 +4511,7 @@
       </div>
     `;
     updateLobbyStartButtons();
+    if (lobbyAppearanceOverlay?.classList.contains("is-open")) renderLobbyAppearanceEditor();
   }
 
   function talentTierClass(tierIndex) {
