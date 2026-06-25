@@ -4341,7 +4341,7 @@
     const index = Math.max(0, Number(talent.artIndex) || 0);
     const col = index % 3;
     const row = Math.floor(index / 3);
-    return `background-image:url('${talent.atlas}');background-size:300% 200%;background-position:${col * 50}% ${row * 100}%;`;
+    return `--atlas-x:${col};--atlas-y:${row};`;
   }
 
   function talentTreeBadge(tree) {
@@ -4368,7 +4368,7 @@
       : "";
     return `
         <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}" data-talent-tree="${escapeHtml(String(talent.tree || ""))}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
-          <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
+          <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"><img class="talent-draft-card-atlas" src="${escapeHtml(talent.atlas)}" alt=""></div>` : talentCardArtSvg(talent)}</div>
         <div class="talent-draft-card-body">
           <div class="talent-draft-card-top">
             <div class="talent-draft-card-topline">

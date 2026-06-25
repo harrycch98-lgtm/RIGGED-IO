@@ -5162,13 +5162,25 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   width:100%;
   aspect-ratio:3 / 2;
   border:1px solid rgba(255,255,255,.08);
-  background-color:#020804;
-  background-repeat:no-repeat;
-  background-position:center;
+  background:
+    linear-gradient(180deg, rgba(10,30,20,.92), rgba(7,18,13,.92));
   image-rendering:auto;
   box-shadow:inset 0 0 18px rgba(52,255,134,.08), 0 0 18px rgba(52,255,134,.08);
   position:relative;
   isolation:isolate;
+  overflow:hidden;
+}
+.talent-draft-card-atlas{
+  position:absolute;
+  inset:0 auto auto 0;
+  width:300%;
+  height:200%;
+  max-width:none;
+  display:block;
+  object-fit:fill;
+  z-index:1;
+  transform:translate(calc(var(--atlas-x, 0) * -33.333333%), calc(var(--atlas-y, 0) * -50%));
+  transform-origin:top left;
 }
 .talent-draft-card-art::before,
 .talent-draft-card-art-image::before,
@@ -5187,8 +5199,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 }
 .talent-draft-card-art-image::before{
   background:
-    radial-gradient(circle at center, transparent 35%, rgba(0,0,0,.22) 100%),
-    linear-gradient(180deg, rgba(52,255,134,.05), rgba(0,0,0,0) 24%, rgba(0,0,0,.18) 100%);
+    linear-gradient(180deg, rgba(52,255,134,.03), rgba(0,0,0,0) 18%, rgba(255,255,255,.03) 100%);
+  z-index:2;
 }
 .talent-draft-card-art-image::after{
   inset:6px;
@@ -5197,7 +5209,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     linear-gradient(125deg, rgba(255,255,255,.1), transparent 18%, transparent 82%, rgba(255,255,255,.06)),
     repeating-linear-gradient(180deg, rgba(255,255,255,.03) 0 1px, transparent 1px 4px);
   mix-blend-mode:screen;
-  opacity:.55;
+  opacity:.2;
+  z-index:2;
 }
 .talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-card-art{
   background:
