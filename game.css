@@ -1074,13 +1074,17 @@ canvas:focus-visible {
 }
 
 .player-emote {
-  min-width: 28px;
-  padding: 1px 5px;
-  border: 1px solid rgba(52,255,134,.28);
-  color: #e8fff0;
-  background: rgba(52,255,134,.08);
-  font: 15px/1 "VT323", "Share Tech Mono", monospace;
-  text-align: center;
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.player-emote-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 
 .player-row:nth-child(n + 6) {
@@ -1496,6 +1500,12 @@ canvas:focus-visible {
   box-shadow:0 0 18px rgba(52,255,134,.22);
   pointer-events:none;
 }
+.leader-emote-image{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+}
 
 .emote-wheel{
   position:absolute;
@@ -1553,8 +1563,10 @@ canvas:focus-visible {
 }
 
 .emote-wheel-icon{
-  color:#effff4;
-  font:26px/1 "VT323","Share Tech Mono",monospace;
+  width:42px;
+  height:42px;
+  display:block;
+  object-fit:contain;
 }
 
 .emote-wheel-label{

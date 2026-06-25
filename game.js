@@ -14,12 +14,12 @@
   const NETWORK_PAUSE_X = -987654321;
   const EMOTE_DURATION = 3.2;
   const EMOTE_OPTIONS = [
-    { id: "cheer", label: "Cheer", icon: "★" },
-    { id: "laugh", label: "Laugh", icon: "☻" },
-    { id: "rage", label: "Rage", icon: "⚡" },
-    { id: "sus", label: "Sus", icon: "?" },
-    { id: "gg", label: "GG", icon: "GG" },
-    { id: "rip", label: "RIP", icon: "RIP" },
+    { id: "cheer", label: "Cheer", asset: "emote-cheer.png" },
+    { id: "laugh", label: "Laugh", asset: "emote-laugh.png" },
+    { id: "rage", label: "Rage", asset: "emote-rage.png" },
+    { id: "sus", label: "Sus", asset: "emote-sus.png" },
+    { id: "gg", label: "GG", asset: "emote-gg.png" },
+    { id: "rip", label: "RIP", asset: "emote-rip.png" },
   ];
   let ws = null;
   let playerId = null;
@@ -357,7 +357,7 @@
     const faction = factionForMenu(factionIndex);
     const profile = player.leaderProfile ? normalizeLeaderProfile(player.leaderProfile) : null;
     const palette = faction.portrait;
-    const lobbyEmote = player?.emote?.until > Date.now() && player?.emote?.icon ? `<span class="leader-emote-bubble">${escapeHtml(player.emote.icon)}</span>` : "";
+    const lobbyEmote = player?.emote?.until > Date.now() ? renderLeaderEmoteMarkup(player.emote.id, player.emote.icon, player.emote.label || player.emote.id || "emote") : "";
     return `<span class="leader-portrait-frame leader-portrait-frame-bright"><span class="leader-portrait" style="--party:${faction.color};--skin:${profile?.skin || palette.skin};--hair:${palette.hair};--suit:${palette.suit};--accent:${palette.accent};display:block;overflow:hidden">${leaderPortraitSvg(factionIndex, profile)}</span>${lobbyEmote}</span>`;
   }
 
@@ -380,7 +380,8 @@
     if (!lobbyPlayer || !option) return false;
     lobbyPlayer.emote = {
       id: option.id,
-      icon: option.icon,
+      icon: option.asset,
+      label: option.label,
       until: Date.now() + EMOTE_DURATION * 1000,
     };
     renderLobbyLeaderStrip();
@@ -414,7 +415,8 @@
           leaderProfile: normalizeLeaderProfile(selectedLeaderProfile),
           emote: {
             id: option.id,
-            icon: option.icon,
+            icon: option.asset,
+            label: option.label,
             until: Date.now() + EMOTE_DURATION * 1000,
           },
         }),
@@ -1688,12 +1690,28 @@
     return EMOTE_OPTIONS.find((option) => option.id === id) || null;
   }
 
+  function emoteAssetById(id, fallback = "") {
+    return emoteOptionById(id)?.asset || String(fallback || "");
+  }
+
+  function renderLeaderEmoteMarkup(emoteId, fallbackAsset = "", label = "emote") {
+    const asset = emoteAssetById(emoteId, fallbackAsset);
+    if (!asset) return "";
+    return `<span class="leader-emote-bubble"><img class="leader-emote-image" src="${escapeHtml(asset)}" alt="${escapeHtml(label)}"></span>`;
+  }
+
+  function renderInlineEmoteMarkup(emoteId, fallbackAsset = "", label = "emote") {
+    const asset = emoteAssetById(emoteId, fallbackAsset);
+    if (!asset) return "";
+    return `<span class="player-emote"><img class="player-emote-image" src="${escapeHtml(asset)}" alt="${escapeHtml(label)}"></span>`;
+  }
+
   function triggerEmote(playerId, emoteId) {
     const player = players[playerId];
     const option = emoteOptionById(emoteId);
     if (!player || !option) return false;
     player.emoteId = option.id;
-    player.emoteIcon = option.icon;
+    player.emoteIcon = option.asset;
     player.emoteUntil = EMOTE_DURATION;
     if (playerId === HUMAN) showToast(`Emote sent: ${option.label}`, "compact");
     return true;
@@ -2397,7 +2415,7 @@
           ${EMOTE_OPTIONS.map((option, index) => `
             <button class="emote-wheel-option emote-wheel-option-${index + 1}" type="button" data-emote-id="${option.id}">
               <span class="emote-wheel-key">${index + 1}</span>
-              <span class="emote-wheel-icon">${option.icon}</span>
+              <img class="emote-wheel-icon" src="${option.asset}" alt="">
               <span class="emote-wheel-label">${option.label}</span>
             </button>
           `).join("")}
@@ -3899,10 +3917,10 @@
       disruptCooldown: 0,
       officeSlowCooldown: 0,
       officeInfluenceSlow: 0,
-      speechCooldown: 0,
+              speechCooldown: 0,
       speechCooldownTotal: 0,
       emoteId: lobbyMember?.emote?.until > Date.now() ? String(lobbyMember.emote.id || "") : "",
-      emoteIcon: lobbyMember?.emote?.until > Date.now() ? String(lobbyMember.emote.icon || "") : "",
+      emoteIcon: lobbyMember?.emote?.until > Date.now() ? emoteAssetById(String(lobbyMember.emote.id || ""), String(lobbyMember.emote.icon || "")) : "",
       emoteUntil: lobbyMember?.emote?.until > Date.now() ? Math.max(0, (Number(lobbyMember.emote.until) - Date.now()) / 1000) : 0,
       leaderDeaths: 0,
       assassinDay: -1,
@@ -7103,7 +7121,7 @@
           <button class="opponent-chip${player.id === HUMAN ? " is-human" : ""}${player.locked > 0 ? " is-blackout" : ""}${player.officeInfluenceSlow > 0 ? " is-jammed" : ""}${isSpeaking(player) ? " is-speaking" : ""}${assassinatedToday(player) ? " is-assassin" : ""}" type="button" data-leader-player="${player.id}" aria-label="${player.id === HUMAN ? "Open your talent terminal" : `Inspect ${escapeHtml(player.name)} talent tree`}">
               <span class="leader-portrait-frame leader-portrait-frame-bright">
                ${leaderPortraitMarkup(player, "leader-portrait")}
-                ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="leader-emote-bubble">${escapeHtml(player.emoteIcon)}</span>` : ""}
+                ${player.emoteUntil > 0 ? renderLeaderEmoteMarkup(player.emoteId, player.emoteIcon, player.emoteId || "emote") : ""}
               </span>
             ${player.locked > 0 ? '<span class="leader-blackout-mark">X</span>' : ""}
             ${player.officeInfluenceSlow > 0 ? '<span class="leader-jam-mark">JAM</span>' : ""}
@@ -7116,7 +7134,7 @@
       <div class="player-row">
         <span class="player-dot" style="background:${player.color}"></span>
         <span class="player-name">${player.name}</span>
-        ${player.emoteUntil > 0 && player.emoteIcon ? `<span class="player-emote">${escapeHtml(player.emoteIcon)}</span>` : ""}
+        ${player.emoteUntil > 0 ? renderInlineEmoteMarkup(player.emoteId, player.emoteIcon, player.emoteId || "emote") : ""}
         <span class="player-count">${player.homeBase >= 0 ? states[player.homeBase].abbr : "--"}</span>
       </div>
     `).join("");
