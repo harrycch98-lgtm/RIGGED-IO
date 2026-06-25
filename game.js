@@ -8492,9 +8492,9 @@
   // ===================== PIP-CAMPAIGN 3000 : TALENT TERMINAL =====================
   const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
   const TALENT_ATLAS_BY_TREE = {
-    oligarchy: "talent-card-atlases/oligarchy-atlas.png?v=1",
+    oligarchy: "talent-card-atlases/oligarchy-atlas.svg?v=2",
     populist: "talent-card-atlases/populist-atlas.svg?v=2",
-    syndicate: "talent-card-atlases/syndicate-atlas.png?v=1",
+    syndicate: "talent-card-atlases/syndicate-atlas.svg?v=2",
     vanguard: "talent-card-atlases/vanguard-atlas.svg?v=2",
     futurist: "talent-card-atlases/futurist-atlas.svg?v=2",
   machine: "talent-card-atlases/machine-atlas.svg?v=2",
