@@ -8663,8 +8663,65 @@
       }))
     )
   );
+  const TALENT_ART_INDEX_BY_ID = {
+    aggressive_portfolio: 1,
+    hostile_liquidation: 2,
+    rapid_construction: 3,
+    private_security: 4,
+    shadow_lobbying: 0,
+    executive_immunity: 5,
+
+    echo_chamber: 0,
+    crowdsourcing: 1,
+    general_strike: 3,
+    human_shield: 2,
+    great_awakening: 4,
+    decentralized_hive: 5,
+
+    system_overclock: 0,
+    signal_scrambler: 1,
+    backdoor_exploits: 2,
+    ghost_servers: 3,
+    skynet_protocol: 4,
+    blackout_bypass: 5,
+
+    fortified_outposts: 0,
+    martial_law_taxes: 1,
+    bureaucratic_hold: 3,
+    checkpoint_grid: 2,
+    iron_curtain: 4,
+    retributive_strike: 5,
+
+    model_polling: 0,
+    hype_train: 1,
+    fast_track_zoning: 2,
+    prime_time_rhetoric: 3,
+    cascade_effect: 4,
+    continuity_office: 5,
+
+    picket_lines: 1,
+    wildcat_cells: 4,
+    assembly_line: 0,
+    red_tape_trap: 2,
+    strike_fund: 5,
+    backlash_cells: 3,
+
+    dark_fiber: 0,
+    signal_leak: 1,
+    listening_posts: 2,
+    media_magnate: 3,
+    trend_engine: 4,
+    broadcast_moat: 5,
+
+    compliance_forms: 3,
+    rainy_day_fund: 0,
+    permit_stack: 1,
+    media_retainer: 2,
+    budget_surplus: 4,
+    double_demolition: 5,
+  };
   TALENT_CARD_LIBRARY.forEach((talent) => {
-    talent.artIndex = talent.tierIndex * 2 + (talent.sourceSide === "right" ? 1 : 0);
+    talent.artIndex = TALENT_ART_INDEX_BY_ID[talent.id] ?? (talent.tierIndex * 2 + (talent.sourceSide === "right" ? 1 : 0));
     talent.atlas = TALENT_ATLAS_BY_TREE[talent.treeId] || "";
   });
   const TALENT_CARDS_BY_TIER = TALENT_REQ_LEVEL.map((_, tierIndex) =>
