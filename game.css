@@ -5204,12 +5204,31 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   justify-content:space-between;
   gap:10px;
 }
+.talent-draft-card-topline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
 .talent-draft-tier,
 .talent-draft-chip{
   color:#9df6c0;
   font:1rem/1 "VT323", monospace;
   letter-spacing:1px;
   text-transform:uppercase;
+}
+.talent-draft-tree-badge{
+  display:inline-grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.04);
+  color:#f5fff9;
+  font:1rem/1 "VT323", monospace;
+  letter-spacing:0;
+  box-shadow:inset 0 0 10px rgba(255,255,255,.03);
+  flex:0 0 auto;
 }
 .talent-draft-chip{
   color:#d8fbff;
@@ -5229,37 +5248,53 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   border-bottom:1px solid rgba(255,255,255,.08);
 }
 .talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-tree-badge{
   color:#ffe08a;
 }
 .talent-draft-card[data-talent-tree="populist"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="populist"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-tree-badge{
   color:#b8efff;
 }
 .talent-draft-card[data-talent-tree="syndicate"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-tree-badge{
   color:#baffd8;
 }
 .talent-draft-card[data-talent-tree="vanguard"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-tree-badge{
   color:#ffc6bb;
 }
 .talent-draft-card[data-talent-tree="futurist"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="futurist"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-tree-badge{
   color:#dac7ff;
 }
 .talent-draft-card[data-talent-tree="machine"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="machine"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-tree-badge{
   color:#ffd1a1;
 }
 .talent-draft-card[data-talent-tree="signal"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="signal"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-tree-badge{
   color:#c4fff7;
 }
 .talent-draft-card[data-talent-tree="ledger"] .talent-draft-origin,
-.talent-draft-card[data-talent-tree="ledger"] .talent-draft-tier{
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-tier,
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-tree-badge{
   color:#fff4d3;
 }
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-tree-badge{ border-color:rgba(255,224,138,.42); background:rgba(255,208,83,.09); }
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-tree-badge{ border-color:rgba(184,239,255,.42); background:rgba(105,216,255,.09); }
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-tree-badge{ border-color:rgba(186,255,216,.42); background:rgba(69,255,158,.09); }
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-tree-badge{ border-color:rgba(255,198,187,.42); background:rgba(255,122,104,.09); }
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-tree-badge{ border-color:rgba(218,199,255,.42); background:rgba(199,173,255,.09); }
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-tree-badge{ border-color:rgba(255,209,161,.42); background:rgba(255,155,61,.09); }
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-tree-badge{ border-color:rgba(196,255,247,.42); background:rgba(127,244,234,.09); }
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-tree-badge{ border-color:rgba(255,244,211,.42); background:rgba(255,244,199,.09); }
 .talent-draft-card p{
   margin:0;
   color:#bde6ce;

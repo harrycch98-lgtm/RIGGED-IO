@@ -4339,10 +4339,24 @@
     return `background-image:url('${talent.atlas}');background-size:300% 200%;background-position:${col * 50}% ${row * 100}%;`;
   }
 
+  function talentTreeBadge(tree) {
+    switch (String(tree || "")) {
+      case "oligarchy": return "$";
+      case "populist": return "M";
+      case "syndicate": return "N";
+      case "vanguard": return "+";
+      case "futurist": return ">";
+      case "machine": return "*";
+      case "signal": return "~";
+      case "ledger": return "=";
+      default: return "#";
+    }
+  }
+
   function talentCardMarkup(talent, options = {}) {
-    const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
-    const picked = !!options.picked;
-    const compact = !!options.compact;
+      const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
+      const picked = !!options.picked;
+      const compact = !!options.compact;
     const action = options.action || "";
     const countdown = options.countdown ? `<div class="talent-draft-chip">${escapeHtml(options.countdown)}</div>` : "";
       return `
@@ -4350,7 +4364,10 @@
           <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
         <div class="talent-draft-card-body">
           <div class="talent-draft-card-top">
-            <span class="talent-draft-tier">${TALENT_TIER_LABELS[tierIndex]}</span>
+            <div class="talent-draft-card-topline">
+              <span class="talent-draft-tree-badge" aria-hidden="true">${escapeHtml(talentTreeBadge(talent.tree))}</span>
+              <span class="talent-draft-tier">${TALENT_TIER_LABELS[tierIndex]}</span>
+            </div>
             ${countdown}
           </div>
           <strong>${escapeHtml(talent.name)}</strong>
