@@ -2728,8 +2728,12 @@
   if (talentDraftOverlay) {
     talentDraftOverlay.addEventListener("click", (event) => {
       const card = event.target.closest("[data-talent-draft-pick]");
-      if (!card || !activeTalentDraft) return;
-      finalizeTalentDraft(activeTalentDraft.playerId, activeTalentDraft.tierIndex, String(card.dataset.talentDraftPick || ""));
+      if (!card || !activeTalentDraft || talentDraftResolving) return;
+      talentDraftResolving = true;
+      card.classList.add("is-confirming");
+      window.setTimeout(() => {
+        finalizeTalentDraft(activeTalentDraft.playerId, activeTalentDraft.tierIndex, String(card.dataset.talentDraftPick || ""));
+      }, 180);
     });
   }
   if (partyRoster) {
@@ -4445,6 +4449,7 @@
   function renderTalentDraftOverlay() {
     if (!talentDraftOverlay) return;
     if (!activeTalentDraft) {
+      talentDraftResolving = false;
       talentDraftOverlay.innerHTML = "";
       talentDraftOverlay.classList.remove("is-open");
       talentDraftOverlay.setAttribute("aria-hidden", "true");
@@ -8625,6 +8630,7 @@
   let victoryEl = null;
   let activeTalentDraft = null;
   let activeTalentDraftTimer = null;
+  let talentDraftResolving = false;
   const pipClamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   function botCashBonus(player) {
