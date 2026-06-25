@@ -2362,9 +2362,12 @@ canvas {
   width:126px;
   height:100px;
   border:1px solid rgba(52,255,134,.55);
-  background:#04150b;
+  background-color:#04150b;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:cover;
   overflow:hidden;
-  image-rendering:pixelated;
+  image-rendering:auto;
   box-shadow:inset 0 0 22px rgba(52,255,134,.1);
 }
 .stage-splash-image::before,
@@ -2404,57 +2407,42 @@ canvas {
 .campaign-stage-splash.is-late .stage-splash-copy strong,
 .campaign-stage-splash.is-late .stage-splash-copy p{ color:#ff6b73; text-shadow:0 0 13px rgba(255,77,90,.62); }
 .stage-splash-image-baby{
-  background:
-    radial-gradient(circle at 38% 38%, #ffd76a 0 9px, transparent 10px),
-    linear-gradient(#34ff86 0 0) 28px 70px/86px 8px no-repeat,
-    linear-gradient(#34ff86 0 0) 42px 56px/18px 18px no-repeat,
-    linear-gradient(#bfffe0 0 0) 74px 50px/22px 24px no-repeat,
-    linear-gradient(180deg,#052b15,#020804);
+  background-image:
+    linear-gradient(180deg, rgba(4,21,11,.08), rgba(1,5,2,.26)),
+    url("./stage-early-chaos.png");
 }
 .stage-splash-image-baby::after{
-  left:31px;
-  top:42px;
-  width:82px;
-  height:38px;
-  border:3px solid #34ff86;
-  border-top:0;
-  box-shadow:0 0 13px rgba(52,255,134,.45);
+  inset:0;
+  border:1px solid rgba(52,255,134,.18);
+  box-shadow:
+    inset 0 0 18px rgba(52,255,134,.14),
+    inset 0 -12px 20px rgba(0,0,0,.34);
 }
 .stage-splash-image-broadcast{
   border-color:rgba(255,215,106,.75);
-  background:
-    linear-gradient(#ffd76a 0 0) 20px 22px/102px 58px no-repeat,
-    linear-gradient(#061109 0 0) 28px 30px/86px 42px no-repeat,
-    repeating-linear-gradient(90deg, rgba(255,215,106,.28) 0 5px, transparent 5px 11px),
-    linear-gradient(180deg,#221706,#020804);
+  background-image:
+    linear-gradient(180deg, rgba(34,23,6,.10), rgba(2,8,4,.32)),
+    url("./stage-mid-chaos.png");
 }
 .stage-splash-image-broadcast::after{
-  left:39px;
-  top:43px;
-  width:64px;
-  height:15px;
-  background:repeating-linear-gradient(90deg, #ff4d5a 0 8px, #ffd76a 8px 14px);
-  box-shadow:0 0 12px rgba(255,215,106,.7);
+  inset:0;
+  border:1px solid rgba(255,215,106,.22);
+  box-shadow:
+    inset 0 0 18px rgba(255,215,106,.12),
+    inset 0 -12px 20px rgba(0,0,0,.38);
 }
 .stage-splash-image-ballot{
   border-color:rgba(255,77,90,.78);
-  background:
-    linear-gradient(#ff4d5a 0 0) 40px 24px/62px 12px no-repeat,
-    linear-gradient(#34ff86 0 0) 55px 14px/33px 28px no-repeat,
-    linear-gradient(#ff4d5a 0 0) 34px 52px/76px 38px no-repeat,
-    linear-gradient(#020804 0 0) 43px 60px/58px 22px no-repeat,
-    radial-gradient(circle at 50% 52%, rgba(255,77,90,.34), transparent 52%),
-    #050505;
+  background-image:
+    linear-gradient(180deg, rgba(36,4,7,.10), rgba(0,0,0,.38)),
+    url("./stage-late-chaos.png");
 }
 .stage-splash-image-ballot::after{
-  left:54px;
-  top:58px;
-  width:34px;
-  height:24px;
-  border-left:6px solid #ff4d5a;
-  border-bottom:6px solid #ff4d5a;
-  transform:rotate(-45deg);
-  filter:drop-shadow(0 0 8px rgba(255,77,90,.75));
+  inset:0;
+  border:1px solid rgba(255,77,90,.24);
+  box-shadow:
+    inset 0 0 18px rgba(255,77,90,.14),
+    inset 0 -12px 20px rgba(0,0,0,.44);
 }
 @keyframes stage-splash-pop{
   0%{ transform:translateY(12px) scale(.9); opacity:0; filter:brightness(1.7); }
@@ -3738,7 +3726,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     .hot-banner{ padding:6px 9px 5px; font-size:clamp(12px, 2.5vw, 18px); border-width:2px; border-radius:5px; }
   }
 .hot-banner.is-on{ display:block; animation:hot-pulse .7s steps(2) infinite; }
-.hot-tooltip{ position:fixed; z-index:130; display:none; transform:translateX(-50%); max-width:280px; padding:7px 10px;
+.hot-tooltip{ position:fixed; z-index:190; display:none; transform:translateX(-50%); max-width:280px; padding:7px 10px;
   font-family:"VT323","Share Tech Mono",monospace; font-size:16px; line-height:1.18; color:var(--term);
   background:#02160c; border:1px solid var(--term); border-radius:4px;
   box-shadow:0 0 20px rgba(52,255,134,0.35), inset 0 0 30px rgba(0,0,0,0.5); text-shadow:0 0 5px rgba(52,255,134,0.4); pointer-events:none; }
