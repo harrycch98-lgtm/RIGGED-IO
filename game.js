@@ -5508,7 +5508,11 @@
     if (!player || !state) return;
     const targets = (mission.targets || [mission.target])
       .map((targetId) => players[targetId])
-      .filter((target) => target && target.id !== player.id);
+      .filter((target) =>
+        target &&
+        target.id !== player.id &&
+        (officeLevel(state, target.id) > 0 || target.homeBase === state.index)
+      );
     if (!targets.length) return;
 
     const results = [];
@@ -5669,12 +5673,9 @@
   function aiEarlyEconomyAction(player, rules, commit) {
     const day = campaignDaysElapsed();
     if (day >= 20) return false;
-    const difficulty = difficultyInput.value;
-    const officeTarget = difficulty === "hard" ? 5 : difficulty === "medium" ? 4 : 3;
     const homeState = states[player.homeBase];
     const hqUpgradePending = missions.some((mission) => mission.type === "baseUpgrade" && mission.player === player.id);
     const offices = states.filter((state) => officeLevel(state, player.id) > 0);
-    const pendingOfficeDeployments = pendingDistrictOfficeCount(player.id);
 
     if (player.mainBaseLevel < 2 && !hqUpgradePending && homeState) {
       const nextLevel = player.mainBaseLevel + 1;
@@ -5688,20 +5689,9 @@
       }
     }
 
-    const deployCost = adHubCost(player);
-    const hqReserve = player.mainBaseLevel < 2 ? mainBaseUpgradeCash(player, 2) : 5000;
-    const deployTarget = states
-      .filter((state) =>
-        officeLevel(state, player.id) <= 0 &&
-        !missions.some((mission) => mission.type === "adDeploy" && mission.player === player.id && mission.state === state.index)
-      )
-      .map((state) => ({
-        state,
-        score: adjustedInfluence(state, player.id) * 0.55 + state.ev * 0.45 + (state.index === player.homeBase ? 30 : 0) + Math.random() * 3,
-      }))
-      .sort((a, b) => b.score - a.score)[0]?.state;
-    if (canBuildMoreDistrictOffices(player) && offices.length + pendingOfficeDeployments < officeTarget && deployTarget && player.cash >= deployCost + hqReserve) {
-      return commit("economy_office_deploy", () => placeAdHub(player.id, deployTarget.index), 0.45);
+    const aggressiveDeployTarget = bestAiOfficeDeployTarget(player);
+    if (aggressiveDeployTarget && player.cash >= adHubCost(player)) {
+      return commit("economy_office_deploy", () => placeAdHub(player.id, aggressiveDeployTarget.index), 0.2);
     }
 
     const upgradeTarget = offices
@@ -5735,6 +5725,24 @@
     return true;
   }
 
+  function bestAiOfficeDeployTarget(player) {
+    if (!player || !canBuildMoreDistrictOffices(player)) return null;
+    return states
+      .filter((state) =>
+        officeLevel(state, player.id) <= 0 &&
+        !missions.some((mission) => mission.type === "adDeploy" && mission.player === player.id && mission.state === state.index)
+      )
+      .map((state) => ({
+        state,
+        score: adjustedInfluence(state, player.id) * 0.55
+          + state.ev * 0.45
+          + (state.index === player.homeBase ? 30 : 0)
+          + (leadingPlayer(state.index) !== player.id ? 10 : 0)
+          + Math.random() * 3,
+      }))
+      .sort((a, b) => b.score - a.score)[0]?.state || null;
+  }
+
   function tickAi(player, dt) {
     pipMaybePick(player);
     player.aiDelay -= dt;
@@ -5754,6 +5762,11 @@
     };
 
     if (aiEarlyEconomyAction(player, rules, commit)) return;
+
+    const officeDeployTarget = bestAiOfficeDeployTarget(player);
+    if (officeDeployTarget && player.cash >= adHubCost(player)) {
+      if (commit("office_deploy_chain", () => placeAdHub(player.id, officeDeployTarget.index), 0.15)) return;
+    }
 
     const guardedBuildings = states.flatMap((state) => ["hq", "office"]
       .filter((building) => policeGuards(state, player.id, building))
@@ -5868,7 +5881,7 @@
     const targetState = states[stateIndex];
     const officeLvl = officeLevel(targetState, player.id);
     const deployPending = missions.some((mission) => mission.type === "adDeploy" && mission.player === player.id && mission.state === stateIndex);
-    if (canBuildMoreDistrictOffices(player) && officeLvl < 1 && !deployPending && player.cash >= adHubCost(player) + rules.reserve && Math.random() < rules.office) {
+    if (canBuildMoreDistrictOffices(player) && officeLvl < 1 && !deployPending && player.cash >= adHubCost(player) && Math.random() < rules.office) {
       if (commit("office_deploy", () => placeAdHub(player.id, stateIndex), 0.6)) return;
     }
 
@@ -9862,7 +9875,16 @@
       "LEADER: [ " + escapeHtml(human.leader) + " ]<br>" +
       "THEME: " + tree.theme + "<br>" +
       "MAIN BASE: [ LEVEL " + human.mainBaseLevel + " ]  PASSIVE: " + formatMoney(hqIncomeDay(human)) + "/day<br>" +
-      "PROJECTED FUNDING: ~" + formatMoney(fund) + "/day";
+      "PROJECTED FUNDING: ~" + formatMoney(fund) + "/day" +
+      '<div class="pip-inline-actions">' +
+      '<button class="primary-button pip-inline-button" type="button" data-pip-action="upgrade-hq"' +
+      ((nextHq && !hqUpgradeBusy && human.cash >= hqReq.cash && homeInfluence >= hqInfluenceReq) ? '' : ' disabled') + '>' +
+      (!hqUnlocked
+        ? 'SELECT HOME BASE FIRST'
+        : nextHq
+        ? (hqUpgradeBusy ? 'HQ UPGRADE UNDERWAY' : ('UPGRADE HQ TO L' + nextHq))
+        : 'HQ MAXED') +
+      '</button></div>';
     pipEl.querySelector("#pipMascot").innerHTML = pipMascot(human);
     pipEl.querySelector("#pipControls").innerHTML =
       '<div class="pip-control-card">' +
@@ -10039,6 +10061,7 @@
     if (!state) return [];
     return players.filter((candidate) =>
       candidate.id !== playerId &&
+      candidate.id >= 0 &&
       (officeLevel(state, candidate.id) > 0 || candidate.homeBase === state.index)
     );
   }
@@ -10591,6 +10614,11 @@
       hotFinanceEl.addEventListener("mousemove", () => positionHotTip(hotFinanceEl));
       hotFinanceEl.addEventListener("mouseleave", () => { hotTipEl.classList.remove("is-on"); });
     }
+    if (eventStrip) {
+      eventStrip.addEventListener("mouseenter", (event) => showEventTickerTip(event));
+      eventStrip.addEventListener("mousemove", (event) => showEventTickerTip(event));
+      eventStrip.addEventListener("mouseleave", () => { hotTipEl.classList.remove("is-on"); });
+    }
     hotbarEl.querySelectorAll(".hotslot").forEach((btn) => {
       const i = Number(btn.dataset.i);
       btn.addEventListener("click", () => armSlot(i));
@@ -10634,11 +10662,47 @@
     hotTipEl.classList.add("is-on");
     positionHotTip(card);
   }
+  function showEventTickerTip(event) {
+    if (!hotTipEl || !eventStrip) return;
+    let heading = "LIVE EVENTS";
+    let label = "MONITOR";
+    const lines = [];
+    if (phase === "base") {
+      label = "HQ DRAFT";
+      lines.push("You are choosing the opening state for your headquarters.");
+      lines.push("Hover states on the map, then confirm the deployment point.");
+      if (baseTimer > 0) lines.push("Selection window: " + Math.ceil(baseTimer) + "s remaining.");
+    } else if (activeWorldEvent && worldEventTimer > 0) {
+      heading = "WORLD EVENT";
+      label = activeWorldEvent.title;
+      lines.push(activeWorldEvent.text || "A temporary global rule is changing the campaign.");
+      lines.push("Duration left: " + campaignDaysLabel(worldEventTimer) + ".");
+    } else if (news) {
+      heading = "LIVE UPDATE";
+      label = news.title || "Campaign News";
+      lines.push(news.text || "A fresh campaign development is reshaping the map.");
+      if (newsTimer > 0) lines.push("Broadcast window: " + campaignDaysLabel(newsTimer) + ".");
+    } else {
+      lines.push("This feed announces world events, breaking news, and live campaign updates.");
+      lines.push("Check it when the rules of the match suddenly change.");
+    }
+    hotTipEl.innerHTML =
+      '<div class="htt"><span>' + heading + '</span><strong>' + label + '</strong></div>' +
+      lines.map((line) => '<div class="htl">' + line + "</div>").join("");
+    hotTipEl.classList.add("is-on");
+    positionHotTipAt(event.clientX, event.clientY);
+  }
   function positionHotTip(btn) {
     const r = btn.getBoundingClientRect();
     hotTipEl.style.left = Math.round(r.left + r.width / 2) + "px";
     hotTipEl.style.top = "auto";
     hotTipEl.style.bottom = Math.round(window.innerHeight - r.top + 18) + "px";
+  }
+  function positionHotTipAt(x, y) {
+    if (!hotTipEl) return;
+    hotTipEl.style.left = Math.round(x) + "px";
+    hotTipEl.style.top = Math.round(y + 18) + "px";
+    hotTipEl.style.bottom = "auto";
   }
 
   function hotbarActionAvailable(slot, human, state) {
