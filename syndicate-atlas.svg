@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #03150c; }
+      .panel { fill: #062719; stroke: #31ff90; stroke-width: 3; }
+      .dim { stroke: #16824b; stroke-width: 2; fill: none; opacity: .9; }
+      .glow { stroke: #89ffbe; stroke-width: 4; fill: none; }
+      .soft { stroke: #31ff90; stroke-width: 2; fill: none; }
+      .solid { fill: #45ff9e; }
+      .ink { fill: #0b3521; }
+      .mist { fill: #d0ffe7; opacity: .9; }
+      .scan { stroke: #12432a; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines7" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="spire">
+      <path d="M0-112-54 74H54Z" class="ink" stroke="#31ff90" stroke-width="4"/>
+      <path d="M-22-36H22M-30 4H30M-38 44H38" class="soft"/>
+      <circle cx="0" cy="-136" r="18" class="mist"/>
+      <path d="M-82-136c18-16 42-24 82-24M82-136c-18-16-42-24-82-24" class="glow"/>
+    </g>
+    <g id="gridNode">
+      <rect x="-64" y="-44" width="128" height="88" class="ink" stroke="#31ff90" stroke-width="4"/>
+      <rect x="-40" y="-18" width="80" height="18" class="solid"/>
+      <rect x="-28" y="10" width="56" height="12" class="solid"/>
+      <circle cx="-82" cy="0" r="10" class="mist"/>
+      <circle cx="82" cy="0" r="10" class="mist"/>
+      <path d="M-72 0H-64M64 0H72" class="glow"/>
+    </g>
+    <g id="ring">
+      <circle cx="0" cy="0" r="68" class="ink" stroke="#89ffbe" stroke-width="4"/>
+      <circle cx="0" cy="0" r="32" class="solid" opacity=".85"/>
+      <path d="M-92 0H92M0-92V92" class="soft"/>
+    </g>
+    <g id="panelStack">
+      <rect x="-84" y="-52" width="168" height="104" class="ink" stroke="#31ff90" stroke-width="4"/>
+      <rect x="-58" y="-24" width="116" height="14" class="solid"/>
+      <rect x="-58" y="2" width="90" height="12" class="solid"/>
+      <rect x="-58" y="26" width="70" height="10" class="solid"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines7)" opacity=".35"/>
+
+    <g>
+      <rect x="24" y="24" width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#spire" transform="translate(286 286) scale(1.08)"/>
+      <use href="#ring" transform="translate(286 184) scale(.88)"/>
+      <path d="M112 128H460M112 164H460M112 438H460" class="dim"/>
+      <path d="M132 406c56-28 104-38 152-30 44 8 88 28 140 30 38 2 76-6 120-24" class="soft"/>
+      <circle cx="286" cy="182" r="14" class="mist"/>
+    </g>
+
+    <g transform="translate(588 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#gridNode" transform="translate(160 244)"/>
+      <use href="#gridNode" transform="translate(286 174) scale(.86)"/>
+      <use href="#gridNode" transform="translate(412 244)"/>
+      <path d="M242 182 204 212M330 182 368 212M224 244H348" class="glow"/>
+      <path d="M104 390H436M104 426H436" class="dim"/>
+      <path d="M120 118H420" class="dim"/>
+    </g>
+
+    <g transform="translate(1152 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#panelStack" transform="translate(180 198)"/>
+      <use href="#panelStack" transform="translate(356 306) scale(1.08)"/>
+      <use href="#ring" transform="translate(354 162) scale(.74)"/>
+      <path d="M110 390c48-30 84-42 118-42 44 0 82 18 124 52 36 28 72 42 118 42" class="glow"/>
+      <path d="M100 126H438M100 160H438M100 438H438" class="dim"/>
+    </g>
+
+    <g transform="translate(24 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#spire" transform="translate(164 306) scale(.9)"/>
+      <use href="#spire" transform="translate(286 234) scale(1.08)"/>
+      <use href="#spire" transform="translate(408 306) scale(.9)"/>
+      <path d="M98 410H442M98 446H442" class="dim"/>
+      <path d="M126 178c42 20 78 28 108 26 30-2 60-16 92-40 34-24 70-38 112-40 32-2 68 4 110 18" class="soft"/>
+      <path d="M118 232c52 24 98 34 144 34 48 0 92-10 144-34" class="glow"/>
+    </g>
+
+    <g transform="translate(588 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#gridNode" transform="translate(170 344) scale(.9)"/>
+      <use href="#panelStack" transform="translate(286 214)"/>
+      <use href="#gridNode" transform="translate(398 344) scale(.9)"/>
+      <path d="M170 312 238 252M398 312 334 252" class="glow"/>
+      <path d="M94 126H444M94 160H444M94 430H444" class="dim"/>
+      <circle cx="286" cy="360" r="12" class="mist"/>
+      <path d="M286 252V348" class="soft"/>
+    </g>
+
+    <g transform="translate(1152 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#31ff90" stroke-width="2"/>
+      <use href="#ring" transform="translate(286 166)"/>
+      <use href="#spire" transform="translate(286 324) scale(.94)"/>
+      <use href="#panelStack" transform="translate(286 424) scale(.84)"/>
+      <path d="M110 118H462M110 152H462" class="dim"/>
+      <path d="M122 238c50 14 92 20 126 18 38-2 76-14 114-38 34-22 68-34 106-36 24-2 54 2 92 12" class="soft"/>
+      <path d="M138 390c46-28 88-40 126-40 38 0 76 12 116 40 38 26 76 38 120 38" class="glow"/>
+    </g>
+  </g>
+</svg>
