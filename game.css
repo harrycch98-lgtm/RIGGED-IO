@@ -276,9 +276,38 @@
 }
 
 .lobby-entry-actions:has(.lobby-bar-panel) {
-  justify-content: center;
-  padding-top: 24px;
-  padding-bottom: 24px;
+  display: grid;
+  align-content: center;
+  justify-content: stretch;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-left: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.lobby-entry-console:has(.lobby-bar-panel) {
+  width: min(1080px, calc(100vw - 48px));
+  min-height: auto;
+  grid-template-columns: 1fr;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lobby-entry-console:has(.lobby-bar-panel)::before {
+  display: none;
+}
+
+.lobby-entry-screen:has(.lobby-bar-panel) {
+  align-content: center;
+}
+
+.lobby-entry-screen:has(.lobby-bar-panel) .lobby-entry-console {
+  margin-block: auto;
+  transform: translateY(72px);
 }
 
 .lobby-entry-account-slot {
@@ -4083,6 +4112,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   position: relative;
   min-height: 0;
   aspect-ratio: 16 / 9;
+  align-self: center;
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -4456,7 +4486,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .lobby-bar-strip .lobby-leader-slot {
   position: absolute;
   width: 94px;
-  min-height: 118px;
+  min-height: 108px;
   padding: 4px 4px 2px;
   border-color: rgba(52,255,134,.08);
   background: transparent;
@@ -4482,8 +4512,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   position: absolute;
   left: 18px;
   right: 18px;
-  top: 18px;
-  bottom: 26px;
+  top: 14px;
+  bottom: 20px;
   border: 1px solid rgba(52,255,134,.18);
   background: linear-gradient(180deg, rgba(52,255,134,.035), rgba(52,255,134,.01));
   pointer-events: none;
@@ -4491,31 +4521,31 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 
 .lobby-bar-strip .lobby-leader-slot:nth-child(1) {
   left: 11.5%;
-  bottom: 34px;
+  bottom: 6px;
 }
 
 .lobby-bar-strip .lobby-leader-slot:nth-child(2) {
   left: 30.5%;
-  bottom: 32px;
+  bottom: 4px;
 }
 
 .lobby-bar-strip .lobby-leader-slot:nth-child(3) {
   left: 49.5%;
-  bottom: 30px;
+  bottom: 2px;
 }
 
 .lobby-bar-strip .lobby-leader-slot:nth-child(4) {
   left: 68%;
-  bottom: 32px;
+  bottom: 4px;
 }
 
 .lobby-bar-strip .lobby-leader-slot:nth-child(5) {
   left: 87.5%;
-  bottom: 35px;
+  bottom: 7px;
 }
 
 .lobby-bar-strip .lobby-leader-slot .leader-portrait {
-  width: 54px;
+  width: 50px;
 }
 
 .lobby-bar-strip .lobby-leader-player {
