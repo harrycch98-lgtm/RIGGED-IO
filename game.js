@@ -2356,6 +2356,7 @@
   const intelBody = document.querySelector("#intelBody");
   const opponentTray = document.querySelector("#opponentTray");
   const rivalTalentViewer = document.querySelector("#rivalTalentViewer");
+  const talentDraftOverlay = document.querySelector("#talentDraftOverlay");
   const newsPanel = document.querySelector(".news-panel");
   const newsChannelName = document.querySelector("#newsChannelName");
   const newsReporter = document.querySelector("#newsReporter");
@@ -2722,6 +2723,13 @@
       if (event.target === rivalTalentViewer || event.target.closest("[data-rival-close]")) {
         closeRivalTalentViewer();
       }
+    });
+  }
+  if (talentDraftOverlay) {
+    talentDraftOverlay.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-talent-draft-pick]");
+      if (!card || !activeTalentDraft) return;
+      finalizeTalentDraft(activeTalentDraft.playerId, activeTalentDraft.tierIndex, String(card.dataset.talentDraftPick || ""));
     });
   }
   if (partyRoster) {
@@ -4218,20 +4226,15 @@
     const expression = expressionById(profile.expression);
     const flag = flagById(profile.flag);
     const palette = faction.portrait || FACTIONS[index].portrait;
-    const tiers = tree.tiers.map((tier, tierIndex) => {
-      const nodes = ["left", "right"].map((side) => {
-        const opt = tier[side];
-        return `
-          <div class="menu-talent-node${opt.ult ? " is-ult" : ""}">
-            <div><strong>${opt.name}</strong>${opt.ult ? "<span>ULT</span>" : ""}</div>
-            <p>${opt.desc}</p>
-          </div>
-        `;
-      }).join('<div class="menu-talent-vs">or</div>');
+    const tiers = TALENT_REQ_LEVEL.map((_, tierIndex) => {
+      const sampleCards = (TALENT_CARDS_BY_TIER[tierIndex] || []).slice(0, 4).map((talent) =>
+        talentCardMarkup(talent, { tierIndex, compact: true })
+      ).join("");
       return `
         <article class="menu-talent-tier">
-          <div class="menu-tier-day">Unlocks at HQ L${TALENT_REQ_LEVEL[tierIndex]}</div>
-          <div class="menu-tier-nodes">${nodes}</div>
+          <div class="menu-tier-day">${TALENT_TIER_LABELS[tierIndex]} // HQ L${TALENT_REQ_LEVEL[tierIndex]} unlock</div>
+          <div class="menu-tier-summary">At game start and after each HQ upgrade, 4 randomized cards from this tier are dealt. Pick 1 before the timer expires.</div>
+          <div class="menu-tier-nodes talent-card-collection">${sampleCards}</div>
         </article>
       `;
     }).join("");
@@ -4281,9 +4284,95 @@
     updateLobbyStartButtons();
   }
 
+  function talentTierClass(tierIndex) {
+    return ["amber", "cyan", "magenta"][tierIndex] || "amber";
+  }
+
+  function talentCardArtSvg(talent) {
+    const text = `${talent.id} ${talent.name} ${talent.desc}`.toLowerCase();
+    const palette = text.includes("assassin") || text.includes("blackout")
+      ? { base: "#2d0814", glow: "#ff5878", line: "#ff9ab4" }
+      : text.includes("speech") || text.includes("crowd")
+      ? { base: "#11221c", glow: "#52ffb4", line: "#ccffe5" }
+      : text.includes("channel") || text.includes("broadcast") || text.includes("signal")
+      ? { base: "#071d28", glow: "#53d7ff", line: "#b9f4ff" }
+      : text.includes("office") || text.includes("base") || text.includes("upgrade")
+      ? { base: "#211909", glow: "#ffd86b", line: "#fff0c1" }
+      : text.includes("disrupt") || text.includes("riot") || text.includes("sabotage")
+      ? { base: "#1f0b22", glow: "#f06cff", line: "#ffd2ff" }
+      : { base: "#102616", glow: "#63ff8d", line: "#d2ffe0" };
+    const motif = text.includes("speech") || text.includes("crowd")
+      ? '<circle cx="44" cy="42" r="18" fill="none" stroke="currentColor" stroke-width="3"/><path d="M31 44 Q44 22 57 44 M26 55 Q44 34 62 55" fill="none" stroke="currentColor" stroke-width="3"/>'
+      : text.includes("channel") || text.includes("broadcast") || text.includes("signal")
+      ? '<rect x="18" y="24" width="52" height="34" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 57 L36 43 L44 49 L57 32 L64 39" fill="none" stroke="currentColor" stroke-width="3"/><rect x="34" y="62" width="20" height="4" fill="currentColor"/>'
+      : text.includes("office") || text.includes("base") || text.includes("upgrade")
+      ? '<path d="M44 18 L66 31 V66 H22 V31 Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M33 66 V44 H55 V66 M29 36 H59" fill="none" stroke="currentColor" stroke-width="3"/>'
+      : text.includes("assassin") || text.includes("blackout")
+      ? '<path d="M22 62 L44 18 L66 62" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="44" cy="44" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M44 26 V62 M26 44 H62" fill="none" stroke="currentColor" stroke-width="3"/>'
+      : text.includes("disrupt") || text.includes("riot") || text.includes("sabotage")
+      ? '<path d="M30 18 H58 L44 40 H61 L29 70 L39 46 H24 Z" fill="currentColor"/><rect x="22" y="72" width="44" height="4" fill="currentColor" opacity=".45"/>'
+      : '<circle cx="44" cy="44" r="20" fill="none" stroke="currentColor" stroke-width="3"/><path d="M25 44 H63 M44 25 V63" fill="none" stroke="currentColor" stroke-width="3"/>';
+    return `
+      <svg viewBox="0 0 88 88" aria-hidden="true">
+        <defs>
+          <radialGradient id="talentCardGlow-${escapeHtml(talent.id)}" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="${palette.glow}" stop-opacity=".42"/>
+            <stop offset="100%" stop-color="${palette.base}" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect x="4" y="4" width="80" height="80" rx="10" fill="${palette.base}" stroke="${palette.line}" stroke-width="2"/>
+        <rect x="8" y="8" width="72" height="72" rx="8" fill="url(#talentCardGlow-${escapeHtml(talent.id)})"/>
+        <g style="color:${palette.glow}">
+          ${motif}
+        </g>
+        <rect x="14" y="14" width="60" height="6" fill="${palette.line}" opacity=".18"/>
+        <rect x="14" y="68" width="60" height="4" fill="${palette.line}" opacity=".18"/>
+      </svg>
+    `;
+  }
+
+  function talentCardMarkup(talent, options = {}) {
+    const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
+    const picked = !!options.picked;
+    const compact = !!options.compact;
+    const action = options.action || "";
+    const countdown = options.countdown ? `<div class="talent-draft-chip">${escapeHtml(options.countdown)}</div>` : "";
+    return `
+      <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
+        <div class="talent-draft-card-art">${talentCardArtSvg(talent)}</div>
+        <div class="talent-draft-card-body">
+          <div class="talent-draft-card-top">
+            <span class="talent-draft-tier">${TALENT_TIER_LABELS[tierIndex]}</span>
+            ${countdown}
+          </div>
+          <strong>${escapeHtml(talent.name)}</strong>
+          <span class="talent-draft-origin">${escapeHtml(talent.treeName)} // ${escapeHtml(talent.treeSub)}</span>
+          <p>${escapeHtml(talent.desc)}</p>
+          ${picked ? '<em>Chosen</em>' : action ? '<em>Pick this card</em>' : '<em>Drafted ability</em>'}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderChosenTalentCards(player) {
+    const cards = chosenTalentCards(player);
+    if (!cards.length) {
+      return `<div class="talent-card-empty">No drafted cards yet. HQ unlocks will deal new choices.</div>`;
+    }
+    return TALENT_REQ_LEVEL.map((_, tierIndex) => {
+      const card = cards.find((entry) => entry.tierIndex === tierIndex);
+      return `
+        <section class="talent-card-tier-block">
+          <div class="talent-card-tier-label">${TALENT_TIER_LABELS[tierIndex]}</div>
+          ${card ? talentCardMarkup(card, { tierIndex, picked: true, compact: true }) : '<div class="talent-card-empty">No card drafted for this tier yet.</div>'}
+        </section>
+      `;
+    }).join("");
+  }
+
   function renderRivalTalentViewer(playerId) {
     if (!rivalTalentViewer) return;
-    const player = players.find((candidate) => candidate.id === playerId && candidate.id !== HUMAN);
+    const player = players.find((candidate) => candidate.id === playerId);
     const tree = player ? TALENTS[player.talentTree] : null;
     if (!player || !tree) {
       rivalTalentViewer.innerHTML = "";
@@ -4292,22 +4381,6 @@
       rivalTalentPlayerId = -1;
       return;
     }
-    const tiers = tree.tiers.map((tier, tierIndex) => `
-      <article class="rival-tier">
-        <div class="rival-tier-label">Unlocks at HQ L${TALENT_REQ_LEVEL[tierIndex]}</div>
-        <div class="rival-tier-nodes">
-          <div class="rival-node">
-            <strong>${tier.left.name}${tier.left.ult ? " [ULT]" : ""}</strong>
-            <p>${tier.left.desc}</p>
-          </div>
-          <div class="rival-tier-vs">OR</div>
-          <div class="rival-node">
-            <strong>${tier.right.name}${tier.right.ult ? " [ULT]" : ""}</strong>
-            <p>${tier.right.desc}</p>
-          </div>
-        </div>
-      </article>
-    `).join("");
     rivalTalentViewer.innerHTML = `
       <div class="rival-talent-head">
         ${leaderPortraitMarkup(player, "leader-portrait")}
@@ -4319,7 +4392,7 @@
         <button class="rival-talent-close" type="button" data-rival-close>ESC</button>
       </div>
       <div class="rival-talent-theme">${escapeHtml(tree.theme)}</div>
-      <div class="rival-talent-grid">${tiers}</div>
+      <div class="rival-talent-grid talent-card-collection">${renderChosenTalentCards(player)}</div>
     `;
     rivalTalentViewer.classList.add("is-open");
     rivalTalentViewer.setAttribute("aria-hidden", "false");
@@ -4337,17 +4410,114 @@
     rivalTalentPlayerId = -1;
   }
 
+  function clearActiveTalentDraftTimer() {
+    if (activeTalentDraftTimer) {
+      clearTimeout(activeTalentDraftTimer);
+      activeTalentDraftTimer = null;
+    }
+  }
+
+  function renderTalentDraftOverlay() {
+    if (!talentDraftOverlay) return;
+    if (!activeTalentDraft) {
+      talentDraftOverlay.innerHTML = "";
+      talentDraftOverlay.classList.remove("is-open");
+      talentDraftOverlay.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const player = players[activeTalentDraft.playerId];
+    if (!player) {
+      activeTalentDraft = null;
+      renderTalentDraftOverlay();
+      return;
+    }
+    const secondsLeft = Math.max(0, Math.ceil((activeTalentDraft.expiresAt - Date.now()) / 1000));
+    talentDraftOverlay.innerHTML = `
+      <div class="talent-draft-panel">
+        <div class="talent-draft-head">
+          <div>
+            <span class="talent-draft-kicker">${TALENT_TIER_LABELS[activeTalentDraft.tierIndex]} Draft</span>
+            <strong>${escapeHtml(player.name)} // choose 1 of 4</strong>
+            <p>${activeTalentDraft.tierIndex === 0 ? "Opening hand dealt. Select your first campaign doctrine." : `HQ Level ${activeTalentDraft.tierIndex + 1} is online. Draft a new doctrine before the clock expires.`}</p>
+          </div>
+          <div class="talent-draft-timer">
+            <span>Decision Window</span>
+            <strong>${secondsLeft}s</strong>
+          </div>
+        </div>
+        <div class="talent-draft-grid">
+          ${activeTalentDraft.options.map((talent) => talentCardMarkup(talent, { tierIndex: activeTalentDraft.tierIndex, action: "pick", countdown: secondsLeft <= 3 ? "AUTO" : "" })).join("")}
+        </div>
+      </div>
+    `;
+    talentDraftOverlay.classList.add("is-open");
+    talentDraftOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function finalizeTalentDraft(playerId, tierIndex, chosenTalentId = "") {
+    const player = players[playerId];
+    if (!player || !tierNeedsTalentPick(player, tierIndex)) return false;
+    const draft = activeTalentDraft && activeTalentDraft.playerId === playerId && activeTalentDraft.tierIndex === tierIndex
+      ? activeTalentDraft
+      : { options: draftOptionsForTier(player, tierIndex) };
+    const chosen = draft.options.find((talent) => talent.id === chosenTalentId) || autoPickDraftTalent(player, draft.options);
+    if (!chosen) return false;
+    player.talents[tierIndex] = chosen.id;
+    if (activeTalentDraft && activeTalentDraft.playerId === playerId && activeTalentDraft.tierIndex === tierIndex) {
+      clearActiveTalentDraftTimer();
+      activeTalentDraft = null;
+      renderTalentDraftOverlay();
+    }
+    addAlert(`${player.name} drafted ${chosen.name} from ${TALENT_TIER_LABELS[tierIndex]}.`);
+    if (playerId === HUMAN) {
+      showToast(`${TALENT_TIER_LABELS[tierIndex]} drafted: ${chosen.name}.`);
+      updateUi(true);
+    }
+    refreshTalentInterfaces();
+    return true;
+  }
+
+  function startTalentDraft(playerId, tierIndex) {
+    const player = players[playerId];
+    if (!player || !tierNeedsTalentPick(player, tierIndex)) return false;
+    const options = draftOptionsForTier(player, tierIndex);
+    if (!options.length) return false;
+    if (player.isBot || playerId !== HUMAN) {
+      return finalizeTalentDraft(playerId, tierIndex, autoPickDraftTalent(player, options)?.id || "");
+    }
+    clearActiveTalentDraftTimer();
+    activeTalentDraft = {
+      playerId,
+      tierIndex,
+      options,
+      expiresAt: Date.now() + TALENT_DRAFT_SECONDS * 1000,
+    };
+    activeTalentDraftTimer = setTimeout(() => {
+      finalizeTalentDraft(playerId, tierIndex);
+    }, TALENT_DRAFT_SECONDS * 1000);
+    renderTalentDraftOverlay();
+    updateUi(true);
+    return true;
+  }
+
+  function checkTalentDraftUnlocks(player) {
+    if (!player) return;
+    for (let tierIndex = 0; tierIndex < TALENT_REQ_LEVEL.length; tierIndex += 1) {
+      if (tierNeedsTalentPick(player, tierIndex)) {
+        startTalentDraft(player.id, tierIndex);
+        if (player.id === HUMAN) break;
+      }
+    }
+  }
+
   function refreshTalentInterfaces() {
     if (pipOpen) renderPip();
     if (rivalTalentPlayerId >= 0) renderRivalTalentViewer(rivalTalentPlayerId);
+    renderTalentDraftOverlay();
   }
 
   function inspectLeaderPortrait(playerId) {
-    if (playerId === HUMAN) {
-      closeRivalTalentViewer();
-      openPip();
-      return;
-    }
+    closePip();
     openRivalTalentViewer(playerId);
   }
 
@@ -4948,6 +5118,7 @@
     state.activePulse = 1;
     addAlert(`${player.name} selected ${state.name} as home base.`);
     if (playerId === HUMAN) broadcast(regionChannelIndex(state.region), `${player.name} plants campaign headquarters in ${state.name}. The first local cameras are rolling.`);
+    checkTalentDraftUnlocks(player);
     return true;
   }
 
@@ -5218,6 +5389,7 @@
       state.activePulse = 1;
       addAlert(`${player.name} completed Main Base upgrade to Level ${mission.level} in ${state.name}.`);
       if (player.id === HUMAN) showToast(`HQ upgrade complete: Level ${mission.level} online.`);
+      checkTalentDraftUnlocks(player);
       return;
     }
     if (mission.type === "sabotage") {
@@ -6734,6 +6906,7 @@
     voteStat.textContent = `${electoralVotes(HUMAN)}`;
     renderUpgradeStatus(human);
     renderDebatePowerOverlay(human);
+    renderTalentDraftOverlay();
     if (calendarCountdown) {
       const calendarCard = calendarCountdown.closest(".election-calendar");
       if (calendarCard) calendarCard.style.display = "block";
@@ -8380,6 +8553,26 @@
   const HQ_INCOME_DAY = [0, 660, 1650, 3850];
   const HQ_UPGRADE = { 2: { cash: 9000, infl: 15, days: 2 }, 3: { cash: 60000, infl: 60, days: 4 } };
   const TALENT_REQ_LEVEL = [1, 2, 3];
+  const TALENT_DRAFT_SECONDS = 10;
+  const TALENT_DRAFT_CHOICES = 4;
+  const TALENT_TIER_LABELS = ["Tier 1", "Tier 2", "Tier 3"];
+  const TALENT_CARD_LIBRARY = Object.entries(TALENTS).flatMap(([treeId, tree]) =>
+    tree.tiers.flatMap((tier, tierIndex) =>
+      ["left", "right"].map((side) => ({
+        ...tier[side],
+        treeId,
+        treeName: tree.name,
+        treeSub: tree.sub,
+        treeTheme: tree.theme,
+        tierIndex,
+        tierLevel: TALENT_REQ_LEVEL[tierIndex],
+        sourceSide: side,
+      }))
+    )
+  );
+  const TALENT_CARDS_BY_TIER = TALENT_REQ_LEVEL.map((_, tierIndex) =>
+    TALENT_CARD_LIBRARY.filter((talent) => talent.tierIndex === tierIndex)
+  );
   const ASSASSINATE_COST = 40000;
   const ASSASSINATE_BLACKOUT_DAYS = 3;
   const ASSASSINATE_STRIP = 5;
@@ -8391,6 +8584,8 @@
   let pipHoverKey = "";
   let pipAudio = null;
   let victoryEl = null;
+  let activeTalentDraft = null;
+  let activeTalentDraftTimer = null;
   const pipClamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   function botCashBonus(player) {
@@ -8413,8 +8608,28 @@
     return Math.round(base * botActionDiscount(player));
   }
 
+  function talentCardById(id) {
+    return TALENT_CARD_LIBRARY.find((talent) => talent.id === id) || null;
+  }
+
+  function chosenTalentCard(player, tierIndex) {
+    if (!player || !player.talents) return null;
+    const chosenId = player.talents[tierIndex];
+    return typeof chosenId === "string" ? talentCardById(chosenId) : null;
+  }
+
+  function chosenTalentCards(player) {
+    if (!player?.talents) return [];
+    return Object.keys(player.talents)
+      .map((key) => chosenTalentCard(player, Number(key)))
+      .filter(Boolean)
+      .sort((a, b) => a.tierIndex - b.tierIndex || a.name.localeCompare(b.name));
+  }
+
   function hasTalent(player, id) {
-    if (!player || !player.talents || !player.talentTree) return false;
+    if (!player || !player.talents) return false;
+    if (chosenTalentCards(player).some((talent) => talent.id === id)) return true;
+    if (!player.talentTree) return false;
     const tree = TALENTS[player.talentTree];
     if (!tree) return false;
     for (const t in player.talents) {
@@ -8422,6 +8637,41 @@
       if (opt && opt.id === id) return true;
     }
     return false;
+  }
+
+  function tierNeedsTalentPick(player, tierIndex) {
+    return !!player && tierUnlocked(tierIndex, player) && !chosenTalentCard(player, tierIndex);
+  }
+
+  function talentKeywordScore(talent, personalityId = "powerBroker") {
+    const keywordWeights = {
+      powerBroker: { cash: 3, income: 3, cost: 2, channel: 2, "power grab": 3, hq: 2 },
+      grassroots: { speech: 3, influence: 3, office: 2, nearby: 2, passive: 1.5 },
+      countyBuilder: { office: 3, upgrade: 3, police: 2.5, base: 2, deploy: 2 },
+      spoiler: { disrupt: 3, assassination: 3, siphon: 2.5, blackout: 2, rival: 1.5 },
+    };
+    const weights = keywordWeights[personalityId] || keywordWeights.powerBroker;
+    const text = `${talent.name} ${talent.desc}`.toLowerCase();
+    return Object.entries(weights).reduce((sum, [keyword, weight]) => sum + (text.includes(keyword) ? weight : 0), Math.random() * 1.5);
+  }
+
+  function draftOptionsForTier(player, tierIndex, count = TALENT_DRAFT_CHOICES) {
+    const pool = shuffle(TALENT_CARDS_BY_TIER[tierIndex] || []);
+    const unique = [];
+    const used = new Set(chosenTalentCards(player).map((talent) => talent.id));
+    for (const talent of pool) {
+      if (used.has(talent.id)) continue;
+      unique.push(talent);
+      if (unique.length >= count) break;
+    }
+    return unique;
+  }
+
+  function autoPickDraftTalent(player, options) {
+    if (!player || !Array.isArray(options) || !options.length) return null;
+    return options
+      .slice()
+      .sort((a, b) => talentKeywordScore(b, player.aiPersonality?.id) - talentKeywordScore(a, player.aiPersonality?.id))[0] || options[0];
   }
   function adHubCost(player) {
     return discountedCost(AD_HUB_COST * (hasTalent(player, "aggressive_portfolio") ? 0.8 : 1), player);
@@ -8586,31 +8836,7 @@
   }
   function pipMaybePick(player) {
     if (!player || !player.isBot) return;
-    const total = TALENTS[player.talentTree]?.tiers.length || 0;
-    for (let i = 0; i < total; i++) {
-      if (tierUnlocked(i, player) && player.talents[i] === undefined) {
-        const t = TALENTS[player.talentTree].tiers[i];
-        let side;
-        if (t.left.live && !t.right.live) side = "left";
-        else if (t.right.live && !t.left.live) side = "right";
-        else {
-          const keywordWeights = {
-            powerBroker: { cash: 3, income: 3, cost: 2, channel: 2, "power grab": 3, hq: 2 },
-            grassroots: { speech: 3, influence: 3, office: 2, nearby: 2, passive: 1.5 },
-            countyBuilder: { office: 3, upgrade: 3, police: 2.5, base: 2, deploy: 2 },
-            spoiler: { disrupt: 3, assassination: 3, siphon: 2.5, blackout: 2, rival: 1.5 },
-          };
-          const weights = keywordWeights[player.aiPersonality?.id] || keywordWeights.powerBroker;
-          const score = (talent) => {
-            const text = (talent.name + " " + talent.desc).toLowerCase();
-            return Object.entries(weights).reduce((sum, [keyword, weight]) => sum + (text.includes(keyword) ? weight : 0), Math.random() * 1.5);
-          };
-          side = score(t.left) >= score(t.right) ? "left" : "right";
-        }
-        player.talents[i] = side;
-        return;
-      }
-    }
+    checkTalentDraftUnlocks(player);
   }
 
   function isSpeaking(player) {
@@ -9555,7 +9781,12 @@
   document.addEventListener("keydown", (e) => {
     const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "select" || tag === "textarea") return;
-    if (e.key === "Tab") { e.preventDefault(); togglePip(); return; }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (rivalTalentPlayerId === HUMAN) closeRivalTalentViewer();
+      else inspectLeaderPortrait(HUMAN);
+      return;
+    }
     if (!pipOpen) return;
     const k = e.key.toLowerCase();
     if (e.key === "Escape") { e.preventDefault(); closePip(); }

@@ -4925,9 +4925,225 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     letter-spacing: 3px;
   }
 
-  .game-logo-tag {
+.game-logo-tag {
     padding-left: 50px;
     font-size: 0.82rem;
     letter-spacing: 2px;
+  }
+}
+
+.talent-draft-overlay{
+  position:absolute;
+  inset:0;
+  z-index:38;
+  display:none;
+  place-items:center;
+  padding:24px;
+  background:radial-gradient(circle at center, rgba(6,22,16,.72), rgba(0,0,0,.88));
+}
+.talent-draft-overlay.is-open{
+  display:grid;
+}
+.talent-draft-panel{
+  width:min(1320px, calc(100% - 24px));
+  display:grid;
+  gap:18px;
+  padding:20px;
+  border:1px solid rgba(140,255,194,.42);
+  background:
+    radial-gradient(circle at top, rgba(80,180,255,.08), transparent 42%),
+    linear-gradient(180deg, rgba(16,31,46,.88), rgba(8,19,14,.95));
+  box-shadow:0 0 34px rgba(52,255,134,.18), inset 0 0 24px rgba(255,255,255,.03);
+}
+.talent-draft-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.talent-draft-head strong{
+  display:block;
+  color:#effff5;
+  font:clamp(1.8rem, 3vw, 2.7rem)/1 "VT323", monospace;
+  letter-spacing:1px;
+}
+.talent-draft-head p,
+.talent-draft-head span{
+  margin:0;
+  color:#a8d7bf;
+}
+.talent-draft-kicker{
+  display:block;
+  color:#79ffc1;
+  font:1rem/1 "VT323", monospace;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+.talent-draft-timer{
+  min-width:150px;
+  display:grid;
+  gap:4px;
+  padding:10px 14px;
+  border:1px solid rgba(117,226,255,.34);
+  background:rgba(20,44,58,.58);
+  text-align:right;
+}
+.talent-draft-timer strong{
+  color:#bff8ff;
+  font:2rem/1 "VT323", monospace;
+}
+.talent-draft-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:18px;
+}
+.talent-draft-card{
+  position:relative;
+  display:grid;
+  gap:12px;
+  padding:14px;
+  border:1px solid rgba(150,255,200,.24);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)),
+    rgba(7,17,14,.9);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.03);
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.talent-draft-card[data-talent-draft-pick]{
+  cursor:pointer;
+}
+.talent-draft-card[data-talent-draft-pick]:hover{
+  transform:translateY(-4px) scale(1.01);
+  box-shadow:0 18px 36px rgba(0,0,0,.36), 0 0 18px rgba(95,221,255,.18);
+}
+.talent-draft-card.is-picked{
+  box-shadow:0 0 0 1px rgba(255,255,255,.05), 0 0 18px rgba(255,215,106,.14);
+}
+.talent-draft-card--amber{ border-color:rgba(255,216,107,.42); }
+.talent-draft-card--cyan{ border-color:rgba(83,215,255,.42); }
+.talent-draft-card--magenta{ border-color:rgba(240,108,255,.42); }
+.talent-draft-card-art{
+  min-height:156px;
+  display:grid;
+  place-items:center;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.08);
+  background:radial-gradient(circle at center, rgba(255,255,255,.06), rgba(255,255,255,0) 60%), rgba(0,0,0,.28);
+}
+.talent-draft-card-art svg{
+  width:100%;
+  max-width:166px;
+  display:block;
+}
+.talent-draft-card-body{
+  display:grid;
+  gap:8px;
+}
+.talent-draft-card-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.talent-draft-tier,
+.talent-draft-chip{
+  color:#9df6c0;
+  font:1rem/1 "VT323", monospace;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.talent-draft-chip{
+  color:#d8fbff;
+}
+.talent-draft-card strong{
+  color:#f5fff9;
+  font:1.6rem/1 "VT323", monospace;
+  letter-spacing:1px;
+}
+.talent-draft-origin{
+  color:#7ea393;
+  font-size:.76rem;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.talent-draft-card p{
+  margin:0;
+  color:#bde6ce;
+  font-size:.88rem;
+  line-height:1.25;
+}
+.talent-draft-card em{
+  color:#79ffc1;
+  font-style:normal;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-size:.78rem;
+}
+.talent-draft-card.is-compact{
+  gap:8px;
+  padding:10px;
+}
+.talent-draft-card.is-compact .talent-draft-card-art{
+  min-height:104px;
+}
+.talent-draft-card.is-compact .talent-draft-card-art svg{
+  max-width:114px;
+}
+.talent-draft-card.is-compact .talent-draft-card-body{
+  gap:6px;
+}
+.talent-draft-card.is-compact strong{
+  font-size:1.15rem;
+}
+.talent-draft-card.is-compact p{
+  font-size:.75rem;
+}
+.talent-card-collection{
+  display:grid;
+  gap:12px;
+}
+.talent-card-tier-block{
+  display:grid;
+  gap:8px;
+}
+.talent-card-tier-label{
+  color:#9df6c0;
+  font:1rem/1 "VT323", monospace;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.talent-card-empty,
+.menu-tier-summary{
+  color:#8fb59f;
+  font-size:.8rem;
+  line-height:1.25;
+}
+.menu-tier-nodes.talent-card-collection{
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+}
+.rival-talent-grid.talent-card-collection{
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px){
+  .talent-draft-grid,
+  .menu-tier-nodes.talent-card-collection,
+  .rival-talent-grid.talent-card-collection{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px){
+  .talent-draft-overlay{
+    padding:12px;
+  }
+  .talent-draft-head{
+    grid-template-columns:1fr;
+    display:grid;
+  }
+  .talent-draft-grid,
+  .menu-tier-nodes.talent-card-collection,
+  .rival-talent-grid.talent-card-collection{
+    grid-template-columns:1fr;
   }
 }
