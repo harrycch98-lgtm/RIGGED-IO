@@ -8567,14 +8567,14 @@
   // ===================== PIP-CAMPAIGN 3000 : TALENT TERMINAL =====================
   const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
   const TALENT_ATLAS_BY_TREE = {
-    oligarchy: "oligarchy-atlas.svg?v=2",
-    populist: "populist-atlas.svg?v=2",
-    syndicate: "syndicate-atlas.svg?v=2",
-    vanguard: "vanguard-atlas.svg?v=2",
-    futurist: "futurist-atlas.svg?v=2",
-    machine: "machine-atlas.svg?v=2",
-    signal: "signal-atlas.svg?v=2",
-    ledger: "ledger-atlas.svg?v=2",
+    oligarchy: "oligarchy-atlas.png?v=2",
+    populist: "populist-atlas.png?v=2",
+    syndicate: "syndicate-atlas.png?v=2",
+    vanguard: "vanguard-atlas.png?v=2",
+    futurist: "futurist-atlas.png?v=2",
+    machine: "machine-atlas.png?v=2",
+    signal: "signal-atlas.png?v=2",
+    ledger: "ledger-atlas.png?v=2",
   };
   const TALENTS = {
     oligarchy: { name: "CORPORATE OLIGARCHY", sub: "DONOR WAR ROOM", theme: "Cheap expansion builds a cash engine, then converts money into brutal tempo.", tiers: [
