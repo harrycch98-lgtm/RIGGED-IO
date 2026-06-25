@@ -4274,10 +4274,6 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   transition: border-color .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
 }
 
-.lobby-leader-slot.is-menu-open {
-  z-index: 4;
-}
-
 .lobby-leader-slot .leader-portrait {
   width: 68px;
 }
@@ -4306,39 +4302,9 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 
 .lobby-portrait-edit-hint {
   color: rgba(191,255,224,.72);
-  font-size: .66rem;
+  font-size: .72rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-}
-
-.lobby-leader-popout {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -42px;
-  display: grid;
-  padding: 6px;
-  border: 1px solid rgba(52,255,134,.42);
-  background: rgba(1, 18, 10, .96);
-  box-shadow: 0 10px 22px rgba(0,0,0,.35);
-}
-
-.lobby-leader-popout-button {
-  width: 100%;
-  min-height: 28px;
-  border: 1px solid rgba(52,255,134,.55);
-  background: transparent;
-  color: #34ff86;
-  font: 11px "Share Tech Mono", monospace;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.lobby-leader-popout-button:hover,
-.lobby-leader-popout-button:focus-visible {
-  background: rgba(52,255,134,.12);
-  outline: none;
 }
 
 .leader-portrait-frame {

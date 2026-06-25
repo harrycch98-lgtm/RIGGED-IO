@@ -488,17 +488,13 @@
       const role = player.isBot ? 'BOT' : player.host ? 'HOST' : ready ? 'READY' : 'PICKING';
       const stateClass = player.isBot ? 'is-bot' : ready ? 'is-ready' : 'is-picking';
       const isSelfLobbyPlayer = !player.isBot && player.id === currentPlayerId;
-      const menuOpen = isSelfLobbyPlayer && lobbyLeaderMenuPlayerId === String(player.id);
       const botAction = player.isBot && isCurrentServerLobbyHost(lobby)
         ? `<button class="lobby-bot-open" type="button" data-remove-lobby-bot="${escapeHtml(player.id)}">Empty Slot</button>`
         : '';
       const portraitMarkup = isSelfLobbyPlayer
-        ? `<button class="lobby-leader-portrait-button" type="button" data-lobby-self-portrait="${escapeHtml(String(player.id))}" aria-expanded="${menuOpen ? "true" : "false"}" title="Open appearance actions">${lobbyLeaderPortraitMarkup(player, factionIndex)}<span class="lobby-portrait-edit-hint">Edit</span></button>`
+        ? `<button class="lobby-leader-portrait-button" type="button" data-lobby-self-portrait="${escapeHtml(String(player.id))}" title="Edit your appearance">${lobbyLeaderPortraitMarkup(player, factionIndex)}<span class="lobby-portrait-edit-hint">Edit Appearance</span></button>`
         : lobbyLeaderPortraitMarkup(player, factionIndex);
-      const menuMarkup = menuOpen
-        ? `<div class="lobby-leader-popout"><button class="lobby-leader-popout-button" type="button" data-lobby-edit-appearance="${escapeHtml(String(player.id))}">Edit Appearance</button></div>`
-        : '';
-      return `<article class="lobby-leader-slot ${stateClass}${menuOpen ? " is-menu-open" : ""}" style="--slot-color:${color}" title="${escapeHtml(playerName)} — ${escapeHtml(partyName)}"><span class="lobby-leader-player">${escapeHtml(playerName)}</span>${portraitMarkup}<span class="lobby-leader-party">${escapeHtml(partyName)}</span><span class="lobby-leader-name">${escapeHtml(leaderName)}</span><span class="lobby-leader-state">${role}</span>${botAction}${menuMarkup}</article>`;
+      return `<article class="lobby-leader-slot ${stateClass}" style="--slot-color:${color}" title="${escapeHtml(playerName)} — ${escapeHtml(partyName)}"><span class="lobby-leader-player">${escapeHtml(playerName)}</span>${portraitMarkup}<span class="lobby-leader-party">${escapeHtml(partyName)}</span><span class="lobby-leader-name">${escapeHtml(leaderName)}</span><span class="lobby-leader-state">${role}</span>${botAction}</article>`;
     }).join('');
   }
 
@@ -2843,13 +2839,6 @@
     lobbyLeaderStrip.addEventListener('click', async (event) => {
       const selfPortrait = event.target.closest('[data-lobby-self-portrait]');
       if (selfPortrait) {
-        const playerId = String(selfPortrait.dataset.lobbySelfPortrait || "");
-        lobbyLeaderMenuPlayerId = lobbyLeaderMenuPlayerId === playerId ? "" : playerId;
-        renderLobbyLeaderStrip();
-        return;
-      }
-      const appearanceButton = event.target.closest('[data-lobby-edit-appearance]');
-      if (appearanceButton) {
         openLobbyAppearanceEditor();
         return;
       }
@@ -2885,13 +2874,7 @@
         return;
       }
       const button = event.target.closest('[data-remove-lobby-bot]');
-      if (!button || button.disabled) {
-        if (lobbyLeaderMenuPlayerId) {
-          lobbyLeaderMenuPlayerId = "";
-          renderLobbyLeaderStrip();
-        }
-        return;
-      }
+      if (!button || button.disabled) return;
       button.disabled = true;
       const removed = await removeBotFromServerLobby(button.dataset.removeLobbyBot);
       if (!removed && button.isConnected) button.disabled = false;
