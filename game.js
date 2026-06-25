@@ -8493,12 +8493,12 @@
   const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
   const TALENT_ATLAS_BY_TREE = {
     oligarchy: "talent-card-atlases/oligarchy-atlas.png?v=1",
-    populist: "talent-card-atlases/populist-atlas.png?v=1",
+    populist: "talent-card-atlases/populist-atlas.svg?v=2",
     syndicate: "talent-card-atlases/syndicate-atlas.png?v=1",
-    vanguard: "talent-card-atlases/vanguard-atlas.png?v=1",
+    vanguard: "talent-card-atlases/vanguard-atlas.svg?v=2",
     futurist: "talent-card-atlases/futurist-atlas.svg?v=2",
-    machine: "talent-card-atlases/machine-atlas.png?v=1",
-    signal: "talent-card-atlases/signal-atlas.png?v=1",
+  machine: "talent-card-atlases/machine-atlas.svg?v=2",
+    signal: "talent-card-atlases/signal-atlas.svg?v=2",
     ledger: "talent-card-atlases/ledger-atlas.svg?v=2",
   };
   const TALENTS = {
