@@ -281,7 +281,7 @@
   justify-content: stretch;
   padding-top: 0;
   padding-bottom: 0;
-  border-left: 0;
+  border-left: 1px solid rgba(0,0,0,.92);
   background: transparent;
   overflow: visible;
 }
@@ -291,7 +291,7 @@
   min-height: auto;
   grid-template-columns: 1fr;
   overflow: visible;
-  border: 0;
+  border: 1px solid rgba(0,0,0,.92);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -303,6 +303,16 @@
 
 .lobby-entry-screen:has(.lobby-bar-panel) {
   align-content: center;
+}
+
+.lobby-entry-screen:has(.lobby-bar-panel)::before {
+  background:
+    linear-gradient(rgba(0,0,0,.96), rgba(0,0,0,.96));
+  opacity: 1;
+  mask-image: none;
+  transform: none;
+  inset: 0 0 auto 0;
+  height: 235px;
 }
 
 .lobby-entry-screen:has(.lobby-bar-panel) .lobby-entry-console {
