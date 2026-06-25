@@ -4073,7 +4073,37 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   background: rgba(1, 18, 9, 0.72);
 }
 
+.lobby-bar-panel {
+  position: relative;
+  min-height: 540px;
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(52,255,134,.34);
+  background: #041108;
+}
+
+.lobby-bar-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .82;
+  filter: saturate(.92) brightness(.72) contrast(1.04);
+}
+
+.lobby-bar-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.08) 18%, rgba(0,0,0,.14) 42%, rgba(0,0,0,.34) 74%, rgba(0,0,0,.48) 100%),
+    repeating-linear-gradient(0deg, rgba(52,255,134,.045) 0 1px, transparent 1px 4px);
+  pointer-events: none;
+}
+
 .lobby-leader-panel-head {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4100,6 +4130,28 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   box-sizing: border-box;
   font-size: .92rem;
   text-align: center;
+}
+
+.lobby-bar-panel .lobby-lineup-control,
+.lobby-bar-panel .sound-icon-toggle {
+  display: none;
+}
+
+.lobby-bar-panel .lobby-lineup-tools {
+  grid-template-columns: 1fr;
+  justify-content: end;
+  padding: 18px 20px 0;
+}
+
+.lobby-bar-panel .lobby-lineup-invite {
+  justify-self: end;
+  width: 168px;
+  min-width: 168px;
+  height: 38px;
+  min-height: 38px;
+  border-width: 2px;
+  background: rgba(2, 12, 7, .72);
+  box-shadow: 0 0 14px rgba(52,255,134,.18);
 }
 
 .lobby-lineup-tools {
@@ -4138,6 +4190,17 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .lobby-lineup-code {
   justify-self: end;
   align-self: center;
+}
+
+.lobby-bar-code {
+  position: absolute;
+  top: 64px;
+  right: 20px;
+  z-index: 2;
+  min-height: 0;
+  padding: 5px 9px;
+  background: rgba(2, 12, 7, .74);
+  backdrop-filter: blur(3px);
 }
 
 .sound-icon-toggle {
@@ -4241,6 +4304,33 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     justify-self: start;
   }
 
+  .lobby-bar-panel {
+    min-height: 480px;
+  }
+
+  .lobby-bar-panel .lobby-lineup-tools {
+    grid-template-columns: 1fr;
+    justify-content: end;
+  }
+
+  .lobby-bar-panel .lobby-lineup-invite {
+    justify-self: end;
+    width: 150px;
+    min-width: 150px;
+  }
+
+  .lobby-bar-code {
+    top: 62px;
+    right: 16px;
+  }
+
+  .lobby-bar-strip {
+    bottom: 28px;
+    width: min(92vw, 520px);
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 10px;
+  }
+
   .difficulty-tooltip {
     right: auto;
     left: 0;
@@ -4254,6 +4344,21 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   overflow-x: auto;
   padding: 3px 2px 6px;
   scrollbar-color: rgba(52,255,134,.55) rgba(0,0,0,.25);
+}
+
+.lobby-bar-strip {
+  position: absolute;
+  left: 50%;
+  bottom: 46px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 108px);
+  gap: 18px;
+  width: 612px;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  transform: translateX(-50%);
 }
 
 .lobby-leader-slot {
@@ -4272,6 +4377,50 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   text-align: center;
   text-transform: uppercase;
   transition: border-color .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
+}
+
+.lobby-bar-strip .lobby-leader-slot {
+  min-height: 148px;
+  padding: 8px 6px 10px;
+  align-self: end;
+  border-color: rgba(52,255,134,.14);
+  background: rgba(1, 10, 6, .22);
+  box-shadow: none;
+  backdrop-filter: blur(1px);
+}
+
+.lobby-bar-strip .lobby-leader-slot::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,0,0,.42), transparent 74%);
+  pointer-events: none;
+}
+
+.lobby-bar-strip .lobby-leader-slot .leader-portrait {
+  width: 60px;
+}
+
+.lobby-bar-strip .lobby-leader-player {
+  font-size: .78rem;
+}
+
+.lobby-bar-strip .lobby-leader-party,
+.lobby-bar-strip .lobby-leader-name {
+  display: none;
+}
+
+.lobby-bar-strip .lobby-leader-state {
+  color: var(--slot-color, #34ff86);
+  font-size: .74rem;
+}
+
+.lobby-bar-strip .lobby-portrait-edit-hint {
+  font-size: .64rem;
 }
 
 .lobby-leader-slot .leader-portrait {
@@ -5057,6 +5206,19 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 
   .leader-custom-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lobby-bar-code {
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+
+  .lobby-bar-strip {
+    left: 14px;
+    right: 14px;
+    width: auto;
+    transform: none;
   }
 
   .party-card {

@@ -67,7 +67,11 @@
       </div>
 
       <div class="party-menu" aria-label="Party selection">
-        <section class="lobby-leader-panel" aria-label="Lobby party leaders">
+        <section class="lobby-leader-panel lobby-bar-panel" aria-label="Lobby party leaders">
+          <video class="lobby-bar-video" autoplay muted loop playsinline>
+            <source src="lobby-bar-loop.mp4" type="video/mp4">
+          </video>
+          <div class="lobby-bar-overlay" aria-hidden="true"></div>
           <div class="lobby-leader-panel-head">
             <div class="lobby-lineup-tools">
               <label class="lobby-lineup-control">
@@ -91,8 +95,8 @@
               <button class="sound-toggle sound-icon-toggle" type="button" aria-label="Turn music on" title="Music off"><span aria-hidden="true">♪</span></button>
             </div>
           </div>
-          <div id="multiplayerInvite" class="multiplayer-invite lobby-lineup-code" aria-live="polite"></div>
-          <div id="lobbyLeaderStrip" class="lobby-leader-strip" aria-live="polite"></div>
+          <div id="multiplayerInvite" class="multiplayer-invite lobby-lineup-code lobby-bar-code" aria-live="polite"></div>
+          <div id="lobbyLeaderStrip" class="lobby-leader-strip lobby-bar-strip" aria-live="polite"></div>
         </section>
         <div id="talentPreview" class="talent-preview is-closed" aria-live="polite"></div>
       </div>
