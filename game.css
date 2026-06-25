@@ -1693,6 +1693,18 @@ canvas:focus-visible {
   font-size:17px;
   line-height:1.1;
 }
+.rival-talent-theme-hq{
+  display:grid;
+  gap:8px;
+}
+.rival-hq-button{
+  width:100%;
+}
+.rival-hq-copy{
+  color:#9fffc4;
+  font-size:16px;
+  line-height:1.08;
+}
 .rival-talent-grid{
   min-height:0;
   display:grid;

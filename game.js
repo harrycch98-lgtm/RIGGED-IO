@@ -2722,6 +2722,16 @@
   }
   if (rivalTalentViewer) {
     rivalTalentViewer.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-rival-action]");
+      if (actionButton) {
+        const action = actionButton.dataset.rivalAction;
+        if (action === "upgrade-hq" && rivalTalentPlayerId === HUMAN) {
+          upgradeMainBase(HUMAN);
+          renderRivalTalentViewer(HUMAN);
+          if (typeof updateUi === "function") updateUi(true);
+        }
+        return;
+      }
       if (event.target === rivalTalentViewer || event.target.closest("[data-rival-close]")) {
         closeRivalTalentViewer();
       }
@@ -4426,6 +4436,34 @@
       rivalTalentPlayerId = -1;
       return;
     }
+    const isHumanProfile = player.id === HUMAN;
+    const nextHq = player.mainBaseLevel < 3 ? player.mainBaseLevel + 1 : 0;
+    const hqReq = nextHq ? HQ_UPGRADE[nextHq] : null;
+    const hqUnlocked = Number.isInteger(player.homeBase) && player.homeBase >= 0;
+    const homeState = hqUnlocked ? states[player.homeBase] : null;
+    const homeInfluence = homeState ? Math.round(adjustedInfluence(homeState, player.id)) : 0;
+    const hqInfluenceReq = hqReq ? Math.ceil((hqReq.infl || 0) * (hasTalent(player, "system_overclock") ? 0.8 : 1)) : 0;
+    const hqUpgradeBusy = missions.some((mission) => mission.type === "baseUpgrade" && mission.player === player.id);
+    const canUpgradeHq = !!(isHumanProfile && hqUnlocked && nextHq && !hqUpgradeBusy && player.cash >= hqReq.cash && homeInfluence >= hqInfluenceReq);
+    const hqMeta = !isHumanProfile
+      ? `<div class="rival-talent-theme">${escapeHtml(tree.theme)}</div>`
+      : `
+      <div class="rival-talent-theme rival-talent-theme-hq">
+        <button class="primary-button rival-hq-button" type="button" data-rival-action="upgrade-hq"${canUpgradeHq ? "" : " disabled"}>
+          ${!hqUnlocked
+            ? "SELECT HOME BASE FIRST"
+            : nextHq
+              ? (hqUpgradeBusy ? "HQ UPGRADE UNDERWAY" : `UPGRADE HQ TO L${nextHq}`)
+              : "HQ MAXED"}
+        </button>
+        <div class="rival-hq-copy">
+          ${!hqUnlocked
+            ? "Choose your HQ state first before upgrading."
+            : nextHq
+              ? `Next tier costs ${formatMoney(hqReq.cash)} and needs ${hqInfluenceReq}% home influence. You have ${homeInfluence}%.`
+              : `HQ Level ${player.mainBaseLevel} is fully upgraded.`}
+        </div>
+      </div>`;
     rivalTalentViewer.innerHTML = `
       <div class="rival-talent-head">
         ${leaderPortraitMarkup(player, "leader-portrait")}
@@ -4436,7 +4474,7 @@
         </div>
         <button class="rival-talent-close" type="button" data-rival-close>ESC</button>
       </div>
-      <div class="rival-talent-theme">${escapeHtml(tree.theme)}</div>
+      ${hqMeta}
       <div class="rival-talent-grid talent-card-collection">${renderChosenTalentCards(player)}</div>
     `;
     rivalTalentViewer.classList.add("is-open");
