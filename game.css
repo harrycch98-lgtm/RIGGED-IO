@@ -5045,6 +5045,38 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .talent-draft-card--amber{ border-color:rgba(255,216,107,.42); }
 .talent-draft-card--cyan{ border-color:rgba(83,215,255,.42); }
 .talent-draft-card--magenta{ border-color:rgba(240,108,255,.42); }
+.talent-draft-card[data-talent-tree="oligarchy"]{
+  border-color:rgba(255,208,83,.48);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,224,138,.06), inset 0 18px 28px rgba(255,214,98,.04);
+}
+.talent-draft-card[data-talent-tree="populist"]{
+  border-color:rgba(105,216,255,.44);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(199,245,255,.06), inset 0 18px 28px rgba(105,216,255,.04);
+}
+.talent-draft-card[data-talent-tree="syndicate"]{
+  border-color:rgba(69,255,158,.46);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(208,255,231,.05), inset 0 18px 28px rgba(69,255,158,.04);
+}
+.talent-draft-card[data-talent-tree="vanguard"]{
+  border-color:rgba(255,122,104,.46);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,155,141,.05), inset 0 18px 28px rgba(255,122,104,.04);
+}
+.talent-draft-card[data-talent-tree="futurist"]{
+  border-color:rgba(199,173,255,.46);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(224,210,255,.05), inset 0 18px 28px rgba(199,173,255,.04);
+}
+.talent-draft-card[data-talent-tree="machine"]{
+  border-color:rgba(255,155,61,.46);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,209,138,.05), inset 0 18px 28px rgba(255,155,61,.04);
+}
+.talent-draft-card[data-talent-tree="signal"]{
+  border-color:rgba(127,244,234,.44);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(212,255,252,.05), inset 0 18px 28px rgba(127,244,234,.04);
+}
+.talent-draft-card[data-talent-tree="ledger"]{
+  border-color:rgba(255,244,199,.44);
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,244,199,.05), inset 0 18px 28px rgba(255,244,199,.04);
+}
 .talent-draft-card-art{
   min-height:156px;
   display:grid;
@@ -5106,6 +5138,62 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   mix-blend-mode:screen;
   opacity:.55;
 }
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(255,241,197,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,208,83,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(199,245,255,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(105,216,255,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(208,255,231,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(69,255,158,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(255,216,196,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,122,104,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(224,210,255,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(199,173,255,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(255,209,138,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,155,61,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(212,255,252,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(127,244,234,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-card-art{
+  background:
+    radial-gradient(circle at center, rgba(255,244,199,.1), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,244,199,.08), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
+    rgba(0,0,0,.28);
+}
 .talent-draft-card-body{
   display:grid;
   gap:8px;
@@ -5139,6 +5227,38 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   letter-spacing:1px;
   padding-bottom:6px;
   border-bottom:1px solid rgba(255,255,255,.08);
+}
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="oligarchy"] .talent-draft-tier{
+  color:#ffe08a;
+}
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="populist"] .talent-draft-tier{
+  color:#b8efff;
+}
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="syndicate"] .talent-draft-tier{
+  color:#baffd8;
+}
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="vanguard"] .talent-draft-tier{
+  color:#ffc6bb;
+}
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="futurist"] .talent-draft-tier{
+  color:#dac7ff;
+}
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="machine"] .talent-draft-tier{
+  color:#ffd1a1;
+}
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="signal"] .talent-draft-tier{
+  color:#c4fff7;
+}
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-origin,
+.talent-draft-card[data-talent-tree="ledger"] .talent-draft-tier{
+  color:#fff4d3;
 }
 .talent-draft-card p{
   margin:0;

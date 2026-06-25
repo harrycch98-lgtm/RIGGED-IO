@@ -4345,9 +4345,9 @@
     const compact = !!options.compact;
     const action = options.action || "";
     const countdown = options.countdown ? `<div class="talent-draft-chip">${escapeHtml(options.countdown)}</div>` : "";
-    return `
-      <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
-        <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
+      return `
+        <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}" data-talent-tree="${escapeHtml(String(talent.tree || ""))}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
+          <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
         <div class="talent-draft-card-body">
           <div class="talent-draft-card-top">
             <span class="talent-draft-tier">${TALENT_TIER_LABELS[tierIndex]}</span>
