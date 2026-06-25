@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #060403; }
+      .panel { fill: #140b05; stroke: #ff8f2f; stroke-width: 3; }
+      .dim { stroke: #8e4a17; stroke-width: 2; fill: none; opacity: .9; }
+      .glow { stroke: #ffb25e; stroke-width: 4; fill: none; }
+      .soft { stroke: #ff8f2f; stroke-width: 2; fill: none; }
+      .solid { fill: #ff9b3d; }
+      .ink { fill: #241309; }
+      .ember { fill: #ffd18a; }
+      .scan { stroke: #4b2610; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines4" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="furnace">
+      <rect x="-102" y="-44" width="204" height="136" class="ink" stroke="#ff8f2f" stroke-width="4"/>
+      <rect x="-66" y="-12" width="132" height="62" fill="#4a1e0d" stroke="#ffb25e" stroke-width="4"/>
+      <rect x="-48" y="6" width="96" height="28" class="solid" opacity=".9"/>
+      <rect x="-74" y="92" width="148" height="28" class="ink" stroke="#ff8f2f" stroke-width="4"/>
+      <circle cx="-54" cy="106" r="8" class="ember"/>
+      <circle cx="54" cy="106" r="8" class="ember"/>
+    </g>
+    <g id="smokestack">
+      <rect x="-36" y="-118" width="72" height="162" class="ink" stroke="#ff8f2f" stroke-width="4"/>
+      <rect x="-50" y="44" width="100" height="36" class="ink" stroke="#ff8f2f" stroke-width="4"/>
+      <path d="M-24-132c20-18 48-18 68-2M-4-158c26-18 58-14 82 6M-34-176c30-16 72-10 104 14" class="soft"/>
+    </g>
+    <g id="gear">
+      <circle cx="0" cy="0" r="44" class="ink" stroke="#ffb25e" stroke-width="4"/>
+      <circle cx="0" cy="0" r="18" class="solid"/>
+      <path d="M0-70V-48M0 48V70M-70 0H-48M48 0H70M50-50 34-34M-50 50-34 34M-50-50-34-34M50 50 34 34" class="glow"/>
+    </g>
+    <g id="pipeline">
+      <path d="M-120 0H-24V-42H34V22H120" class="soft"/>
+      <circle cx="-24" cy="0" r="10" class="solid"/>
+      <circle cx="34" cy="-42" r="10" class="solid"/>
+      <circle cx="34" cy="22" r="10" class="solid"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines4)" opacity=".35"/>
+
+    <g>
+      <rect x="24" y="24" width="540" height="540" class="panel"/>
+      <rect x="72" y="72" width="444" height="444" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#furnace" transform="translate(286 250)"/>
+      <use href="#gear" transform="translate(166 390) scale(.9)"/>
+      <use href="#gear" transform="translate(406 390) scale(1.15)"/>
+      <path d="M122 168H454M122 208H454M122 430H454" class="dim"/>
+      <path d="M136 454c64-26 122-34 182-20 66 14 120 12 184-14" class="soft"/>
+      <circle cx="286" cy="154" r="18" class="solid"/>
+    </g>
+
+    <g transform="translate(588 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="36" y="36" width="468" height="468" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#smokestack" transform="translate(162 298)"/>
+      <use href="#smokestack" transform="translate(284 250) scale(.84)"/>
+      <use href="#smokestack" transform="translate(398 326) scale(1.08)"/>
+      <path d="M88 408H452M88 438H452" class="dim"/>
+      <path d="M98 146c52 22 90 30 142 26 60-4 104-30 166-46 34-8 66-8 110 4" class="soft"/>
+      <path d="M104 188c56 26 100 34 166 28 62-6 104-34 154-50 36-10 64-12 92-6" class="glow"/>
+    </g>
+
+    <g transform="translate(1152 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="40" y="40" width="460" height="460" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#pipeline" transform="translate(270 184) scale(1.3)"/>
+      <use href="#pipeline" transform="translate(270 286) scale(1.05 -1.05)"/>
+      <use href="#gear" transform="translate(176 374) scale(.82)"/>
+      <use href="#gear" transform="translate(358 374) scale(1.04)"/>
+      <path d="M110 118H430M110 454H430" class="dim"/>
+      <rect x="224" y="128" width="92" height="42" class="ink" stroke="#ffb25e" stroke-width="4"/>
+      <rect x="240" y="142" width="60" height="14" class="solid"/>
+    </g>
+
+    <g transform="translate(24 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="50" y="50" width="440" height="440" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#furnace" transform="translate(174 366) scale(.92)"/>
+      <use href="#smokestack" transform="translate(356 270) scale(.9)"/>
+      <path d="M104 120 214 154 284 130 346 166 434 134" class="glow"/>
+      <path d="M104 162 184 186 270 170 330 198 430 168" class="soft"/>
+      <path d="M100 418H442" class="dim"/>
+      <circle cx="140" cy="120" r="10" class="ember"/>
+      <circle cx="214" cy="154" r="8" class="ember"/>
+      <circle cx="284" cy="130" r="8" class="ember"/>
+      <circle cx="346" cy="166" r="8" class="ember"/>
+      <circle cx="434" cy="134" r="8" class="ember"/>
+    </g>
+
+    <g transform="translate(588 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="40" y="40" width="460" height="460" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#gear" transform="translate(168 200) scale(.82)"/>
+      <use href="#gear" transform="translate(278 300) scale(1.28)"/>
+      <use href="#gear" transform="translate(390 194) scale(.92)"/>
+      <path d="M168 200 278 300 390 194" class="soft"/>
+      <path d="M120 406c70-54 132-58 180-18 40 34 82 40 120 20 24-12 52-38 88-82" class="glow"/>
+      <path d="M94 100H444M94 438H444" class="dim"/>
+      <rect x="234" y="124" width="86" height="34" class="ink" stroke="#ffb25e" stroke-width="4"/>
+      <rect x="252" y="136" width="50" height="10" class="solid"/>
+    </g>
+
+    <g transform="translate(1152 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="36" y="36" width="468" height="468" class="ink" stroke="#ff8f2f" stroke-width="2"/>
+      <use href="#furnace" transform="translate(270 366) scale(1.05)"/>
+      <path d="M90 418H450" class="dim"/>
+      <path d="M98 166H442M98 202H442" class="dim"/>
+      <path d="M114 150c44 0 68 16 88 42 18 24 36 38 68 38 28 0 48-10 72-38 24-28 54-42 108-42" class="glow"/>
+      <path d="M118 250c42-18 74-22 110-12 28 8 56 28 88 28 28 0 54-16 82-30 38-18 70-18 112 2" class="soft"/>
+      <circle cx="270" cy="138" r="16" class="solid"/>
+      <circle cx="226" cy="154" r="7" class="ember"/>
+      <circle cx="314" cy="154" r="7" class="ember"/>
+    </g>
+  </g>
+</svg>

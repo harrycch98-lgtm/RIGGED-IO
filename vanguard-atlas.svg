@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #140403; }
+      .panel { fill: #250806; stroke: #ff6464; stroke-width: 3; }
+      .dim { stroke: #8b2d2b; stroke-width: 2; fill: none; opacity: .9; }
+      .glow { stroke: #ff9b8d; stroke-width: 4; fill: none; }
+      .soft { stroke: #ff6464; stroke-width: 2; fill: none; }
+      .solid { fill: #ff7a68; }
+      .ink { fill: #34100d; }
+      .bone { fill: #ffd8c4; opacity: .92; }
+      .scan { stroke: #4d1815; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines6" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="shield">
+      <path d="M0-80 76-52 70 18c-4 54-28 90-70 118-42-28-66-64-70-118l-6-70z" class="ink" stroke="#ff7a68" stroke-width="4"/>
+      <path d="M0-66V112M-54-22H54" class="glow"/>
+    </g>
+    <g id="banner">
+      <path d="M-120-44H92l48 40-48 40H-120Z" class="ink" stroke="#ff6464" stroke-width="4"/>
+      <path d="M-96-18H58M-96 0H44M-96 18H58" class="soft"/>
+    </g>
+    <g id="starburst">
+      <path d="M0-72 18-18 72 0 18 18 0 72-18 18-72 0-18-18Z" class="solid"/>
+    </g>
+    <g id="tower2">
+      <rect x="-30" y="-108" width="60" height="180" class="ink" stroke="#ff6464" stroke-width="4"/>
+      <rect x="-60" y="72" width="120" height="34" class="ink" stroke="#ff6464" stroke-width="4"/>
+      <path d="M-46-82H46M-46-40H46M-46 2H46M-46 44H46" class="soft"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines6)" opacity=".35"/>
+
+    <g>
+      <rect x="24" y="24" width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#shield" transform="translate(286 272) scale(1.15)"/>
+      <use href="#starburst" transform="translate(286 160)"/>
+      <path d="M120 126H452M120 162H452M120 430H452" class="dim"/>
+      <path d="M130 394c46-18 84-24 120-18 38 6 74 24 110 40 36 16 78 20 136 10" class="soft"/>
+      <circle cx="208" cy="408" r="10" class="bone"/>
+      <circle cx="364" cy="418" r="10" class="bone"/>
+    </g>
+
+    <g transform="translate(588 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#banner" transform="translate(246 178)"/>
+      <use href="#tower2" transform="translate(166 332)"/>
+      <use href="#tower2" transform="translate(356 316) scale(1.16)"/>
+      <path d="M90 416H450M90 450H450" class="dim"/>
+      <path d="M114 248c48 16 82 22 116 18 34-4 64-18 98-38 38-24 80-34 146-36" class="glow"/>
+      <circle cx="394" cy="170" r="16" class="solid"/>
+    </g>
+
+    <g transform="translate(1152 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#shield" transform="translate(170 304) scale(.84)"/>
+      <use href="#shield" transform="translate(286 248) scale(1.06)"/>
+      <use href="#shield" transform="translate(404 304) scale(.84)"/>
+      <path d="M92 136H448M92 170H448M92 436H448" class="dim"/>
+      <path d="M126 386c44-24 74-34 106-34 34 0 66 12 104 34 36 22 70 32 112 32 28 0 60-8 98-24" class="soft"/>
+      <use href="#starburst" transform="translate(286 154) scale(.76)"/>
+    </g>
+
+    <g transform="translate(24 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#tower2" transform="translate(150 310) scale(.9)"/>
+      <use href="#tower2" transform="translate(286 248) scale(1.12)"/>
+      <use href="#tower2" transform="translate(424 326) scale(.82)"/>
+      <path d="M120 410H452M120 442H452" class="dim"/>
+      <path d="M106 152c54 8 100 28 144 58 42 28 88 42 148 44 34 0 70-6 112-18" class="glow"/>
+      <path d="M102 204c46 8 88 22 128 42 46 24 94 34 146 34 40 0 84-8 132-24" class="soft"/>
+    </g>
+
+    <g transform="translate(588 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#banner" transform="translate(266 144) scale(1.06)"/>
+      <use href="#shield" transform="translate(286 308) scale(1.04)"/>
+      <path d="M92 404H448M92 438H448" class="dim"/>
+      <path d="M118 240c46-20 78-28 106-26 36 2 68 18 106 50 38 32 76 48 122 52 28 2 58-2 92-12" class="soft"/>
+      <path d="M126 194c38 0 66-14 94-44 22-22 46-34 74-34 32 0 54 12 74 38 20 24 46 42 80 56" class="glow"/>
+    </g>
+
+    <g transform="translate(1152 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#ff6464" stroke-width="2"/>
+      <use href="#starburst" transform="translate(286 144) scale(1.12)"/>
+      <use href="#banner" transform="translate(286 228)"/>
+      <use href="#shield" transform="translate(286 362) scale(.88)"/>
+      <path d="M114 430H458" class="dim"/>
+      <path d="M112 118H460M112 154H460" class="dim"/>
+      <circle cx="196" cy="392" r="10" class="bone"/>
+      <circle cx="286" cy="414" r="12" class="bone"/>
+      <circle cx="376" cy="392" r="10" class="bone"/>
+      <path d="M160 374c34-26 66-40 94-40 28 0 58 14 90 40 28 22 56 34 88 34 18 0 40-4 66-12" class="soft"/>
+    </g>
+  </g>
+</svg>

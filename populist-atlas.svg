@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #04120d; }
+      .panel { fill: #092218; stroke: #48c8ff; stroke-width: 3; }
+      .dim { stroke: #1d5f79; stroke-width: 2; fill: none; opacity: .9; }
+      .glow { stroke: #8ce7ff; stroke-width: 4; fill: none; }
+      .soft { stroke: #48c8ff; stroke-width: 2; fill: none; }
+      .solid { fill: #69d8ff; }
+      .ink { fill: #0b2c3a; }
+      .mist { fill: #c7f5ff; opacity: .9; }
+      .scan { stroke: #12394a; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines5" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="podium">
+      <rect x="-92" y="28" width="184" height="88" class="ink" stroke="#48c8ff" stroke-width="4"/>
+      <rect x="-62" y="54" width="124" height="18" class="solid"/>
+      <rect x="-38" y="-24" width="20" height="52" class="solid"/>
+      <rect x="18" y="-24" width="20" height="52" class="solid"/>
+      <circle cx="-28" cy="-30" r="10" class="mist"/>
+      <circle cx="28" cy="-30" r="10" class="mist"/>
+    </g>
+    <g id="crowd">
+      <circle cx="-82" cy="0" r="18" class="mist"/>
+      <circle cx="-34" cy="-8" r="20" class="mist"/>
+      <circle cx="20" cy="2" r="18" class="mist"/>
+      <circle cx="72" cy="-4" r="19" class="mist"/>
+      <path d="M-106 46c22-28 52-40 78-40 26 0 54 12 74 40M-8 48c20-28 48-40 80-40 28 0 56 12 78 40" class="soft"/>
+    </g>
+    <g id="rays">
+      <path d="M0 0-140-164M0 0-68-188M0 0 0-202M0 0 68-188M0 0 140-164" class="glow"/>
+    </g>
+    <g id="laurel">
+      <path d="M-70 44c-32-22-50-52-54-88 26 22 46 26 68 18-10 22-10 44-14 70zM70 44c32-22 50-52 54-88-26 22-46 26-68 18 10 22 10 44 14 70z" class="soft"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines5)" opacity=".35"/>
+
+    <g>
+      <rect x="24" y="24" width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <use href="#rays" transform="translate(286 214)"/>
+      <use href="#podium" transform="translate(286 288)"/>
+      <use href="#crowd" transform="translate(286 416) scale(1.24)"/>
+      <path d="M110 110H462M110 146H462M110 448H462" class="dim"/>
+      <circle cx="286" cy="192" r="20" class="solid"/>
+    </g>
+
+    <g transform="translate(588 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <use href="#crowd" transform="translate(182 360) scale(1.05)"/>
+      <use href="#crowd" transform="translate(354 344) scale(.9)"/>
+      <path d="M104 202c44-34 82-48 126-48 38 0 72 10 106 30 30 18 58 28 100 28 34 0 68-10 108-34" class="glow"/>
+      <path d="M94 242c58-26 98-34 150-32 46 2 86 14 126 34 38 20 72 26 132 24" class="soft"/>
+      <rect x="232" y="124" width="76" height="34" class="ink" stroke="#8ce7ff" stroke-width="4"/>
+      <rect x="248" y="138" width="44" height="10" class="solid"/>
+    </g>
+
+    <g transform="translate(1152 24)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <use href="#podium" transform="translate(166 262) scale(.9)"/>
+      <use href="#podium" transform="translate(286 236) scale(1.05)"/>
+      <use href="#podium" transform="translate(404 266) scale(.82)"/>
+      <path d="M92 132H448M92 170H448M92 414H448" class="dim"/>
+      <path d="M120 380c52-24 90-34 128-32 38 2 72 14 116 34 36 18 74 20 126 2" class="glow"/>
+      <use href="#laurel" transform="translate(286 198) scale(1.1)"/>
+    </g>
+
+    <g transform="translate(24 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <path d="M104 144H438M104 178H438M104 402H438" class="dim"/>
+      <path d="M128 350c44-56 86-82 126-82 36 0 58 18 82 48 16 20 34 32 60 32 32 0 68-20 130-82" class="glow"/>
+      <path d="M142 228c30 18 56 26 84 26 28 0 56-8 88-24 30-16 58-24 88-24 30 0 62 10 96 30" class="soft"/>
+      <circle cx="156" cy="222" r="10" class="mist"/>
+      <circle cx="242" cy="196" r="10" class="mist"/>
+      <circle cx="332" cy="194" r="10" class="mist"/>
+      <circle cx="420" cy="224" r="10" class="mist"/>
+    </g>
+
+    <g transform="translate(588 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="44" y="44" width="452" height="452" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <use href="#crowd" transform="translate(168 386) scale(.88)"/>
+      <use href="#podium" transform="translate(356 248) scale(1.08)"/>
+      <path d="M94 142H444M94 178H444M94 430H444" class="dim"/>
+      <path d="M112 300c54-24 94-32 140-28 40 4 74 18 110 40 32 20 62 26 118 26" class="soft"/>
+      <path d="M132 250c28 0 52-18 72-48 18-24 42-38 74-38 34 0 58 14 76 44 14 24 36 42 70 56" class="glow"/>
+    </g>
+
+    <g transform="translate(1152 588)">
+      <rect width="540" height="540" class="panel"/>
+      <rect x="48" y="48" width="492" height="492" class="ink" stroke="#48c8ff" stroke-width="2"/>
+      <use href="#rays" transform="translate(286 188) scale(1.1)"/>
+      <use href="#laurel" transform="translate(286 204) scale(1.28)"/>
+      <use href="#podium" transform="translate(286 314) scale(1.12)"/>
+      <path d="M114 432H458" class="dim"/>
+      <path d="M110 126H462M110 162H462" class="dim"/>
+      <use href="#crowd" transform="translate(286 436) scale(1.18)"/>
+      <circle cx="286" cy="184" r="22" class="mist"/>
+    </g>
+  </g>
+</svg>
