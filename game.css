@@ -2221,6 +2221,9 @@ canvas {
   padding: 8px 12px 7px;
   border: 2px solid rgba(52, 255, 134, 0.7);
   border-radius: 4px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .16s ease, transform .16s ease;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   font-size: 1.08rem;
@@ -2248,6 +2251,39 @@ canvas {
   border-radius: 4px;
   font-size: 0.95rem;
   line-height: 1;
+}
+.toast.is-draft{
+  padding: 10px 14px 9px;
+  border-width: 2px;
+  border-color: rgba(255, 238, 153, 0.92);
+  background:
+    linear-gradient(180deg, rgba(255,245,180,.12), rgba(255,255,255,0) 26%),
+    radial-gradient(circle at left center, rgba(105,216,255,.12), transparent 38%),
+    rgba(10,16,12,.96);
+  color: #f8ffd8;
+  text-shadow: 0 0 12px rgba(255,244,180,.18);
+  box-shadow:
+    0 0 26px rgba(255,238,153,.18),
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    inset 0 12px 24px rgba(255,255,255,.03);
+  animation: doctrine-toast-in .52s cubic-bezier(.16,.84,.24,1);
+}
+@keyframes doctrine-toast-in{
+  0%{
+    opacity:0;
+    transform:translateY(14px) scale(.94);
+    filter:brightness(.84);
+  }
+  55%{
+    opacity:1;
+    transform:translateY(-2px) scale(1.02);
+    filter:brightness(1.06);
+  }
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+  }
 }
 
 .pause-overlay{
@@ -5520,6 +5556,69 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   grid-template-columns:repeat(3, minmax(0, 1fr));
 }
 
+.talent-history-hud{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:118px;
+  z-index:88;
+  display:none;
+  gap:8px;
+  padding:8px 10px 9px;
+  border:1px solid rgba(52,255,134,.22);
+  border-radius:6px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 28%),
+    rgba(3,14,9,.86);
+  box-shadow:0 0 18px rgba(0,0,0,.24), inset 0 0 14px rgba(255,255,255,.02);
+  pointer-events:none;
+}
+.talent-history-hud.is-visible{
+  display:grid;
+}
+.talent-history-title{
+  color:#97f7bf;
+  font:1.05rem/1 "VT323","Share Tech Mono",monospace;
+  letter-spacing:1px;
+}
+.talent-history-track{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.talent-history-chip{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  padding:5px 8px 6px;
+  border:1px solid rgba(52,255,134,.18);
+  background:rgba(52,255,134,.05);
+}
+.talent-history-chip-tier{
+  color:#88b39a;
+  font:0.82rem/1 "VT323","Share Tech Mono",monospace;
+  letter-spacing:1px;
+}
+.talent-history-chip strong{
+  color:#effff5;
+  font:0.95rem/1 "VT323","Share Tech Mono",monospace;
+  letter-spacing:.8px;
+  font-weight:400;
+}
+.talent-history-empty{
+  color:#9bcab0;
+  font:0.9rem/1.1 "VT323","Share Tech Mono",monospace;
+  letter-spacing:.8px;
+}
+.talent-history-chip[data-talent-tree="oligarchy"]{ border-color:rgba(255,208,83,.36); background:rgba(255,208,83,.08); }
+.talent-history-chip[data-talent-tree="populist"]{ border-color:rgba(105,216,255,.36); background:rgba(105,216,255,.08); }
+.talent-history-chip[data-talent-tree="syndicate"]{ border-color:rgba(69,255,158,.36); background:rgba(69,255,158,.08); }
+.talent-history-chip[data-talent-tree="vanguard"]{ border-color:rgba(255,122,104,.36); background:rgba(255,122,104,.08); }
+.talent-history-chip[data-talent-tree="futurist"]{ border-color:rgba(199,173,255,.36); background:rgba(199,173,255,.08); }
+.talent-history-chip[data-talent-tree="machine"]{ border-color:rgba(255,155,61,.36); background:rgba(255,155,61,.08); }
+.talent-history-chip[data-talent-tree="signal"]{ border-color:rgba(127,244,234,.36); background:rgba(127,244,234,.08); }
+.talent-history-chip[data-talent-tree="ledger"]{ border-color:rgba(255,244,199,.36); background:rgba(255,244,199,.08); }
+
 @media (max-width: 1100px){
   .talent-draft-grid,
   .menu-tier-nodes.talent-card-collection,
@@ -5531,6 +5630,11 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 @media (max-width: 720px){
   .talent-draft-overlay{
     padding:12px;
+  }
+  .talent-history-hud{
+    left:10px;
+    right:10px;
+    bottom:110px;
   }
   .talent-draft-head{
     grid-template-columns:1fr;

@@ -2380,6 +2380,7 @@
   const debatePowerOverlay = document.querySelector("#debatePowerOverlay");
   const newsSoundButtons = document.querySelectorAll(".sound-toggle");
   const toast = document.querySelector("#toast");
+  const talentHistoryHud = document.querySelector("#talentHistoryHud");
   const partyRoster = document.querySelector("#partyRoster");
   const talentPreview = document.querySelector("#talentPreview");
 
@@ -4398,7 +4399,37 @@
           ${card ? talentCardMarkup(card, { tierIndex, picked: true, compact: true }) : '<div class="talent-card-empty">No card drafted for this tier yet.</div>'}
         </section>
       `;
-    }).join("");
+      }).join("");
+  }
+
+  function renderTalentHistoryHud(player) {
+    if (!talentHistoryHud) return;
+    if (!gameStarted || !player) {
+      talentHistoryHud.innerHTML = "";
+      talentHistoryHud.classList.remove("is-visible");
+      return;
+    }
+    const cards = chosenTalentCards(player);
+    if (!cards.length) {
+      talentHistoryHud.innerHTML = `
+        <div class="talent-history-title">DOCTRINES</div>
+        <div class="talent-history-empty">No drafted doctrines yet.</div>
+      `;
+      talentHistoryHud.classList.add("is-visible");
+      return;
+    }
+    talentHistoryHud.innerHTML = `
+      <div class="talent-history-title">DOCTRINES</div>
+      <div class="talent-history-track">
+        ${cards.map(({ tierIndex, card }) => `
+          <article class="talent-history-chip" data-talent-tree="${escapeHtml(String(card.tree || ""))}">
+            <span class="talent-history-chip-tier">${escapeHtml(TALENT_TIER_LABELS[tierIndex])}</span>
+            <strong>${escapeHtml(card.name)}</strong>
+          </article>
+        `).join("")}
+      </div>
+    `;
+    talentHistoryHud.classList.add("is-visible");
   }
 
   function renderRivalTalentViewer(playerId) {
@@ -4514,10 +4545,11 @@
       renderTalentDraftOverlay();
     }
     addAlert(`${player.name} drafted ${chosen.name} from ${TALENT_TIER_LABELS[tierIndex]}.`);
-    if (playerId === HUMAN) {
-      showToast(`${TALENT_TIER_LABELS[tierIndex]} drafted: ${chosen.name}.`);
-      updateUi(true);
-    }
+      if (playerId === HUMAN) {
+        playTalentDraftPickSfx();
+        showToast(`${TALENT_TIER_LABELS[tierIndex]} doctrine chosen: ${chosen.name}.`, "draft");
+        updateUi(true);
+      }
     refreshTalentInterfaces();
     return true;
   }
@@ -4558,6 +4590,7 @@
   function refreshTalentInterfaces() {
     if (pipOpen) renderPip();
     if (rivalTalentPlayerId >= 0) renderRivalTalentViewer(rivalTalentPlayerId);
+    renderTalentHistoryHud(players[HUMAN]);
     renderTalentDraftOverlay();
   }
 
@@ -8489,15 +8522,20 @@
   }
 
   function showToast(message, variant = "") {
-    toast.textContent = message;
-    toast.classList.toggle("is-compact", variant === "compact");
-    toast.classList.add("is-visible");
-    window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => {
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.toggle("is-compact", variant === "compact");
+      toast.classList.toggle("is-draft", variant === "draft");
       toast.classList.remove("is-visible");
-      toast.classList.remove("is-compact");
-    }, 2200);
-  }
+      void toast.offsetWidth;
+      toast.classList.add("is-visible");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.classList.remove("is-visible");
+        toast.classList.remove("is-compact");
+        toast.classList.remove("is-draft");
+      }, 2200);
+    }
 
   function roundRect(x, y, w, h, r) {
     ctx.beginPath();
@@ -9431,6 +9469,42 @@
       tone("sine", 82, t + 0.04, 0.42, 0.4, 32);
       tone("triangle", 1480, t + 0.19, 0.14, 0.22, 620);
     }
+  }
+
+  function playTalentDraftPickSfx() {
+    if (!soundOn || sfxVolume <= 0) return;
+    ensureAudio();
+    const ac = audioContext;
+    if (!ac || ac.state === "suspended") return;
+    const now = ac.currentTime;
+    const master = ac.createGain();
+    master.gain.setValueAtTime(sfxLevel(0.58), now);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.92);
+    master.connect(ac.destination);
+
+    const lead = ac.createOscillator();
+    const leadGain = ac.createGain();
+    lead.type = "triangle";
+    lead.frequency.setValueAtTime(392, now);
+    lead.frequency.exponentialRampToValueAtTime(587.33, now + 0.16);
+    leadGain.gain.setValueAtTime(0.0001, now);
+    leadGain.gain.linearRampToValueAtTime(0.13, now + 0.018);
+    leadGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+    lead.connect(leadGain).connect(master);
+    lead.start(now);
+    lead.stop(now + 0.32);
+
+    const sparkle = ac.createOscillator();
+    const sparkleGain = ac.createGain();
+    sparkle.type = "sine";
+    sparkle.frequency.setValueAtTime(783.99, now + 0.1);
+    sparkle.frequency.exponentialRampToValueAtTime(1046.5, now + 0.26);
+    sparkleGain.gain.setValueAtTime(0.0001, now + 0.1);
+    sparkleGain.gain.linearRampToValueAtTime(0.07, now + 0.13);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+    sparkle.connect(sparkleGain).connect(master);
+    sparkle.start(now + 0.1);
+    sparkle.stop(now + 0.46);
   }
 
   function ensurePipAudio() {
