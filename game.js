@@ -1895,7 +1895,7 @@
   const MATCH_MODES = {
     campaign100: { id: "campaign100", label: "100 Days", timed: true, days: 100, seconds: MATCH_SECONDS },
   };
-  const HOME_BASE_SECONDS = 15;
+  const HOME_BASE_SECONDS = 60;
   const NEWS_INTERVAL = 85;
   const WORLD_EVENT_FIRST_DAYS_TO_ELECTION = 87;
   const WORLD_EVENT_LAST_DAY_BUFFER = 10;
@@ -4490,13 +4490,6 @@
     activeTalentDraftRenderKey = renderKey;
     talentDraftOverlay.innerHTML = `
       <div class="talent-draft-panel is-dealing">
-        <div class="talent-draft-head">
-          <div>
-            <span class="talent-draft-kicker">${TALENT_TIER_LABELS[activeTalentDraft.tierIndex]} Draft</span>
-            <strong>${escapeHtml(player.name)} // choose 1 of 4</strong>
-            <p>${activeTalentDraft.tierIndex === 0 ? "Opening hand dealt. Select your first campaign doctrine." : `HQ Level ${activeTalentDraft.tierIndex + 1} is online. Draft a new doctrine to lock in your upgrade.`}</p>
-          </div>
-        </div>
         <div class="talent-draft-grid">
           ${activeTalentDraft.options.map((talent) => talentCardMarkup(talent, { tierIndex: activeTalentDraft.tierIndex, action: "pick" })).join("")}
         </div>
