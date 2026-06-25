@@ -1477,19 +1477,24 @@ canvas:focus-visible {
 }
 .leader-emote-bubble{
   position:absolute;
-  right:2px;
-  bottom:2px;
-  z-index:5;
-  min-width:22px;
-  padding:1px 4px 2px;
+  left:50%;
+  top:50%;
+  z-index:6;
+  min-width:44px;
+  min-height:44px;
+  padding:4px 8px 6px;
   border:1px solid rgba(52,255,134,.55);
-  background:rgba(3,16,8,.94);
+  border-radius:999px;
+  background:rgba(3,16,8,.88);
   color:#effff4;
-  font:14px/1 "VT323","Share Tech Mono",monospace;
+  font:28px/1 "VT323","Share Tech Mono",monospace;
   text-align:center;
-  transform:none;
+  display:grid;
+  place-items:center;
+  transform:translate(-50%, -50%);
   text-shadow:0 0 8px rgba(52,255,134,.45);
-  box-shadow:0 0 14px rgba(52,255,134,.18);
+  box-shadow:0 0 18px rgba(52,255,134,.22);
+  pointer-events:none;
 }
 
 .emote-wheel{

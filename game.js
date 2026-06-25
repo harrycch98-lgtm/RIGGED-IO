@@ -5291,7 +5291,7 @@
     if (hasTalent(player, "model_polling") && state.ev >= 10) bonus += 5;
     if ((action?.hypeBoost || 1) > 1) bonus += 8;
     if (hasTalent(player, "executive_immunity")) bonus += 5;
-    if (channels.some((channel) => channel.owner === player.id && stateInChannelCoverage(state, channel))) bonus += 3;
+    if (channels.some((channel) => channel.owner === player.id && stateInChannelCoverage(state, channel))) bonus += 6;
     bonus += officeLevel(state, player.id) * 2;
     return bonus;
   }
