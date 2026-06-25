@@ -2475,6 +2475,7 @@
   const difficultyInput = document.querySelector("#difficulty");
   const newGameButton = document.querySelector("#newGameButton");
   const createLobbyButton = document.querySelector("#createLobbyButton");
+  const lobbyStartButton = document.querySelector("#lobbyStartButton");
   const copyInviteButton = document.querySelector("#copyInviteButton");
   const mainMenuAddBotButton = document.querySelector("#mainMenuAddBotButton");
   
@@ -2808,6 +2809,7 @@
 
   if (newGameButton) newGameButton.addEventListener("click", beginSelectedGame);
   if (createLobbyButton) createLobbyButton.addEventListener("click", handleInviteFriendClick);
+  if (lobbyStartButton) lobbyStartButton.addEventListener("click", beginSelectedGame);
   if (copyInviteButton) copyInviteButton.addEventListener("click", copyInviteLink);
   if (mainMenuAddBotButton) {
     mainMenuAddBotButton.addEventListener("click", async () => {
@@ -3609,6 +3611,10 @@
       button.textContent = lobbyStartButtonLabel(selectedParty);
       button.disabled = multiplayerState.enabled && multiplayerState.host && !lobbyCanHostStart();
     });
+    if (lobbyStartButton) {
+      lobbyStartButton.textContent = lobbyStartButtonLabel(selectedParty);
+      lobbyStartButton.disabled = multiplayerState.enabled && multiplayerState.host && !lobbyCanHostStart();
+    }
   }
 
   function lobbyCanHostStart() {
