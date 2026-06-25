@@ -2402,6 +2402,7 @@
   const partyRoster = document.querySelector("#partyRoster");
   const talentPreview = document.querySelector("#talentPreview");
   const homeBaseConfirmOverlay = document.querySelector("#homeBaseConfirmOverlay");
+  let emoteWheelHoverId = "";
 
   function ensureEmoteWheel() {
       let wheel = document.getElementById("emoteWheel");
@@ -2428,6 +2429,12 @@
     mapStage?.appendChild(wheel);
       wheel.querySelectorAll("[data-emote-id]").forEach((button) => {
         button.addEventListener("click", () => sendEmote(String(button.dataset.emoteId || "")));
+        button.addEventListener("pointerenter", () => {
+          emoteWheelHoverId = String(button.dataset.emoteId || "");
+        });
+        button.addEventListener("pointerleave", () => {
+          if (emoteWheelHoverId === String(button.dataset.emoteId || "")) emoteWheelHoverId = "";
+        });
       });
       return wheel;
     }
@@ -2452,7 +2459,14 @@
 
   function closeEmoteWheel() {
     emoteWheelOpen = false;
+    emoteWheelHoverId = "";
     ensureEmoteWheel()?.classList.remove("is-open");
+  }
+
+  function hoveredEmoteWheelId() {
+    if (!emoteWheelOpen) return "";
+    const hoveredButton = document.querySelector("#emoteWheel .emote-wheel-option:hover");
+    return String(hoveredButton?.dataset?.emoteId || emoteWheelHoverId || "");
   }
 
   function toggleEmoteWheel(force = null) {
@@ -4574,6 +4588,7 @@
         updateUi(true);
       }
     refreshTalentInterfaces();
+    if (tierIndex === 0) maybeStartCampaignEarly();
     return true;
   }
 
@@ -4611,6 +4626,22 @@
     if (rivalTalentPlayerId >= 0) renderRivalTalentViewer(rivalTalentPlayerId);
     renderTalentHistoryHud(players[HUMAN]);
     renderTalentDraftOverlay();
+  }
+
+  function everyoneReadyForCampaignLive() {
+    return players.length > 0 && players.every((player) =>
+      player &&
+      player.homeBase >= 0 &&
+      player.mainBaseLevel >= 1 &&
+      player.talents[0] !== undefined
+    );
+  }
+
+  function maybeStartCampaignEarly() {
+    if (phase !== "base") return false;
+    if (!everyoneReadyForCampaignLive()) return false;
+    finalizeHomeBases();
+    return true;
   }
 
   function inspectLeaderPortrait(playerId) {
@@ -5225,6 +5256,7 @@
     addAlert(`${player.name} selected ${state.name} as home base.`);
     if (playerId === HUMAN) broadcast(regionChannelIndex(state.region), `${player.name} plants campaign headquarters in ${state.name}. The first local cameras are rolling.`);
     checkTalentDraftUnlocks(player);
+    maybeStartCampaignEarly();
     return true;
   }
 
@@ -6055,6 +6087,47 @@
     }
     return true;
   }
+
+  function forcedDebateTargetFor(player, stateIndex) {
+    if (!player || !hasTalent(player, "executive_immunity")) return null;
+    return players
+      .filter((candidate) =>
+        candidate &&
+        candidate.id !== player.id &&
+        !candidate.action &&
+        canUseCampaignActions(candidate, candidate.id)
+      )
+      .sort((a, b) =>
+        adjustedInfluence(states[stateIndex], b.id) - adjustedInfluence(states[stateIndex], a.id) ||
+        b.mainBaseLevel - a.mainBaseLevel ||
+        b.cash - a.cash
+      )[0] || null;
+  }
+
+  function launchDebateNight(state, player, liveSpeakers) {
+    const debateOpponent = liveSpeakers.find((candidate) => candidate.id !== player.id) || null;
+    if (!debateOpponent) return false;
+    const debateId = debateOpponent.action?.debateId || "debate-" + Math.round(elapsed * 1000) + "-" + debateOpponent.id + "-" + player.id;
+    const contenders = [...liveSpeakers.filter((candidate) => candidate.id !== player.id), player];
+    contenders.forEach((candidate) => {
+      candidate.action.debateId = debateId;
+      candidate.action.debateRoll = Number(candidate.action.debateRoll ?? (Math.random() * 20));
+      candidate.action.decoyStates = [];
+      candidate.action.left = DEBATE_SECONDS;
+      candidate.action.total = DEBATE_SECONDS;
+      candidate.action.vulnerableLeft = DEBATE_SECONDS;
+      candidate.action.speechRateMult = (SPEECH_SECONDS / DEBATE_SECONDS) * (hasTalent(candidate, "prime_time_rhetoric") ? 1.2 : 1);
+    });
+    debateEventCounter = Math.max(debateEventCounter, Number(latestDebateEvent?.id || 0)) + 1;
+    latestDebateEvent = { id: debateEventCounter, playAt: Date.now() };
+    lastPresentedDebateEventId = latestDebateEvent.id;
+    presentDebateEvent(latestDebateEvent);
+    addAlert("DEBATE NIGHT: " + player.name + " challenged " + debateOpponent.name + " in " + state.name + ". Winner earns a +" + debateVictoryBonus() + "% influence surge.");
+    broadcast(regionChannelIndex(state.region), "DEBATE NIGHT is live in " + state.name + ": " + contenders.map((candidate) => candidate.name).join(" versus ") + ".");
+    if (player.id === HUMAN) showToast("DEBATE NIGHT — beat " + debateOpponent.name + " for +" + debateVictoryBonus() + "% influence.");
+    return true;
+  }
+
   function startAction(playerId, type, stateIndex) {
     if (playerId === HUMAN && routeGuestGameCommand('startAction', [type, stateIndex])) return true;
     const player = players[playerId];
@@ -6064,14 +6137,13 @@
       return false;
     }
     const executiveSpeech = type === "speech" && hasTalent(player, "executive_immunity");
-    const times = { speech: SPEECH_SECONDS * (executiveSpeech ? 0.5 : 1) };
+    const times = { speech: SPEECH_SECONDS };
     const costs = { speech: 0 };
     if (!times[type]) {
       if (playerId === HUMAN) showToast("Choose a campaign action.");
       return false;
     }
-    const liveSpeakers = type === "speech" ? realSpeechesInState(stateIndex) : [];
-    const debateOpponent = liveSpeakers.find((candidate) => candidate.id !== playerId) || null;
+    let liveSpeakers = type === "speech" ? realSpeechesInState(stateIndex) : [];
     if (type === "speech") {
       if (worldEventActive("martyrdom_cycle") && leadingPlayer(stateIndex) === playerId) {
         if (playerId === HUMAN) showToast("WORLD EVENT: You cannot speech in a state you already lead.");
@@ -6093,36 +6165,36 @@
     player.cash -= costs[type];
     const vulnerableLeft = type === "speech" ? times[type] : undefined;
     const hypeBoost = type === "speech" && player.hypeNext ? 1.4 : 1;
-    const speechRateMult = executiveSpeech ? 4 : 1;
+    const speechRateMult = 1;
     if (type === "speech") player.hypeNext = false;
-    const decoyStates = type === "speech" && !debateOpponent && hasTalent(player, "skynet_protocol")
+    const decoyStates = type === "speech" && !liveSpeakers.some((candidate) => candidate.id !== playerId) && hasTalent(player, "skynet_protocol")
       ? chooseSpeechDecoyStates(stateIndex, 3)
       : [];
     player.action = { type, state: stateIndex, decoyStates, left: times[type], total: times[type], vulnerableLeft, hypeBoost, speechRateMult };
     if (type === "speech") {
       player.speechCooldown = SPEECH_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS;
       player.speechCooldownTotal = player.speechCooldown;
+      if (!liveSpeakers.some((candidate) => candidate.id !== playerId) && debateParticipantLimit() > 1 && executiveSpeech) {
+        const forcedTarget = forcedDebateTargetFor(player, stateIndex);
+        if (forcedTarget) {
+          forcedTarget.action = {
+            type: "speech",
+            state: stateIndex,
+            decoyStates: [],
+            left: SPEECH_SECONDS,
+            total: SPEECH_SECONDS,
+            vulnerableLeft: SPEECH_SECONDS,
+            hypeBoost: 1,
+            speechRateMult: 1,
+            forcedDebate: true,
+          };
+          liveSpeakers = [...liveSpeakers, forcedTarget];
+        }
+      }
     }
     state.activePulse = 1;
-    if (type === "speech" && debateOpponent) {
-      const debateId = debateOpponent.action?.debateId || "debate-" + Math.round(elapsed * 1000) + "-" + debateOpponent.id + "-" + player.id;
-      const contenders = [...liveSpeakers.filter((candidate) => candidate.id !== player.id), player];
-      contenders.forEach((candidate) => {
-        candidate.action.debateId = debateId;
-        candidate.action.debateRoll = Number(candidate.action.debateRoll ?? (Math.random() * 20));
-        candidate.action.decoyStates = [];
-        candidate.action.left = DEBATE_SECONDS;
-        candidate.action.total = DEBATE_SECONDS;
-        candidate.action.vulnerableLeft = DEBATE_SECONDS;
-        candidate.action.speechRateMult = (SPEECH_SECONDS / DEBATE_SECONDS) * (hasTalent(candidate, "executive_immunity") ? 2 : 1);
-      });
-      debateEventCounter = Math.max(debateEventCounter, Number(latestDebateEvent?.id || 0)) + 1;
-      latestDebateEvent = { id: debateEventCounter, playAt: Date.now() };
-      lastPresentedDebateEventId = latestDebateEvent.id;
-      presentDebateEvent(latestDebateEvent);
-      addAlert("DEBATE NIGHT: " + player.name + " challenged " + debateOpponent.name + " in " + state.name + ". Winner earns a +" + debateVictoryBonus() + "% influence surge.");
-      broadcast(regionChannelIndex(state.region), "DEBATE NIGHT is live in " + state.name + ": " + contenders.map((candidate) => candidate.name).join(" versus ") + ".");
-      if (playerId === HUMAN) showToast("DEBATE NIGHT — beat " + debateOpponent.name + " for +" + debateVictoryBonus() + "% influence.");
+    if (type === "speech" && liveSpeakers.some((candidate) => candidate.id !== playerId)) {
+      launchDebateNight(state, player, [...liveSpeakers.filter((candidate) => candidate.id !== player.id), player]);
     } else {
       addAlert(`${player.name} started ${labelAction(type)} in ${state.name}.`);
     }
@@ -7814,7 +7886,7 @@
   }
 
   function mapIconScale() {
-    return Math.max(0.34, 1 / Math.pow(Math.max(1, Camera.zoom), 0.38));
+    return Math.max(0.2, 1 / Math.pow(Math.max(1, Camera.zoom), 0.72));
   }
 
   function mainBasePoint(state) {
@@ -7822,9 +7894,9 @@
   }
 
   function miniBasePoint(state, player, index, total) {
-    const step = Math.min(18, Math.max(10, state.w / Math.max(2, total + 1)));
+    const step = Math.min(13, Math.max(7, state.w / Math.max(3, total + 2.6)));
     const x = state.cx - (total - 1) * step / 2 + index * step;
-    const y = Math.max(state.y + 8, Math.min(state.y + state.h - 8, state.cy + 18));
+    const y = Math.max(state.y + 8, Math.min(state.y + state.h - 8, state.cy + 16));
     return { x, y };
   }
 
@@ -8676,7 +8748,7 @@
       { left:{id:"rapid_construction",name:"PROCUREMENT DESK",desc:"District Office upgrades cost 30% less cash.",live:true},
         right:{id:"private_security",name:"RETAINER CONTRACTS",desc:"Police upkeep is cut 50%.",live:true} },
       { left:{id:"shadow_lobbying",name:"BOARDROOM STATE",desc:"Level 3 HQ boosts HQ income by 50% and all state funding by 25%.",live:true,ult:true},
-        right:{id:"executive_immunity",name:"EXECUTIVE BLITZ",desc:"Speeches run at 2x speed, gain extra influence, and finish debates faster.",live:true,ult:true} },
+        right:{id:"executive_immunity",name:"FLOOR AMBUSH",desc:"Starting a speech in an empty state force-pulls one idle rival leader into Debate Night with you.",live:true,ult:true} },
     ]},
     populist: { name: "POPULIST COALITION", sub: "STREET HIVE", theme: "Speeches seed crowds, crowds fund offices, offices make Power Grab terrifying.", tiers: [
       { left:{id:"echo_chamber",name:"CHANT LOOP",desc:"Public Speeches gain +5 local influence and 5% stronger speech output.",live:true},
@@ -11069,6 +11141,11 @@
     if (tag === "input" || tag === "select" || tag === "textarea") return;
     if (String(event.key || "").toLowerCase() === "c") {
       event.preventDefault();
+      const hoveredId = hoveredEmoteWheelId();
+      if (hoveredId) {
+        sendEmote(hoveredId);
+        return;
+      }
       closeEmoteWheel();
     }
   });
