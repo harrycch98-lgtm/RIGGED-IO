@@ -5148,10 +5148,14 @@
   }
 
   function chooseHomeBase(playerId, stateIndex) {
-    if (playerId === HUMAN && routeGuestGameCommand('chooseHomeBase', [stateIndex])) return true;
     const player = players[playerId];
     const state = states[stateIndex];
     if (!player || !state || player.homeBase >= 0 || phase !== "base") return false;
+    if (playerId === HUMAN) {
+      const confirmed = window.confirm(`Deploy your HQ in ${state.name}?`);
+      if (!confirmed) return false;
+      if (routeGuestGameCommand('chooseHomeBase', [stateIndex])) return true;
+    }
     const alreadyTaken = players.some((candidate) => candidate.homeBase === stateIndex);
     if (alreadyTaken) {
       if (playerId === HUMAN) showToast(`${state.name} already has a home base.`);
