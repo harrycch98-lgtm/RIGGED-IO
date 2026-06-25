@@ -1486,18 +1486,10 @@ canvas:focus-visible {
   z-index:6;
   min-width:44px;
   min-height:44px;
-  padding:4px 8px 6px;
-  border:1px solid rgba(52,255,134,.55);
-  border-radius:999px;
-  background:rgba(3,16,8,.88);
-  color:#effff4;
-  font:28px/1 "VT323","Share Tech Mono",monospace;
-  text-align:center;
+  padding:0;
   display:grid;
   place-items:center;
   transform:translate(-50%, -50%);
-  text-shadow:0 0 8px rgba(52,255,134,.45);
-  box-shadow:0 0 18px rgba(52,255,134,.22);
   pointer-events:none;
 }
 .leader-emote-image{
