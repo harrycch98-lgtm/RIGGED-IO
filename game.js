@@ -12,7 +12,7 @@
   const REST_BACKEND_URL = String(URL_PARAMS.get('api') || CONFIG.apiUrl || localStorage.getItem('rigged.apiUrl') || DEFAULT_REST_BACKEND_URL).replace(/\/+$/, '');
   const BACKEND_URL = String(URL_PARAMS.get('ws') || CONFIG.wsUrl || localStorage.getItem('rigged.wsUrl') || DEFAULT_WS_BACKEND_URL).replace(/\/+$/, '');
   const NETWORK_PAUSE_X = -987654321;
-  const EMOTE_DURATION = 3.2;
+  const EMOTE_DURATION = 3;
   const EMOTE_OPTIONS = [
     { id: "cheer", label: "Cheer", asset: "emote-cheer.png" },
     { id: "laugh", label: "Laugh", asset: "emote-laugh.png" },
