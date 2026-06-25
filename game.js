@@ -2383,6 +2383,7 @@
   const talentHistoryHud = document.querySelector("#talentHistoryHud");
   const partyRoster = document.querySelector("#partyRoster");
   const talentPreview = document.querySelector("#talentPreview");
+  const homeBaseConfirmOverlay = document.querySelector("#homeBaseConfirmOverlay");
 
   function ensureEmoteWheel() {
       let wheel = document.getElementById("emoteWheel");
@@ -2735,6 +2736,23 @@
       window.setTimeout(() => {
         finalizeTalentDraft(activeTalentDraft.playerId, activeTalentDraft.tierIndex, String(card.dataset.talentDraftPick || ""));
       }, 180);
+    });
+  }
+  if (homeBaseConfirmOverlay) {
+    homeBaseConfirmOverlay.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-home-base-confirm]");
+      if (!action) return;
+      if (action.dataset.homeBaseConfirm === "cancel") {
+        pendingHomeBaseStateIndex = -1;
+        renderHomeBaseConfirmOverlay();
+        return;
+      }
+      if (action.dataset.homeBaseConfirm === "confirm") {
+        const stateIndex = pendingHomeBaseStateIndex;
+        pendingHomeBaseStateIndex = -1;
+        renderHomeBaseConfirmOverlay();
+        if (stateIndex >= 0) chooseHomeBase(HUMAN, stateIndex, true);
+      }
     });
   }
   if (partyRoster) {
@@ -4191,29 +4209,8 @@
   }
 
   function renderPartyRoster() {
-    if (!partyRoster || typeof TALENTS === "undefined") return;
-    partyRoster.setAttribute("style", "display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px");
-    partyRoster.innerHTML = FACTIONS.map((_, index) => {
-      const faction = factionForMenu(index);
-      const tree = TALENTS[faction.talentTree];
-      const selected = index === selectedParty;
-      const cardFlag = selected ? normalizeLeaderProfile(selectedLeaderProfile).flag : PARTY_FLAGS[index % PARTY_FLAGS.length].id;
-      return `
-        <button class="party-card${selected ? " is-selected" : ""}" type="button" data-party-index="${index}" aria-pressed="${selected}">
-          <span class="party-card-visual">
-            ${partyFlagSvg(index, cardFlag)}
-            <span class="leader-portrait" style="--party:${faction.color};--skin:${faction.portrait.skin};--hair:${faction.portrait.hair};--suit:${faction.portrait.suit};--accent:${faction.portrait.accent};display:block;overflow:hidden">
-              ${leaderPortraitSvg(index)}
-            </span>
-          </span>
-          <span class="party-card-copy">
-            <strong>${escapeHtml(faction.name)}</strong>
-            <span>${faction.leader}</span>
-            <em>${tree.name}</em>
-          </span>
-        </button>
-      `;
-    }).join("");
+    if (!partyRoster) return;
+    partyRoster.innerHTML = "";
   }
 
   function renderTalentPreview(index) {
@@ -5147,13 +5144,18 @@
     });
   }
 
-  function chooseHomeBase(playerId, stateIndex) {
+  function chooseHomeBase(playerId, stateIndex, confirmed = false) {
     const player = players[playerId];
     const state = states[stateIndex];
     if (!player || !state || player.homeBase >= 0 || phase !== "base") return false;
     if (playerId === HUMAN) {
-      const confirmed = window.confirm(`Deploy your HQ in ${state.name}?`);
-      if (!confirmed) return false;
+      if (!confirmed) {
+        pendingHomeBaseStateIndex = stateIndex;
+        renderHomeBaseConfirmOverlay();
+        return false;
+      }
+      pendingHomeBaseStateIndex = -1;
+      renderHomeBaseConfirmOverlay();
       if (routeGuestGameCommand('chooseHomeBase', [stateIndex])) return true;
     }
     const alreadyTaken = players.some((candidate) => candidate.homeBase === stateIndex);
@@ -6955,6 +6957,7 @@
     renderUpgradeStatus(human);
     renderDebatePowerOverlay(human);
     renderTalentDraftOverlay();
+    renderHomeBaseConfirmOverlay();
     if (calendarCountdown) {
       const calendarCard = calendarCountdown.closest(".election-calendar");
       if (calendarCard) calendarCard.style.display = "block";
@@ -8712,6 +8715,7 @@
   let activeTalentDraftTimer = null;
   let talentDraftResolving = false;
   let activeTalentDraftRenderKey = "";
+  let pendingHomeBaseStateIndex = -1;
   const pipClamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   function botCashBonus(player) {
@@ -8732,6 +8736,30 @@
 
   function discountedCost(base, player) {
     return Math.round(base * botActionDiscount(player));
+  }
+
+  function renderHomeBaseConfirmOverlay() {
+    if (!homeBaseConfirmOverlay) return;
+    const state = pendingHomeBaseStateIndex >= 0 ? states[pendingHomeBaseStateIndex] : null;
+    if (!state || phase !== "base") {
+      homeBaseConfirmOverlay.innerHTML = "";
+      homeBaseConfirmOverlay.classList.remove("is-open");
+      homeBaseConfirmOverlay.setAttribute("aria-hidden", "true");
+      return;
+    }
+    homeBaseConfirmOverlay.innerHTML = `
+      <div class="home-base-confirm-panel">
+        <div class="home-base-confirm-kicker">HQ Deployment</div>
+        <div class="home-base-confirm-title">Deploy HQ in ${escapeHtml(state.name)}?</div>
+        <div class="home-base-confirm-copy">This locks in your campaign headquarters and starts your run from ${escapeHtml(state.abbr)}.</div>
+        <div class="home-base-confirm-actions">
+          <button class="secondary-button" type="button" data-home-base-confirm="cancel">Cancel</button>
+          <button class="primary-button" type="button" data-home-base-confirm="confirm">Confirm Deploy</button>
+        </div>
+      </div>
+    `;
+    homeBaseConfirmOverlay.classList.add("is-open");
+    homeBaseConfirmOverlay.setAttribute("aria-hidden", "false");
   }
 
   function talentCardById(id) {
