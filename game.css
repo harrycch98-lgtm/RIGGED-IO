@@ -5004,21 +5004,40 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   padding:14px;
   border:1px solid rgba(150,255,200,.24);
   background:
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)),
-    rgba(7,17,14,.9);
-  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.03);
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 26%),
+    radial-gradient(circle at top, rgba(112,222,255,.08), transparent 44%),
+    linear-gradient(180deg, rgba(10,26,21,.96), rgba(5,14,11,.96));
+  box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.03), inset 0 18px 28px rgba(255,255,255,.02);
   transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  overflow:hidden;
+}
+.talent-draft-card::before,
+.talent-draft-card::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+}
+.talent-draft-card::before{
+  inset:7px;
+  border:1px solid rgba(255,255,255,.045);
+  opacity:.8;
+}
+.talent-draft-card::after{
+  inset:auto 14px 0;
+  height:2px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent);
+  opacity:.65;
 }
 .talent-draft-card[data-talent-draft-pick]{
   cursor:pointer;
 }
 .talent-draft-card[data-talent-draft-pick]:hover{
   transform:translateY(-4px) scale(1.01);
-  box-shadow:0 18px 36px rgba(0,0,0,.36), 0 0 18px rgba(95,221,255,.18);
+  box-shadow:0 18px 36px rgba(0,0,0,.36), 0 0 18px rgba(95,221,255,.18), inset 0 0 0 1px rgba(255,255,255,.04);
 }
 .talent-draft-card[data-talent-draft-pick]:hover .talent-draft-card-art-image{
   box-shadow:inset 0 0 22px rgba(52,255,134,.12), 0 0 24px rgba(52,255,134,.16);
-  filter:brightness(1.04) contrast(1.03);
+  filter:brightness(1.06) contrast(1.04) saturate(1.03);
 }
 .talent-draft-card.is-picked{
   box-shadow:0 0 0 1px rgba(255,255,255,.05), 0 0 18px rgba(255,215,106,.14);
@@ -5030,14 +5049,16 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   min-height:156px;
   display:grid;
   place-items:center;
-  padding:10px;
+  padding:12px;
   border:1px solid rgba(255,255,255,.08);
   background:
-    radial-gradient(circle at center, rgba(255,255,255,.06), rgba(255,255,255,0) 60%),
+    radial-gradient(circle at center, rgba(255,255,255,.08), rgba(255,255,255,0) 58%),
     linear-gradient(180deg, rgba(52,255,134,.05), rgba(0,0,0,.16)),
+    linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,0) 34%),
     rgba(0,0,0,.28);
   overflow:hidden;
   position:relative;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), inset 0 18px 30px rgba(255,255,255,.02);
 }
 .talent-draft-card-art svg{
   width:100%;
@@ -5054,9 +5075,11 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   image-rendering:auto;
   box-shadow:inset 0 0 18px rgba(52,255,134,.08), 0 0 18px rgba(52,255,134,.08);
   position:relative;
+  isolation:isolate;
 }
 .talent-draft-card-art::before,
-.talent-draft-card-art-image::before{
+.talent-draft-card-art-image::before,
+.talent-draft-card-art-image::after{
   content:"";
   position:absolute;
   inset:0;
@@ -5073,6 +5096,15 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   background:
     radial-gradient(circle at center, transparent 35%, rgba(0,0,0,.22) 100%),
     linear-gradient(180deg, rgba(52,255,134,.05), rgba(0,0,0,0) 24%, rgba(0,0,0,.18) 100%);
+}
+.talent-draft-card-art-image::after{
+  inset:6px;
+  border:1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(125deg, rgba(255,255,255,.1), transparent 18%, transparent 82%, rgba(255,255,255,.06)),
+    repeating-linear-gradient(180deg, rgba(255,255,255,.03) 0 1px, transparent 1px 4px);
+  mix-blend-mode:screen;
+  opacity:.55;
 }
 .talent-draft-card-body{
   display:grid;
@@ -5098,18 +5130,22 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   color:#f5fff9;
   font:1.6rem/1 "VT323", monospace;
   letter-spacing:1px;
+  text-shadow:0 0 10px rgba(255,255,255,.08);
 }
 .talent-draft-origin{
   color:#7ea393;
   font-size:.76rem;
   text-transform:uppercase;
   letter-spacing:1px;
+  padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
 .talent-draft-card p{
   margin:0;
   color:#bde6ce;
   font-size:.88rem;
   line-height:1.25;
+  min-height:3.4em;
 }
 .talent-draft-card em{
   color:#79ffc1;
