@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #020503; }
+      .panel { fill: #031108; stroke: #19ff7a; stroke-width: 3; }
+      .dim { stroke: #0d6b3a; stroke-width: 2; fill: none; opacity: .85; }
+      .glow { stroke: #39ff93; stroke-width: 4; fill: none; }
+      .soft { stroke: #1db85f; stroke-width: 2; fill: none; }
+      .solid { fill: #19ff7a; }
+      .ink { fill: #062714; }
+      .scan { stroke: #0f3d22; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines2" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="robotDesk">
+      <rect x="-54" y="26" width="108" height="104" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-34" y="48" width="24" height="16" class="solid"/>
+      <rect x="10" y="48" width="24" height="16" class="solid"/>
+      <rect x="-22" y="86" width="44" height="12" class="solid"/>
+      <rect x="-88" y="134" width="176" height="68" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-78" y="202" width="156" height="20" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-10" y="-4" width="20" height="32" class="ink" stroke="#19ff7a" stroke-width="4"/>
+    </g>
+    <g id="bank">
+      <rect x="-92" y="-22" width="184" height="132" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <path d="M-108-22H108L0-82Z" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <path d="M-58-14v112M-20-14v112M20-14v112M58-14v112" class="soft"/>
+      <circle cx="0" cy="34" r="22" class="glow"/>
+      <path d="M-8 34h18M2 20c-8 0-14 6-14 14s6 14 14 14M-2 48c8 0 14-6 14-14S6 20-2 20" class="soft"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines2)" opacity=".35"/>
+
+    <g>
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(82 82)">
+        <use href="#robotDesk" transform="translate(108 232) scale(.62)"/>
+        <rect x="176" y="204" width="118" height="148" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <rect x="194" y="182" width="82" height="26" class="solid"/>
+        <path d="M176 278h118M176 316h118" class="soft"/>
+        <path d="M302 198 408 146 472 118" class="glow"/>
+        <rect x="350" y="86" width="86" height="62" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <path d="M364 120h54M392 94v52" class="glow"/>
+        <use href="#bank" transform="translate(420 260) scale(.42)"/>
+      </g>
+    </g>
+
+    <g transform="translate(600 0)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(84 70)">
+        <use href="#bank" transform="translate(216 238) scale(.84)"/>
+        <path d="M136 84c62 16 104 44 132 96M310 84c44 20 84 54 106 106" class="soft"/>
+        <path d="M80 146 144 194M352 154 408 206" class="glow"/>
+        <path d="M34 92h74M412 92h74" class="soft"/>
+        <circle cx="34" cy="92" r="18" class="solid"/>
+        <circle cx="486" cy="92" r="18" class="solid"/>
+        <path d="M18 76 50 108M18 108 50 76M470 76 502 108M470 108 502 76" class="bg" stroke="#031108" stroke-width="6"/>
+      </g>
+    </g>
+
+    <g transform="translate(1200 0)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(80 70)">
+        <use href="#robotDesk" transform="translate(124 246) scale(.58)"/>
+        <rect x="206" y="126" width="144" height="120" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <rect x="220" y="100" width="116" height="28" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M238 146h80M238 174h82M238 202h72" class="soft"/>
+        <path d="M366 186 446 186 446 116" class="glow"/>
+        <path d="M430 116 446 96 462 116" class="glow"/>
+        <path d="M356 320 428 266" class="soft"/>
+      </g>
+    </g>
+
+    <g transform="translate(0 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(84 76)">
+        <use href="#robotDesk" transform="translate(96 232) scale(.56)"/>
+        <rect x="228" y="94" width="136" height="96" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M244 124h104M244 154h88" class="soft"/>
+        <rect x="228" y="214" width="136" height="96" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M244 244h104M244 274h88" class="soft"/>
+        <path d="M170 158 228 142M170 266 228 250" class="glow"/>
+        <path d="M364 142 438 110M364 250 438 282" class="glow"/>
+        <circle cx="446" cy="108" r="16" class="solid"/>
+        <circle cx="446" cy="284" r="16" class="solid"/>
+      </g>
+    </g>
+
+    <g transform="translate(600 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(82 74)">
+        <use href="#bank" transform="translate(192 230) scale(.78)"/>
+        <path d="M192 28v112M136 66h112" class="soft"/>
+        <rect x="14" y="46" width="112" height="78" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <polyline points="24,106 56,98 78,72 102,84" class="glow"/>
+        <rect x="330" y="38" width="136" height="92" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <path d="M346 62h92M346 88h74M346 114h86" class="soft"/>
+        <path d="M106 270 168 256M278 256 344 244" class="glow"/>
+        <path d="M248 92c34 26 52 56 58 88" class="soft"/>
+      </g>
+    </g>
+
+    <g transform="translate(1200 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(76 78)">
+        <use href="#robotDesk" transform="translate(102 238) scale(.58)"/>
+        <rect x="204" y="178" width="116" height="144" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <rect x="338" y="152" width="116" height="170" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M202 176 336 152" class="glow"/>
+        <path d="M324 98 458 60" class="soft"/>
+        <path d="M250 78 272 148M388 62 394 144" class="glow"/>
+        <path d="M150 120 214 206" class="soft"/>
+        <circle cx="444" cy="54" r="16" class="solid"/>
+      </g>
+    </g>
+  </g>
+</svg>
