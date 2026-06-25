@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #020503; }
+      .panel { fill: #031108; stroke: #19ff7a; stroke-width: 3; }
+      .dim { stroke: #0d6b3a; stroke-width: 2; fill: none; opacity: .85; }
+      .glow { stroke: #39ff93; stroke-width: 4; fill: none; }
+      .soft { stroke: #1db85f; stroke-width: 2; fill: none; }
+      .solid { fill: #19ff7a; }
+      .ink { fill: #062714; }
+      .scan { stroke: #0f3d22; stroke-width: 1; opacity: .32; }
+    </style>
+    <pattern id="scanlines3" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 1H8M0 5H8" class="scan"/>
+    </pattern>
+    <g id="robotConsole">
+      <rect x="-54" y="18" width="108" height="110" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-34" y="44" width="24" height="16" class="solid"/>
+      <rect x="10" y="44" width="24" height="16" class="solid"/>
+      <rect x="-22" y="84" width="44" height="12" class="solid"/>
+      <rect x="-94" y="132" width="188" height="62" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-80" y="194" width="160" height="22" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <rect x="-12" y="-2" width="24" height="28" class="ink" stroke="#19ff7a" stroke-width="4"/>
+    </g>
+    <g id="tower">
+      <path d="M0-86 -34 48H34Z" class="ink" stroke="#19ff7a" stroke-width="4"/>
+      <path d="M-18-14H18M-26 20H26" class="soft"/>
+      <circle cx="0" cy="-108" r="18" class="glow"/>
+      <path d="M-70-108c16-18 38-28 70-28M70-108c-16-18-38-28-70-28" class="soft"/>
+      <path d="M-96-108c24-26 56-40 96-40M96-108c-24-26-56-40-96-40" class="glow"/>
+    </g>
+    <g id="map2">
+      <path d="M20 38 56 18l62 6 29-16 63 8 46-8 42 16 54 3 20 25 34 3 22 18-14 13-36 7-6 20-28 17-23 28-61-8-34 14-35-6-44 10-41-8-40 11-57-10-36 7-18-22 12-13-11-26 18-18 22 2 19-15 22 1z" class="dim"/>
+    </g>
+  </defs>
+  <rect width="1800" height="1200" class="bg"/>
+  <g transform="translate(18 18)">
+    <rect width="1764" height="1164" fill="url(#scanlines3)" opacity=".35"/>
+
+    <g>
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(72 74)">
+        <use href="#robotConsole" transform="translate(222 294) scale(.68)"/>
+        <path d="M220 228 112 132 48 96" class="glow"/>
+        <path d="M234 228 246 126 248 58" class="glow"/>
+        <path d="M248 230 356 136 426 92" class="glow"/>
+        <rect x="20" y="72" width="84" height="52" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <rect x="386" y="70" width="86" height="52" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <circle cx="246" cy="228" r="110" class="soft"/>
+        <path d="M96 126c58 16 92 52 120 102M380 126c-58 16-92 52-120 102" class="soft"/>
+      </g>
+    </g>
+
+    <g transform="translate(600 0)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(72 66)">
+        <use href="#robotConsole" transform="translate(246 292) scale(.64)"/>
+        <use href="#map2" transform="translate(122 82) scale(1.02)"/>
+        <circle cx="258" cy="168" r="84" class="glow"/>
+        <circle cx="258" cy="168" r="128" class="soft"/>
+        <path d="M258 84v168M174 168h168" class="soft"/>
+        <path d="M254 248 114 318M262 248 390 318" class="glow"/>
+        <rect x="32" y="298" width="88" height="58" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <rect x="392" y="298" width="88" height="58" class="ink" stroke="#19ff7a" stroke-width="3"/>
+      </g>
+    </g>
+
+    <g transform="translate(1200 0)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(72 68)">
+        <use href="#robotConsole" transform="translate(86 306) scale(.56)"/>
+        <rect x="182" y="224" width="208" height="116" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <rect x="210" y="188" width="152" height="40" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M238 248h98M238 278h126M238 308h86" class="soft"/>
+        <use href="#tower" transform="translate(244 124) scale(.9)"/>
+        <path d="M244 160 244 224" class="glow"/>
+        <path d="M160 360 244 338 328 360" class="soft"/>
+      </g>
+    </g>
+
+    <g transform="translate(0 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(76 74)">
+        <use href="#robotConsole" transform="translate(92 310) scale(.54)"/>
+        <use href="#map2" transform="translate(150 118) scale(.94)"/>
+        <rect x="24" y="82" width="102" height="66" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <rect x="358" y="72" width="102" height="66" class="ink" stroke="#19ff7a" stroke-width="3"/>
+        <path d="M206 146 76 116M300 136 408 104" class="soft"/>
+        <path d="M188 204 116 300M276 194 388 290" class="glow"/>
+        <path d="M242 164v162" class="soft"/>
+      </g>
+    </g>
+
+    <g transform="translate(600 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(56 64)">
+        <use href="#robotConsole" transform="translate(250 310) scale(.62)"/>
+        <use href="#tower" transform="translate(72 140) scale(.56)"/>
+        <use href="#tower" transform="translate(156 110) scale(.66)"/>
+        <use href="#tower" transform="translate(248 84) scale(.76)"/>
+        <use href="#tower" transform="translate(348 116) scale(.68)"/>
+        <use href="#tower" transform="translate(434 150) scale(.58)"/>
+        <path d="M70 172 156 136 248 110 348 144 432 178" class="glow"/>
+        <path d="M88 230 176 214 250 192 330 214 414 236" class="soft"/>
+        <path d="M250 248v-86" class="glow"/>
+      </g>
+    </g>
+
+    <g transform="translate(1200 600)">
+      <rect width="564" height="564" class="panel"/>
+      <g transform="translate(82 68)">
+        <rect x="134" y="170" width="184" height="132" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <rect x="166" y="136" width="120" height="38" class="ink" stroke="#19ff7a" stroke-width="4"/>
+        <path d="M112 318 134 286M340 286 392 330" class="soft"/>
+        <use href="#robotConsole" transform="translate(226 310) scale(.62)"/>
+        <circle cx="226" cy="246" r="174" class="glow"/>
+        <path d="M86 248c34-22 66-30 100-34M366 248c-34-22-66-30-100-34" class="soft"/>
+        <path d="M64 116 124 168M388 116 328 168" class="glow"/>
+        <circle cx="64" cy="116" r="14" class="solid"/>
+        <circle cx="388" cy="116" r="14" class="solid"/>
+      </g>
+    </g>
+  </g>
+</svg>
