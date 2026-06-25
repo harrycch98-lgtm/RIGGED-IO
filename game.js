@@ -8496,10 +8496,10 @@
     populist: "talent-card-atlases/populist-atlas.png?v=1",
     syndicate: "talent-card-atlases/syndicate-atlas.png?v=1",
     vanguard: "talent-card-atlases/vanguard-atlas.png?v=1",
-    futurist: "talent-card-atlases/futurist-atlas.png?v=1",
+    futurist: "talent-card-atlases/futurist-atlas.svg?v=2",
     machine: "talent-card-atlases/machine-atlas.png?v=1",
     signal: "talent-card-atlases/signal-atlas.png?v=1",
-    ledger: "talent-card-atlases/ledger-atlas.png?v=1",
+    ledger: "talent-card-atlases/ledger-atlas.svg?v=2",
   };
   const TALENTS = {
     oligarchy: { name: "CORPORATE OLIGARCHY", sub: "DONOR WAR ROOM", theme: "Cheap expansion builds a cash engine, then converts money into brutal tempo.", tiers: [
