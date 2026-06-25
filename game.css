@@ -57,26 +57,18 @@
 .lobby-entry-console {
   position: relative;
   z-index: 1;
-  width: min(1080px, 100%);
-  min-height: min(650px, calc(100vh - 48px));
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(390px, .85fr);
-  overflow: hidden;
-  border: 1px solid rgba(52, 255, 134, .68);
-  border-radius: 14px;
-  background: rgba(2, 12, 7, .92);
-  box-shadow: 0 0 0 1px rgba(52,255,134,.08), 0 0 70px rgba(20,160,80,.2), 0 34px 90px rgba(0,0,0,.78);
+  width: min(980px, calc(100vw - 48px));
+  min-height: auto;
+  display: block;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .lobby-entry-console::before {
-  content: "SECURE CONNECTION // ACTIVE";
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  z-index: 4;
-  color: rgba(130, 255, 178, .48);
-  font-size: 10px;
-  letter-spacing: 1.5px;
+  display: none;
 }
 
 .lobby-sound-toggle {
@@ -122,17 +114,7 @@
 }
 
 .lobby-entry-hero {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
-  padding: clamp(44px, 6vw, 82px);
-  overflow: hidden;
-  background:
-    linear-gradient(145deg, rgba(52,255,134,.08), transparent 46%),
-    repeating-linear-gradient(90deg, transparent 0 63px, rgba(52,255,134,.035) 64px),
-    #020d07;
+  display: none;
 }
 
 .lobby-entry-hero::after {
@@ -266,13 +248,12 @@
 @keyframes lobby-signal { to { height: 18%; opacity: .35; } }
 
 .lobby-entry-actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   min-width: 0;
-  padding: 68px 44px 26px;
-  overflow-y: auto;
-  border-left: 1px solid rgba(52,255,134,.28);
-  background: linear-gradient(180deg, rgba(8,27,16,.97), rgba(2,12,7,.98));
+  padding: 0;
+  overflow: visible;
+  border-left: 0;
+  background: transparent;
 }
 
 .lobby-entry-account-slot {
@@ -477,26 +458,9 @@
   font: 28px/1 "VT323", monospace;
 }
 
-.lobby-entry-actions header > span {
-  color: #34ff86;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.lobby-entry-actions header > strong {
-  display: block;
-  margin-top: 10px;
-  color: #e8fff0;
-  font: 29px/1.1 "VT323", monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.lobby-entry-actions header > p {
-  margin: 8px 0 28px;
-  color: #6d9180;
-  font-size: 12px;
+.lobby-entry-actions header,
+.lobby-entry-actions footer {
+  display: none;
 }
 
 .lobby-route {
@@ -4067,10 +4031,10 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .lobby-leader-panel {
   display: grid;
   gap: 8px;
-  padding: 10px;
-  border: 1px solid rgba(52, 255, 134, 0.32);
-  border-radius: 6px;
-  background: rgba(1, 18, 9, 0.72);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .lobby-bar-panel {
@@ -4078,7 +4042,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   min-height: 540px;
   padding: 0;
   overflow: hidden;
-  border-color: rgba(52,255,134,.34);
+  border: 0;
+  border-radius: 0;
   background: #041108;
 }
 
