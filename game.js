@@ -11460,7 +11460,7 @@
     }
   });
 
-  selectMenuParty(selectedParty, true);
+  selectMenuParty(selectedParty, false);
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", buildHotbar);
   else buildHotbar();
