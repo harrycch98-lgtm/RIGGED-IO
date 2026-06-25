@@ -4331,6 +4331,14 @@
     `;
   }
 
+  function talentCardArtStyle(talent) {
+    if (!talent?.atlas) return "";
+    const index = Math.max(0, Number(talent.artIndex) || 0);
+    const col = index % 3;
+    const row = Math.floor(index / 3);
+    return `background-image:url('${talent.atlas}');background-size:300% 200%;background-position:${col * 50}% ${row * 100}%;`;
+  }
+
   function talentCardMarkup(talent, options = {}) {
     const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
     const picked = !!options.picked;
@@ -4339,7 +4347,7 @@
     const countdown = options.countdown ? `<div class="talent-draft-chip">${escapeHtml(options.countdown)}</div>` : "";
     return `
       <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
-        <div class="talent-draft-card-art">${talentCardArtSvg(talent)}</div>
+        <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
         <div class="talent-draft-card-body">
           <div class="talent-draft-card-top">
             <span class="talent-draft-tier">${TALENT_TIER_LABELS[tierIndex]}</span>
@@ -8483,6 +8491,16 @@
 
   // ===================== PIP-CAMPAIGN 3000 : TALENT TERMINAL =====================
   const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
+  const TALENT_ATLAS_BY_TREE = {
+    oligarchy: "talent-card-atlases/oligarchy-atlas.png?v=1",
+    populist: "talent-card-atlases/populist-atlas.png?v=1",
+    syndicate: "talent-card-atlases/syndicate-atlas.png?v=1",
+    vanguard: "talent-card-atlases/vanguard-atlas.png?v=1",
+    futurist: "talent-card-atlases/futurist-atlas.png?v=1",
+    machine: "talent-card-atlases/machine-atlas.png?v=1",
+    signal: "talent-card-atlases/signal-atlas.png?v=1",
+    ledger: "talent-card-atlases/ledger-atlas.png?v=1",
+  };
   const TALENTS = {
     oligarchy: { name: "CORPORATE OLIGARCHY", sub: "DONOR WAR ROOM", theme: "Cheap expansion builds a cash engine, then converts money into brutal tempo.", tiers: [
       { left:{id:"aggressive_portfolio",name:"FRANCHISE PERMITS",desc:"District Offices deploy 20% cheaper.",live:true},
@@ -8570,6 +8588,10 @@
       }))
     )
   );
+  TALENT_CARD_LIBRARY.forEach((talent) => {
+    talent.artIndex = talent.tierIndex * 2 + (talent.sourceSide === "right" ? 1 : 0);
+    talent.atlas = TALENT_ATLAS_BY_TREE[talent.treeId] || "";
+  });
   const TALENT_CARDS_BY_TIER = TALENT_REQ_LEVEL.map((_, tierIndex) =>
     TALENT_CARD_LIBRARY.filter((talent) => talent.tierIndex === tierIndex)
   );

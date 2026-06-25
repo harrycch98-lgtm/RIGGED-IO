@@ -5035,6 +5035,15 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   max-width:166px;
   display:block;
 }
+.talent-draft-card-art-image{
+  width:100%;
+  aspect-ratio:3 / 2;
+  border:1px solid rgba(255,255,255,.08);
+  background-color:#020804;
+  background-repeat:no-repeat;
+  image-rendering:auto;
+  box-shadow:inset 0 0 18px rgba(52,255,134,.08);
+}
 .talent-draft-card-body{
   display:grid;
   gap:8px;
@@ -5088,6 +5097,9 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 }
 .talent-draft-card.is-compact .talent-draft-card-art svg{
   max-width:114px;
+}
+.talent-draft-card.is-compact .talent-draft-card-art-image{
+  aspect-ratio:3 / 2;
 }
 .talent-draft-card.is-compact .talent-draft-card-body{
   gap:6px;
