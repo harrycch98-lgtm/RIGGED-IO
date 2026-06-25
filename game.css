@@ -5038,8 +5038,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .talent-draft-card{
   position:relative;
   display:grid;
-  gap:12px;
-  padding:14px;
+  gap:14px;
+  padding:16px 14px 15px;
   border:1px solid rgba(150,255,200,.24);
   background:
     linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 26%),
@@ -5139,7 +5139,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   box-shadow:0 14px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,244,199,.05), inset 0 18px 28px rgba(255,244,199,.04);
 }
 .talent-draft-card-art{
-  min-height:156px;
+  min-height:182px;
   display:grid;
   place-items:center;
   padding:12px;
@@ -5160,7 +5160,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 }
 .talent-draft-card-art-image{
   width:100%;
-  aspect-ratio:3 / 2;
+  aspect-ratio:4 / 3;
   border:1px solid rgba(255,255,255,.08);
   background:
     linear-gradient(180deg, rgba(10,30,20,.92), rgba(7,18,13,.92));
@@ -5270,7 +5270,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 }
 .talent-draft-card-body{
   display:grid;
-  gap:8px;
+  gap:10px;
 }
 .talent-draft-card-top{
   display:flex;
