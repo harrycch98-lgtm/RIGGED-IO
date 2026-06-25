@@ -5790,20 +5790,34 @@
     const campaignDay = campaignDaysElapsed();
     const strategicReserve = campaignDay < 20 ? 12000 : campaignDay < 70 ? 8000 : baseRules.reserve;
     const rules = { ...baseRules, reserve: Math.max(baseRules.reserve, strategicReserve) };
+    const maxActions = campaignDay < 20 ? 3 : 2;
+    let actionsTaken = 0;
+    let maxDelayBonus = 0;
     const commit = (action, perform, delayBonus = 0) => {
       if (!perform()) return false;
       player.aiActionCounts = player.aiActionCounts || {};
       player.aiActionCounts[action] = (player.aiActionCounts[action] || 0) + 1;
       player.aiLastAction = action;
-      player.aiDelay = rules.delay + delayBonus + Math.random() * 1.5;
+      actionsTaken += 1;
+      maxDelayBonus = Math.max(maxDelayBonus, delayBonus);
       return true;
     };
+    const shouldEndPass = () => !!player.action || actionsTaken >= maxActions;
+    const finishPass = () => {
+      player.aiDelay = rules.delay + maxDelayBonus + Math.random() * 1.5;
+    };
 
-    if (aiEarlyEconomyAction(player, rules, commit)) return;
+    if (aiEarlyEconomyAction(player, rules, commit) && shouldEndPass()) {
+      finishPass();
+      return;
+    }
 
     const officeDeployTarget = bestAiOfficeDeployTarget(player);
     if (officeDeployTarget && player.cash >= adHubCost(player)) {
-      if (commit("office_deploy_chain", () => placeAdHub(player.id, officeDeployTarget.index), 0.15)) return;
+      if (commit("office_deploy_chain", () => placeAdHub(player.id, officeDeployTarget.index), 0.15) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const guardedBuildings = states.flatMap((state) => ["hq", "office"]
@@ -5811,11 +5825,17 @@
       .map((building) => ({ state, building })));
     if (guardedBuildings.length && (player.cash < totalPoliceUpkeepDay(player) || projectedCashPerDay(player) < 0)) {
       const weakestGuard = guardedBuildings.sort((a, b) => policeUpkeepDay(player, b.state, b.building) - policeUpkeepDay(player, a.state, a.building))[0];
-      if (commit("police_removed", () => togglePolice(player.id, weakestGuard.state.index, weakestGuard.building))) return;
+      if (commit("police_removed", () => togglePolice(player.id, weakestGuard.state.index, weakestGuard.building)) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     if (player.mainBaseLevel >= 1 && player.mainBaseLevel < 3 && Math.random() < rules.hq) {
-      if (commit("hq_upgrade", () => upgradeMainBase(player.id), 1)) return;
+      if (commit("hq_upgrade", () => upgradeMainBase(player.id), 1) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const speakingRivals = players.filter((candidate) => candidate.id !== player.id && isSpeaking(candidate) && canInterruptAction(candidate));
@@ -5825,12 +5845,18 @@
     if (speakingRival && player.cash >= assassinateCost(player, speakingRival) + rules.reserve && Math.random() < rules.assassinate * repeatRisk * assassinTalentBoost) {
       const visibleSpeechStates = [speakingRival.action.state, ...(speakingRival.action.decoyStates || [])];
       const assassinationState = visibleSpeechStates[Math.floor(Math.random() * visibleSpeechStates.length)];
-      if (commit("assassinate", () => assassinate(player.id, assassinationState), 1.5)) return;
+      if (commit("assassinate", () => assassinate(player.id, assassinationState), 1.5) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const channelIndex = bestChannelForPlayer(player.id);
     if (channelIndex >= 0 && player.cash >= channelTakeoverCost(player.id, channels[channelIndex]) + rules.reserve && Math.random() < rules.channel) {
-      if (commit("news_channel", () => buyChannel(player.id, channelIndex), 0.5)) return;
+      if (commit("news_channel", () => buyChannel(player.id, channelIndex), 0.5) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     if ((player.officeSlowCooldown || 0) <= 0 && player.cash >= OFFICE_SLOW_COST + rules.reserve) {
@@ -5842,7 +5868,10 @@
         }))
         .sort((a, b) => b.score - a.score);
       if (officeSlowTargets.length && Math.random() < 0.08) {
-        if (commit("district_jam", () => slowDistrictOffices(player.id, officeSlowTargets[0].player.id), 1)) return;
+        if (commit("district_jam", () => slowDistrictOffices(player.id, officeSlowTargets[0].player.id), 1) && shouldEndPass()) {
+          finishPass();
+          return;
+        }
       }
     }
 
@@ -5859,7 +5888,10 @@
       }))
       .sort((a, b) => b.score - a.score);
     if (guardedBuildings.length < rules.maxPolice && policeTargets.length && Math.random() < rules.police) {
-      if (commit("police_deployed", () => togglePolice(player.id, policeTargets[0].state.index, policeTargets[0].building))) return;
+      if (commit("police_deployed", () => togglePolice(player.id, policeTargets[0].state.index, policeTargets[0].building)) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     if ((player.disruptCooldown || 0) <= 0 && canStartDisruptionOp(player, player.id)) {
@@ -5881,7 +5913,10 @@
         .sort((a, b) => b.score - a.score);
       const disruptTalentBoost = (hasTalent(player, "ghost_servers") ? 0.12 : 0) + (hasTalent(player, "general_strike") ? 0.06 : 0);
       if (disruptTargets.length && Math.random() < rules.disrupt + disruptTalentBoost) {
-        if (commit("disrupt", () => disrupt(player.id, disruptTargets[0].state.index), 1)) return;
+        if (commit("disrupt", () => disrupt(player.id, disruptTargets[0].state.index), 1) && shouldEndPass()) {
+          finishPass();
+          return;
+        }
       }
     }
 
@@ -5896,7 +5931,10 @@
       .sort((a, b) => b.score - a.score);
     const powerGrabTalentBoost = (hasTalent(player, "decentralized_hive") ? 0.12 : 0) + (hasTalent(player, "strike_fund") ? 0.08 : 0);
     if (powerGrabTargets.length && Math.random() < rules.powerGrab + powerGrabTalentBoost) {
-      if (commit("power_grab", () => powerGrab(player.id, powerGrabTargets[0].state.index), 1.2)) return;
+      if (commit("power_grab", () => powerGrab(player.id, powerGrabTargets[0].state.index), 1.2) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const stateIndex = player.insetDelay <= 0 ? chooseAiInsetState(player.id) : chooseAiState(player.id);
@@ -5913,14 +5951,20 @@
       .filter(Boolean)
       .sort((a, b) => b.score - a.score);
     if (upgradeTargets.length && Math.random() < 0.38) {
-      if (commit("office_upgrade", () => upgradeMiniBase(player.id, upgradeTargets[0].state.index), 0.8)) return;
+      if (commit("office_upgrade", () => upgradeMiniBase(player.id, upgradeTargets[0].state.index), 0.8) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const targetState = states[stateIndex];
     const officeLvl = officeLevel(targetState, player.id);
     const deployPending = missions.some((mission) => mission.type === "adDeploy" && mission.player === player.id && mission.state === stateIndex);
     if (canBuildMoreDistrictOffices(player) && officeLvl < 1 && !deployPending && player.cash >= adHubCost(player) && Math.random() < rules.office) {
-      if (commit("office_deploy", () => placeAdHub(player.id, stateIndex), 0.6)) return;
+      if (commit("office_deploy", () => placeAdHub(player.id, stateIndex), 0.6) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
 
     const nextHqLevel = Math.min(3, player.mainBaseLevel + 1);
@@ -5935,12 +5979,20 @@
       : [states[preferredSpeechState], ...states]
         .filter(Boolean)
         .find((state, index, list) => list.findIndex((candidate) => candidate.index === state.index) === index && !activeSpeechInState(state.index));
-    if (speechState && commit("speech", () => startAction(player.id, "speech", speechState.index))) return;
+    if (speechState && commit("speech", () => startAction(player.id, "speech", speechState.index)) && shouldEndPass()) {
+      finishPass();
+      return;
+    }
 
     if (officeLvl > 0 && officeLvl < MINI_BASE_MAX_LEVEL && officeLvl + 1 <= player.mainBaseLevel) {
-      if (commit("office_upgrade", () => upgradeMiniBase(player.id, stateIndex))) return;
+      if (commit("office_upgrade", () => upgradeMiniBase(player.id, stateIndex)) && shouldEndPass()) {
+        finishPass();
+        return;
+      }
     }
-    player.aiDelay = Math.max(1, rules.delay * 0.5) + Math.random();
+    player.aiDelay = actionsTaken > 0
+      ? rules.delay + maxDelayBonus + Math.random() * 1.5
+      : Math.max(1, rules.delay * 0.5) + Math.random();
   }
 
   function activeSpeechInState(stateIndex) {

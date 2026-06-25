@@ -3726,13 +3726,15 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     .hot-banner{ padding:6px 9px 5px; font-size:clamp(12px, 2.5vw, 18px); border-width:2px; border-radius:5px; }
   }
 .hot-banner.is-on{ display:block; animation:hot-pulse .7s steps(2) infinite; }
-.hot-tooltip{ position:fixed; z-index:190; display:none; transform:translateX(-50%); max-width:280px; padding:7px 10px;
+.hot-tooltip{ position:fixed; z-index:190; display:none; transform:translateX(-50%); max-width:360px; padding:7px 10px;
   font-family:"VT323","Share Tech Mono",monospace; font-size:16px; line-height:1.18; color:var(--term);
   background:#02160c; border:1px solid var(--term); border-radius:4px;
   box-shadow:0 0 20px rgba(52,255,134,0.35), inset 0 0 30px rgba(0,0,0,0.5); text-shadow:0 0 5px rgba(52,255,134,0.4); pointer-events:none; }
 .hot-tooltip.is-on{ display:block; }
-.hot-tooltip .htt{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:18px; letter-spacing:1px; color:#bfffe0; border-bottom:1px solid var(--term-deep); margin-bottom:3px; padding-bottom:2px; }
-.hot-tooltip .htt strong{ color:#ffd76a; font-weight:400; white-space:nowrap; }
+.hot-tooltip .htt{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; font-size:18px; letter-spacing:1px; color:#bfffe0; border-bottom:1px solid var(--term-deep); margin-bottom:3px; padding-bottom:2px; }
+.hot-tooltip .htt span,
+.hot-tooltip .htt strong{ min-width:0; overflow-wrap:anywhere; word-break:break-word; }
+.hot-tooltip .htt strong{ color:#ffd76a; font-weight:400; white-space:normal; text-align:right; }
 .hot-tooltip .htl{ color:#8fe9b6; }
 .hot-tooltip .hot-cost-line{ color:#ffd76a; text-shadow:0 0 7px rgba(255,215,106,.42); }
 .influence-tip-row{ display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:7px; color:#9fffc4; }
