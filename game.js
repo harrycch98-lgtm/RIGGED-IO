@@ -8750,7 +8750,11 @@
   function chosenTalentCards(player) {
     if (!player?.talents) return [];
     return Object.keys(player.talents)
-      .map((key) => chosenTalentCard(player, Number(key)))
+      .map((key) => {
+        const tierIndex = Number(key);
+        const card = chosenTalentCard(player, tierIndex);
+        return card ? { ...card, tierIndex, card } : null;
+      })
       .filter(Boolean)
       .sort((a, b) => a.tierIndex - b.tierIndex || a.name.localeCompare(b.name));
   }
