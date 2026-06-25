@@ -2409,7 +2409,7 @@ canvas {
 .stage-splash-image-baby{
   background-image:
     linear-gradient(180deg, rgba(4,21,11,.08), rgba(1,5,2,.26)),
-    url("./stage-early-chaos.png");
+    url("./stage-early-chaos.png?v=2");
 }
 .stage-splash-image-baby::after{
   inset:0;
@@ -2422,7 +2422,7 @@ canvas {
   border-color:rgba(255,215,106,.75);
   background-image:
     linear-gradient(180deg, rgba(34,23,6,.10), rgba(2,8,4,.32)),
-    url("./stage-mid-chaos.png");
+    url("./stage-mid-chaos.png?v=2");
 }
 .stage-splash-image-broadcast::after{
   inset:0;
@@ -2435,7 +2435,7 @@ canvas {
   border-color:rgba(255,77,90,.78);
   background-image:
     linear-gradient(180deg, rgba(36,4,7,.10), rgba(0,0,0,.38)),
-    url("./stage-late-chaos.png");
+    url("./stage-late-chaos.png?v=2");
 }
 .stage-splash-image-ballot::after{
   inset:0;
