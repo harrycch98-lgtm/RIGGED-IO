@@ -4358,12 +4358,14 @@
   }
 
   function talentCardMarkup(talent, options = {}) {
-      const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
-      const picked = !!options.picked;
-      const compact = !!options.compact;
+    const tierIndex = Number(options.tierIndex ?? talent.tierIndex ?? 0);
+    const picked = !!options.picked;
+    const compact = !!options.compact;
     const action = options.action || "";
-    const countdown = options.countdown ? `<div class="talent-draft-chip">${escapeHtml(options.countdown)}</div>` : "";
-      return `
+    const countdown = options.showCountdownChip
+      ? `<div class="talent-draft-chip" data-talent-draft-auto-chip>${escapeHtml(options.countdown || "")}</div>`
+      : "";
+    return `
         <article class="talent-draft-card talent-draft-card--${talentTierClass(tierIndex)}${picked ? " is-picked" : ""}${compact ? " is-compact" : ""}" data-talent-tree="${escapeHtml(String(talent.tree || ""))}"${action ? ` data-talent-draft-pick="${escapeHtml(talent.id)}"` : ""}>
           <div class="talent-draft-card-art">${talent?.atlas ? `<div class="talent-draft-card-art-image" style="${talentCardArtStyle(talent)}"></div>` : talentCardArtSvg(talent)}</div>
         <div class="talent-draft-card-body">
@@ -4450,6 +4452,7 @@
     if (!talentDraftOverlay) return;
     if (!activeTalentDraft) {
       talentDraftResolving = false;
+      activeTalentDraftRenderKey = "";
       talentDraftOverlay.innerHTML = "";
       talentDraftOverlay.classList.remove("is-open");
       talentDraftOverlay.setAttribute("aria-hidden", "true");
@@ -4462,8 +4465,20 @@
       return;
     }
     const secondsLeft = Math.max(0, Math.ceil((activeTalentDraft.expiresAt - Date.now()) / 1000));
+    const renderKey = `${activeTalentDraft.playerId}:${activeTalentDraft.tierIndex}:${activeTalentDraft.options.map((talent) => talent.id).join("|")}`;
+    if (activeTalentDraftRenderKey === renderKey) {
+      const timerValue = talentDraftOverlay.querySelector("[data-talent-draft-timer-value]");
+      if (timerValue) timerValue.textContent = `${secondsLeft}s`;
+      talentDraftOverlay.querySelectorAll("[data-talent-draft-auto-chip]").forEach((chip) => {
+        chip.textContent = secondsLeft <= 3 ? "AUTO" : "";
+      });
+      talentDraftOverlay.classList.add("is-open");
+      talentDraftOverlay.setAttribute("aria-hidden", "false");
+      return;
+    }
+    activeTalentDraftRenderKey = renderKey;
     talentDraftOverlay.innerHTML = `
-      <div class="talent-draft-panel">
+      <div class="talent-draft-panel is-dealing">
         <div class="talent-draft-head">
           <div>
             <span class="talent-draft-kicker">${TALENT_TIER_LABELS[activeTalentDraft.tierIndex]} Draft</span>
@@ -4472,11 +4487,11 @@
           </div>
           <div class="talent-draft-timer">
             <span>Decision Window</span>
-            <strong>${secondsLeft}s</strong>
+            <strong data-talent-draft-timer-value>${secondsLeft}s</strong>
           </div>
         </div>
         <div class="talent-draft-grid">
-          ${activeTalentDraft.options.map((talent) => talentCardMarkup(talent, { tierIndex: activeTalentDraft.tierIndex, action: "pick", countdown: secondsLeft <= 3 ? "AUTO" : "" })).join("")}
+          ${activeTalentDraft.options.map((talent) => talentCardMarkup(talent, { tierIndex: activeTalentDraft.tierIndex, action: "pick", showCountdownChip: true, countdown: secondsLeft <= 3 ? "AUTO" : "" })).join("")}
         </div>
       </div>
     `;
@@ -8631,6 +8646,7 @@
   let activeTalentDraft = null;
   let activeTalentDraftTimer = null;
   let talentDraftResolving = false;
+  let activeTalentDraftRenderKey = "";
   const pipClamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   function botCashBonus(player) {

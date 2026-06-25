@@ -4955,6 +4955,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
     linear-gradient(180deg, rgba(16,31,46,.88), rgba(8,19,14,.95));
   box-shadow:0 0 34px rgba(52,255,134,.18), inset 0 0 24px rgba(255,255,255,.03);
   animation:talent-draft-panel-in .28s ease-out;
+  perspective:1400px;
 }
 .talent-draft-head{
   display:flex;
@@ -5014,6 +5015,10 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   opacity:0;
   transform:translateY(22px) scale(.965);
   animation:talent-draft-card-in .36s cubic-bezier(.2,.8,.2,1) forwards;
+  transform-style:preserve-3d;
+}
+.talent-draft-panel.is-dealing .talent-draft-card{
+  animation:talent-draft-card-deal .62s cubic-bezier(.16,.84,.24,1) forwards;
 }
 .talent-draft-grid .talent-draft-card:nth-child(1){ animation-delay:.03s; }
 .talent-draft-grid .talent-draft-card:nth-child(2){ animation-delay:.08s; }
@@ -5442,6 +5447,28 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   to{
     opacity:1;
     transform:translateY(0) scale(1);
+  }
+}
+@keyframes talent-draft-card-deal{
+  0%{
+    opacity:0;
+    transform:translateY(34px) rotateX(-86deg) scale(.88);
+    filter:brightness(.72) saturate(.88);
+  }
+  42%{
+    opacity:1;
+    transform:translateY(8px) rotateX(-18deg) scale(.96);
+    filter:brightness(.96) saturate(.98);
+  }
+  68%{
+    opacity:1;
+    transform:translateY(-2px) rotateX(4deg) scale(1.01);
+    filter:brightness(1.02) saturate(1.02);
+  }
+  100%{
+    opacity:1;
+    transform:translateY(0) rotateX(0deg) scale(1);
+    filter:brightness(1) saturate(1);
   }
 }
 .talent-draft-card.is-compact{
