@@ -4174,10 +4174,10 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(#000, #000) top left / 92px 92px no-repeat,
-    linear-gradient(#000, #000) top right / 92px 92px no-repeat,
-    linear-gradient(#000, #000) bottom left / 92px 92px no-repeat,
-    linear-gradient(#000, #000) bottom right / 92px 92px no-repeat;
+    linear-gradient(#000, #000) top left / 190px 100px no-repeat,
+    linear-gradient(#000, #000) top right / 190px 100px no-repeat,
+    linear-gradient(#000, #000) bottom left / 190px 100px no-repeat,
+    linear-gradient(#000, #000) bottom right / 190px 100px no-repeat;
 }
 
 .lobby-bar-video {
