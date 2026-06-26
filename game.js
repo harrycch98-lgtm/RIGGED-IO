@@ -1195,7 +1195,15 @@
             mainMenu.style.display = 'block';
             mainMenu.style.visibility = 'visible';
             mainMenu.style.zIndex = '1000';
+            mainMenu.classList.remove('is-hidden');
           }
+
+          window.isJoiner = false;
+          window.isServerLobbyHost = false;
+          gameStarted = false;
+          renderPartyRoster();
+          renderTalentPreview(selectedParty);
+          refreshMultiplayerUi();
           
           console.log('Showing main menu');
         };
