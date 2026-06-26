@@ -2732,7 +2732,7 @@
       {
         id: "fundraising_surge",
         name: "FUNDRAISING SURGE",
-        effect: "States pay extra daily cash based on how much influence you hold there.",
+        effect: "States with more active parties generate more daily cash. 4-5 party pileups print the most money.",
       },
     ],
     mid: [
@@ -2744,7 +2744,7 @@
       {
         id: "border_heist",
         name: "BORDER HEIST",
-        effect: "Power Grab also steals 5% influence from adjacent states.",
+        effect: "Power Grab or DISRUPT also steals 5% influence from adjacent states.",
       },
     ],
     late: [
@@ -2757,6 +2757,11 @@
         id: "ghost_mandate",
         name: "GHOST MANDATE",
         effect: "CA, TX, FL, and NY unlock 130% ghost influence with Level 3 District Offices.",
+      },
+      {
+        id: "long_range_stump",
+        name: "LONG-RANGE STUMP",
+        effect: "The farther a speech or Debate Night is from your HQ, the stronger it gets. Alaska and Hawaii hit hardest unless your HQ is there.",
       },
     ],
   };
@@ -5500,8 +5505,9 @@
       const debateSpeechMult = player.action.debateId && hasTalent(player, "prime_time_rhetoric") ? 1.2 : 1;
       const frontRunnerSpeechMult = worldEventActive("martyrdom_cycle") ? 2 : 1;
       const peacefulStageMult = isEarlyStage() && leadingPlayer(state.index) < 0 ? 2 : 1;
+      const longRangeSpeechMult = speechDistanceMultiplier(player, state);
       const siphonMult = 1;
-      applyInfluenceGain(state, player.id, SPEECH_RATE * speechRateMult * player.speechBias * speechBoost * echoMult * modelPollingMult * hypeMult * debateSpeechMult * frontRunnerSpeechMult * peacefulStageMult, dt, true, siphonMult);
+      applyInfluenceGain(state, player.id, SPEECH_RATE * speechRateMult * player.speechBias * speechBoost * echoMult * modelPollingMult * hypeMult * debateSpeechMult * frontRunnerSpeechMult * peacefulStageMult * longRangeSpeechMult, dt, true, siphonMult);
       state.activePulse = 1;
     }
     if (player.action.left <= 0) {
@@ -5530,6 +5536,7 @@
     if (hasTalent(player, "executive_immunity")) bonus += 5;
     if (channels.some((channel) => channel.owner === player.id && stateInChannelCoverage(state, channel))) bonus += 6;
     bonus += officeLevel(state, player.id) * 2;
+    bonus += Math.round((speechDistanceMultiplier(player, state) - 1) * 20);
     return bonus;
   }
 
@@ -5871,6 +5878,10 @@
     if (hasTalent(player, "signal_leak")) {
       player.signalLeakBoost = Math.max(player.signalLeakBoost || 0, CAMPAIGN_DAY_SECONDS);
       results.push("Broadcast Surge active for 1d");
+    }
+    const adjacentStolen = stealAdjacentInfluence(player.id, state.index, 5);
+    if (adjacentStolen.length) {
+      results.push("siphoned adjacent influence in " + adjacentStolen.join(", "));
     }
     state.activePulse = 1;
     actionEffects.push({ type: "sabotage", player: player.id, target: targets[0].id, state: state.index, left: 1.8, total: 1.8 });
@@ -9002,6 +9013,24 @@
       .slice(0, Math.max(1, maxCount));
   }
 
+  function speechDistanceMultiplier(player, state) {
+    if (!player || !state || !stageVariantActive("long_range_stump", "late") || !isLateStage()) return 1;
+    const homeState = states[player.homeBase];
+    if (!homeState) return 1;
+    if (homeState.index === state.index) return 1;
+    const homeAbbr = homeState.abbr;
+    const targetAbbr = state.abbr;
+    const homeInset = homeAbbr === "AK" || homeAbbr === "HI";
+    if (!homeInset && (targetAbbr === "AK" || targetAbbr === "HI")) return 2;
+    const maxDistance = states.reduce((best, candidate) => {
+      if (!candidate || candidate.index === homeState.index) return best;
+      return Math.max(best, Math.hypot((candidate.cx || 0) - (homeState.cx || 0), (candidate.cy || 0) - (homeState.cy || 0)));
+    }, 1);
+    const distance = Math.hypot((state.cx || 0) - (homeState.cx || 0), (state.cy || 0) - (homeState.cy || 0));
+    const normalized = Math.max(0, Math.min(1, distance / Math.max(1, maxDistance)));
+    return 1 + normalized * 0.75;
+  }
+
   // ===================== PIP-CAMPAIGN 3000 : TALENT TERMINAL =====================
   const TALENT_ORDER = ["oligarchy", "populist", "syndicate", "vanguard", "futurist", "machine", "signal", "ledger"];
   const TALENT_ATLAS_BY_TREE = {
@@ -9477,7 +9506,7 @@
         if (stageVariantActive("media_war", "mid") && isMidStage() && st.ev >= MID_STAGE_MONEY_MIN_EV && st.ev <= MID_STAGE_MONEY_MAX_EV && inf >= 60) {
           daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
         }
-        if (stageVariantActive("fundraising_surge", "early") && isEarlyStage()) daily *= 1 + inf / 100;
+        daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
         total += daily;
@@ -9509,7 +9538,7 @@
         if (stageVariantActive("media_war", "mid") && isMidStage() && st.ev >= MID_STAGE_MONEY_MIN_EV && st.ev <= MID_STAGE_MONEY_MAX_EV && inf >= 60) {
           daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
         }
-        if (stageVariantActive("fundraising_surge", "early") && isEarlyStage()) daily *= 1 + inf / 100;
+        daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
         influence += daily;
@@ -9532,6 +9561,18 @@
       police: Math.round(police),
       net,
     };
+  }
+
+  function influenceDiversityCount(state) {
+    if (!state || !Array.isArray(state.influence)) return 0;
+    return state.influence.reduce((count, value) => count + ((Number(value) || 0) > 0 ? 1 : 0), 0);
+  }
+
+  function fundraisingSurgeMultiplier(state) {
+    if (!stageVariantActive("fundraising_surge", "early") || !isEarlyStage()) return 1;
+    const activeParties = influenceDiversityCount(state);
+    if (activeParties <= 1) return 1;
+    return 1 + (activeParties - 1) * 0.25;
   }
 
   function projectedCashPerDay(player) {
@@ -10654,6 +10695,29 @@
     return applied;
   }
 
+  function stealAdjacentInfluence(playerId, stateIndex, amountPerState) {
+    const adjacentStolen = [];
+    if (!stageVariantActive("border_heist", "mid") || !isMidStage()) return adjacentStolen;
+    adjacentStatesFor(stateIndex, amountPerState).forEach((adjacent) => {
+      const rivals = players
+        .filter((candidate) => candidate.id !== playerId && adjustedInfluence(adjacent, candidate.id) > influenceFloor(candidate, adjacent))
+        .sort((a, b) => adjustedInfluence(adjacent, b.id) - adjustedInfluence(adjacent, a.id));
+      let remaining = amountPerState;
+      while (remaining > 0 && rivals.length) {
+        const rival = rivals.shift();
+        const available = Math.max(0, adjustedInfluence(adjacent, rival.id) - influenceFloor(rival, adjacent));
+        if (available <= 0) continue;
+        const taken = Math.min(remaining, available);
+        adjacent.influence[rival.id] = clampInfluenceForState(adjacent, rival.id, adjustedInfluence(adjacent, rival.id) - taken);
+        adjacent.influence[playerId] = clampInfluenceForState(adjacent, playerId, adjustedInfluence(adjacent, playerId) + taken);
+        adjacent.activePulse = 1;
+        remaining -= taken;
+      }
+      if (remaining < amountPerState) adjacentStolen.push(adjacent.abbr);
+    });
+    return adjacentStolen;
+  }
+
   function powerGrab(playerId, stateIndex) {
     if (playerId === HUMAN && routeGuestGameCommand('powerGrab', [stateIndex])) return true;
     const player = players[playerId];
@@ -10671,26 +10735,7 @@
     player.cash -= cost;
     const grabAmount = (hasTalent(player, "decentralized_hive") ? 30 : 20) * (worldEventActive("reckless_power_grab") ? 1.1 : 1);
     const gained = grantFlatStateInfluence(state, playerId, grabAmount);
-    const adjacentStolen = [];
-    if (stageVariantActive("border_heist", "mid") && isMidStage()) {
-      adjacentStatesFor(stateIndex, 5).forEach((adjacent) => {
-        const rivals = players
-          .filter((candidate) => candidate.id !== playerId && adjustedInfluence(adjacent, candidate.id) > influenceFloor(candidate, adjacent))
-          .sort((a, b) => adjustedInfluence(adjacent, b.id) - adjustedInfluence(adjacent, a.id));
-        let remaining = 5;
-        while (remaining > 0 && rivals.length) {
-          const rival = rivals.shift();
-          const available = Math.max(0, adjustedInfluence(adjacent, rival.id) - influenceFloor(rival, adjacent));
-          if (available <= 0) continue;
-          const taken = Math.min(remaining, available);
-          adjacent.influence[rival.id] = clampInfluenceForState(adjacent, rival.id, adjustedInfluence(adjacent, rival.id) - taken);
-          adjacent.influence[playerId] = clampInfluenceForState(adjacent, playerId, adjustedInfluence(adjacent, playerId) + taken);
-          adjacent.activePulse = 1;
-          remaining -= taken;
-        }
-        if (remaining < 5) adjacentStolen.push(adjacent.abbr);
-      });
-    }
+    const adjacentStolen = stealAdjacentInfluence(playerId, stateIndex, 5);
     let backlashStates = [];
     if (worldEventActive("reckless_power_grab")) {
       backlashStates = shuffle(states.filter((candidate) => candidate.index !== state.index && adjustedInfluence(candidate, playerId) > 0)).slice(0, 2);
