@@ -182,10 +182,13 @@
   let matchResultCounter = 0;
   let matchResult = null;
   let lastPresentedMatchResultId = 0;
+  let electionRoundResults = { midterm: null, presidential: null };
+  let finalElectionScoreboard = null;
   let broadcastEventCounter = 0;
   let latestBroadcastEvent = null;
   let lastPresentedBroadcastEventId = 0;
   let victoryPresentationToken = 0;
+  let victoryOverlayMode = "";
   let emoteWheelOpen = false;
   let emoteWheelPointer = { x: 180, y: 180 };
 
@@ -1676,6 +1679,8 @@
       latestDebateEvent,
       latestDebateResultEvent,
       matchResult,
+      electionRoundResults,
+      finalElectionScoreboard,
       latestBroadcastEvent,
       campaignStageVariants,
       activeCampaignStageVariantId,
@@ -1729,6 +1734,8 @@
     latestDebateResultEvent = snapshot.latestDebateResultEvent ?? latestDebateResultEvent;
     debateResultEventCounter = Math.max(debateResultEventCounter, Number(latestDebateResultEvent?.id || 0));
     matchResult = snapshot.matchResult ?? matchResult;
+    electionRoundResults = snapshot.electionRoundResults ?? electionRoundResults;
+    finalElectionScoreboard = snapshot.finalElectionScoreboard ?? finalElectionScoreboard;
     latestBroadcastEvent = snapshot.latestBroadcastEvent ?? latestBroadcastEvent;
     campaignStageVariants = snapshot.campaignStageVariants ?? campaignStageVariants;
     activeCampaignStageVariantId = String(snapshot.activeCampaignStageVariantId || activeCampaignStageVariantId || "");
@@ -2703,24 +2710,24 @@
     victory: { src: "bgm-victory.mp3", loop: true },
   };
   const CAMPAIGN_STAGE_INFO = {
-    early: {
-      name: "KISSING BABIES PHASE",
-      kicker: "PEACEFUL OPENING",
-      effect: "Random early-stage doctrine goes live.",
-      icon: "baby",
-    },
-    mid: {
-      name: "CABLE NEWS KNIFE FIGHT",
-      kicker: "MEDIA WAR",
-      effect: "Random mid-game doctrine goes live.",
-      icon: "broadcast",
-    },
-    late: {
-      name: "RIGGED OVERTIME",
-      kicker: "NO MORE PRETENDING",
-      effect: "Random late-game doctrine goes live. Duel speech mode unlocks alongside normal Debate Nights.",
-      icon: "ballot",
-    },
+      early: {
+        name: "KISSING BABIES PHASE",
+        kicker: "PEACEFUL OPENING",
+        effect: "Random early-stage doctrine goes live.",
+        icon: "baby",
+      },
+      mid: {
+        name: "MIDTERM ELECTION",
+        kicker: "MEDIA WAR",
+        effect: "Random mid-game doctrine goes live.",
+        icon: "broadcast",
+      },
+      late: {
+        name: "PRESIDENTIAL ELECTION",
+        kicker: "NO MORE PRETENDING",
+        effect: "Random late-game doctrine goes live. Duel speech mode unlocks alongside normal Debate Nights.",
+        icon: "ballot",
+      },
   };
   const CAMPAIGN_STAGE_VARIANTS = {
     early: [
@@ -2736,11 +2743,11 @@
       },
     ],
     mid: [
-      {
-        id: "media_war",
-        name: "MEDIA WAR",
-        effect: "Owned channels suppress rivals. 10-20 EV strongholds print cash.",
-      },
+        {
+          id: "media_war",
+          name: "MEDIA WAR",
+          effect: "States worth 10-20 EV give extra cash at 60% influence, and speeches there splash into adjacent states.",
+        },
       {
         id: "border_heist",
         name: "BORDER HEIST",
@@ -4217,9 +4224,12 @@
     matchResultCounter = 0;
     matchResult = null;
     lastPresentedMatchResultId = 0;
+    electionRoundResults = { midterm: null, presidential: null };
+    finalElectionScoreboard = null;
     broadcastEventCounter = 0;
     latestBroadcastEvent = null;
     lastPresentedBroadcastEventId = 0;
+    victoryOverlayMode = "";
     if (victoryEl) victoryEl.classList.remove("is-open");
     closeRivalTalentViewer();
     news = null;
@@ -5332,7 +5342,7 @@
       state.sabotageCooldown = Math.max(0, (state.sabotageCooldown || 0) - dt);
     });
 
-    if (elapsed >= currentMatchMode.seconds) finishElection();
+    if (elapsed >= currentMatchMode.seconds) finishPresidentialElection();
   }
 
   function tickCampaignStageEffects(announce = true) {
@@ -5342,6 +5352,9 @@
     lastCampaignStage = stage;
     const variant = ensureCampaignStageVariant(stage);
     activeCampaignStageVariantId = String(variant?.id || "");
+    if (stage === "late" && !electionRoundResults.midterm) {
+      resolveMidtermElection();
+    }
     refreshBgm(4.2);
     showCampaignStageSplash(stage);
     if (!announce) return;
@@ -5509,6 +5522,9 @@
       const siphonMult = 1;
       applyInfluenceGain(state, player.id, SPEECH_RATE * speechRateMult * player.speechBias * speechBoost * echoMult * modelPollingMult * hypeMult * debateSpeechMult * frontRunnerSpeechMult * peacefulStageMult * longRangeSpeechMult, dt, true, siphonMult);
       state.activePulse = 1;
+      if (midStageCashStateActiveForPlayer(player, state)) {
+        splashAdjacentInfluence(player, state.index, 3 * dt / Math.max(SPEECH_SECONDS, 1));
+      }
     }
     if (player.action.left <= 0) {
       const finishedType = player.action.type;
@@ -5936,6 +5952,13 @@
       state.activePulse = 1;
     });
     if (nearby.length) addAlert(player.name + "'s Rally Ripple spilled into " + nearby.map((state) => state.abbr).join(", ") + ".");
+  }
+
+  function midStageCashStateActiveForPlayer(player, state) {
+    if (!player || !state || !stageVariantActive("media_war", "mid") || !isMidStage()) return false;
+    return Number(state.ev) >= MID_STAGE_MONEY_MIN_EV
+      && Number(state.ev) <= MID_STAGE_MONEY_MAX_EV
+      && adjustedInfluence(state, player.id) >= 60;
   }
 
   function influenceEfficiency(value) {
@@ -7110,16 +7133,7 @@
   }
 
   function finishElection(winnerId = null, reason = "time expired") {
-    if (matchOver) return;
-    matchOver = true;
-    const resolvedWinnerId = winnerId === null
-      ? players
-          .map((player) => ({ player, electoral: electoralVotes(player.id), vote: projectedVote(player.id) }))
-          .sort((a, b) => b.electoral - a.electoral || b.vote - a.vote)[0]?.player.id
-      : winnerId;
-    matchResult = { id: ++matchResultCounter, winnerId: resolvedWinnerId, reason };
-    lastPresentedMatchResultId = matchResult.id;
-    presentElectionResult(resolvedWinnerId, reason, true);
+    finishPresidentialElection(reason);
   }
 
   function localCandidateId() {
@@ -7127,23 +7141,128 @@
     return Number.isFinite(Number(lobbyCandidate?.id)) ? Number(lobbyCandidate.id) : HUMAN;
   }
 
-  function presentElectionResult(winnerId, reason, announce) {
+  function electionRoundLabel(roundKey) {
+    return roundKey === "midterm" ? "MIDTERM ELECTION" : "PRESIDENTIAL ELECTION";
+  }
+
+  function electionReasonText(roundKey, reason = "") {
+    if (reason) return reason;
+    return roundKey === "midterm" ? "midterm election complete" : "presidential election complete";
+  }
+
+  function buildElectionRoundResult(roundKey, reason = "") {
+    const totalEv = totalElectoralVotes();
     const standings = players
-      .map((player) => ({ player, electoral: electoralVotes(player.id), vote: projectedVote(player.id), states: statesHeld(player.id) }))
-      .sort((a, b) => b.electoral - a.electoral || b.vote - a.vote);
-    const winner = standings.find((item) => item.player.id === winnerId) || standings[0];
-    if (!winner) return;
-    if (announce) {
-      addAlert(`${winner.player.name} wins: ${reason}. Electoral vote ${winner.electoral}/${totalElectoralVotes()}.`);
-      showToast(`${winner.player.name} wins the electoral vote.`);
+      .map((player) => ({
+        playerId: player.id,
+        name: player.name,
+        leader: player.leader,
+        color: player.color,
+        electoral: electoralVotes(player.id),
+        vote: projectedVote(player.id),
+        states: statesHeld(player.id),
+        hqLevel: player.mainBaseLevel || 0,
+        points: electoralVotes(player.id),
+      }))
+      .sort((a, b) => b.electoral - a.electoral || b.vote - a.vote || b.states - a.states);
+    const winner = standings[0] || null;
+    return {
+      id: ++matchResultCounter,
+      round: roundKey,
+      title: electionRoundLabel(roundKey),
+      reason: electionReasonText(roundKey, reason),
+      totalEv,
+      winnerId: winner?.playerId ?? -1,
+      standings,
+    };
+  }
+
+  function buildFinalElectionScoreboard() {
+    const midterm = electionRoundResults.midterm;
+    const presidential = electionRoundResults.presidential;
+    const rows = players.map((player) => {
+      const midtermEntry = midterm?.standings?.find((entry) => entry.playerId === player.id) || null;
+      const presidentialEntry = presidential?.standings?.find((entry) => entry.playerId === player.id) || null;
+      const midtermPoints = Number(midtermEntry?.points || 0);
+      const presidentialPoints = Number(presidentialEntry?.points || 0);
+      const totalPoints = midtermPoints + presidentialPoints;
+      return {
+        playerId: player.id,
+        name: player.name,
+        leader: player.leader,
+        color: player.color,
+        midtermPoints,
+        presidentialPoints,
+        totalPoints,
+        midtermVotes: Number(midtermEntry?.electoral || 0),
+        presidentialVotes: Number(presidentialEntry?.electoral || 0),
+        midtermPopular: Number(midtermEntry?.vote || 0),
+        presidentialPopular: Number(presidentialEntry?.vote || 0),
+      };
+    }).sort((a, b) =>
+      b.totalPoints - a.totalPoints ||
+      b.presidentialPoints - a.presidentialPoints ||
+      b.presidentialPopular - a.presidentialPopular ||
+      b.midtermPopular - a.midtermPopular
+    );
+    return {
+      id: ++matchResultCounter,
+      rows,
+      winnerId: rows[0]?.playerId ?? -1,
+      formula: "Points = electoral votes controlled at the Midterm Election + electoral votes controlled at the Presidential Election.",
+    };
+  }
+
+  function resolveMidtermElection(reason = "midterm election complete") {
+    if (electionRoundResults.midterm) return electionRoundResults.midterm;
+    const result = buildElectionRoundResult("midterm", reason);
+    electionRoundResults = { ...electionRoundResults, midterm: result };
+    paused = true;
+    localPauseRequested = false;
+    addAlert(`${result.standings[0]?.name || "Unknown"} leads the ${result.title.toLowerCase()} with ${result.standings[0]?.electoral || 0}/${result.totalEv} EV.`);
+    showToast(`${result.title} results are in.`);
+    presentElectionRoundResult(result, true);
+    return result;
+  }
+
+  function finishPresidentialElection(reason = "presidential election complete") {
+    if (matchOver) return;
+    matchOver = true;
+    paused = true;
+    const presidential = buildElectionRoundResult("presidential", reason);
+    electionRoundResults = { ...electionRoundResults, presidential };
+    finalElectionScoreboard = buildFinalElectionScoreboard();
+    matchResult = {
+      id: ++matchResultCounter,
+      winnerId: finalElectionScoreboard.winnerId,
+      reason: "RIGGED final tally complete",
+      rounds: electionRoundResults,
+      finalScoreboard: finalElectionScoreboard,
+    };
+    lastPresentedMatchResultId = matchResult.id;
+    const finalWinner = finalElectionScoreboard.rows[0];
+    if (finalWinner) {
+      addAlert(`${finalWinner.name} wins RIGGED with ${finalWinner.totalPoints} total points.`);
+      showToast(`${finalWinner.name} wins RIGGED.`);
     }
-    showVoteCountingScreen(standings, winner, reason);
-    resultBgm = winner.player.id === localCandidateId() ? "victory" : "";
+    presentElectionRoundResult(presidential, true);
+  }
+
+  function presentElectionResult(winnerId, reason, announce) {
+    const scoreboard = matchResult?.finalScoreboard || finalElectionScoreboard || buildFinalElectionScoreboard();
+    finalElectionScoreboard = scoreboard;
+    if (announce && scoreboard.rows[0]) {
+      addAlert(`${scoreboard.rows[0].name} wins RIGGED with ${scoreboard.rows[0].totalPoints} total points.`);
+    }
+    showFinalElectionScoreboard(scoreboard);
+    const localWinner = scoreboard.rows.find((row) => row.playerId === localCandidateId());
+    resultBgm = localWinner && scoreboard.winnerId === localWinner.playerId ? "victory" : "";
     if (resultBgm) {
       playVictorySfx();
       transitionBgm(resultBgm, 1.6);
+    } else {
+      playDefeatSfx();
     }
-    else playDefeatSfx();
     updateUi(true);
   }
 
@@ -9506,13 +9625,13 @@
     let total = 0;
     for (const st of states) {
       if (st.cashFreeze?.[player.id] > 0) continue;
-      const inf = st.influence[player.id];
-      const level = officeLevel(st, player.id);
-      if (inf > 0) {
-        let daily = (1 + (st.ev || 8) * 0.05) * 90 * (inf / 100);
-        if (stageVariantActive("media_war", "mid") && isMidStage() && st.ev >= MID_STAGE_MONEY_MIN_EV && st.ev <= MID_STAGE_MONEY_MAX_EV && inf >= 60) {
-          daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
-        }
+        const inf = st.influence[player.id];
+        const level = officeLevel(st, player.id);
+        if (inf > 0) {
+          let daily = (1 + (st.ev || 8) * 0.05) * 90 * (inf / 100);
+          if (midStageCashStateActiveForPlayer(player, st)) {
+            daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
+          }
         daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
@@ -9538,13 +9657,13 @@
         if (policeGuards(st, player.id, "office")) police += policeUpkeepDay(player, st, "office");
         continue;
       }
-      const inf = st.influence[player.id];
-      const level = officeLevel(st, player.id);
-      if (inf > 0) {
-        let daily = (1 + (st.ev || 8) * 0.05) * 90 * (inf / 100);
-        if (stageVariantActive("media_war", "mid") && isMidStage() && st.ev >= MID_STAGE_MONEY_MIN_EV && st.ev <= MID_STAGE_MONEY_MAX_EV && inf >= 60) {
-          daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
-        }
+        const inf = st.influence[player.id];
+        const level = officeLevel(st, player.id);
+        if (inf > 0) {
+          let daily = (1 + (st.ev || 8) * 0.05) * 90 * (inf / 100);
+          if (midStageCashStateActiveForPlayer(player, st)) {
+            daily += st.ev * MID_STAGE_MONEY_PER_EV_DAY;
+          }
         daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
@@ -10182,8 +10301,31 @@
         returnToLobbyMenu();
         return;
       }
+      if (event.target.closest("[data-victory-close]")) {
+        if (victoryOverlayMode === "midterm-summary") {
+          victoryEl.classList.remove("is-open");
+          victoryOverlayMode = "";
+          paused = false;
+          localPauseRequested = false;
+          updateUi(true);
+          return;
+        }
+        if (victoryOverlayMode === "presidential-summary") {
+          showFinalElectionScoreboard(finalElectionScoreboard || buildFinalElectionScoreboard());
+          return;
+        }
+        if (victoryOverlayMode === "midterm-count") {
+          showElectionRoundSummary(electionRoundResults.midterm);
+          return;
+        }
+        if (victoryOverlayMode === "presidential-count") {
+          showElectionRoundSummary(electionRoundResults.presidential);
+          return;
+        }
+      }
       if (event.target === victoryEl || event.target.closest("[data-victory-close]")) {
         victoryEl.classList.remove("is-open");
+        victoryOverlayMode = "";
       }
     });
   }
@@ -10307,6 +10449,143 @@
       }, 850);
     };
     requestAnimationFrame(tick);
+  }
+
+  function presentElectionRoundResult(result, announce = true) {
+    if (!result) return;
+    if (announce) {
+      resultBgm = result.winnerId === localCandidateId() ? "victory" : "";
+      if (resultBgm) {
+        playVictorySfx();
+        transitionBgm(resultBgm, 1.6);
+      } else {
+        playDefeatSfx();
+      }
+    }
+    showElectionRoundCountingScreen(result);
+    updateUi(true);
+  }
+
+  function configureVictoryActions(closeLabel = "Close Results", showMenu = true) {
+    if (!victoryEl) return;
+    const closeButton = victoryEl.querySelector("[data-victory-close]");
+    const menuButton = victoryEl.querySelector("[data-victory-menu]");
+    if (closeButton) closeButton.textContent = closeLabel;
+    if (menuButton) menuButton.hidden = !showMenu;
+  }
+
+  function showElectionRoundCountingScreen(result) {
+    buildVictoryDom();
+    if (!victoryEl || !result) return;
+    victoryOverlayMode = `${result.round}-count`;
+    configureVictoryActions("Skip Count", false);
+    const body = victoryEl.querySelector("#victoryBody");
+    if (!body) return;
+    const rows = result.standings.map((item, index) => `
+      <div class="count-row" style="--party:${item.color}">
+        <span class="count-rank">${index + 1}</span>
+        <span class="count-name">${escapeHtml(item.name)}</span>
+        <span class="count-bar"><i style="width:0%"></i></span>
+        <strong data-count-votes="${item.playerId}">0</strong>
+      </div>
+    `).join("");
+    body.innerHTML =
+      '<div class="counting-screen">' +
+      `<div class="counting-title">${escapeHtml(result.title)}</div>` +
+      '<div class="counting-subtitle">Counting electoral votes...</div>' +
+      `<div class="counting-total">${result.totalEv} TOTAL ELECTORAL VOTES / POINTS THIS ROUND</div>` +
+      `<div class="counting-rows">${rows}</div>` +
+      '</div>';
+    victoryEl.classList.add("is-open");
+    const presentationToken = ++victoryPresentationToken;
+    const startedAt = performance.now();
+    const duration = 3200;
+    const tick = (now) => {
+      if (presentationToken !== victoryPresentationToken) return;
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      result.standings.forEach((item) => {
+        const number = body.querySelector(`[data-count-votes="${item.playerId}"]`);
+        const row = number?.closest(".count-row");
+        const bar = row?.querySelector(".count-bar i");
+        const votes = Math.round(item.electoral * eased);
+        if (number) number.textContent = String(votes);
+        if (bar) bar.style.width = `${Math.max(2, (votes / Math.max(1, result.totalEv)) * 100)}%`;
+      });
+      if (t < 1) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      window.setTimeout(() => {
+        if (presentationToken === victoryPresentationToken) showElectionRoundSummary(result);
+      }, 700);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function showElectionRoundSummary(result) {
+    buildVictoryDom();
+    if (!victoryEl || !result) return;
+    victoryOverlayMode = `${result.round}-summary`;
+    const closeLabel = result.round === "midterm" ? "Continue Campaign" : "Show Final Tally";
+    configureVictoryActions(closeLabel, true);
+    const body = victoryEl.querySelector("#victoryBody");
+    if (!body) return;
+    const winner = result.standings[0];
+    const rows = result.standings.map((item, index) => `
+      <div class="round-summary-row" style="--party:${item.color}">
+        <span>${index + 1}. ${escapeHtml(item.name)}</span>
+        <strong>${item.points} pts</strong>
+        <small>${item.electoral} EV / ${(item.vote * 100).toFixed(1)}%</small>
+      </div>
+    `).join("");
+    body.innerHTML =
+      '<div class="round-summary-screen">' +
+      `<div class="counting-title">${escapeHtml(result.title)} RESULTS</div>` +
+      `<div class="counting-subtitle">${escapeHtml(result.reason)}</div>` +
+      '<div class="victory-reason">Points formula: electoral votes controlled when this election ends.</div>' +
+      '<div class="victory-stats">' +
+      `<div><span>Round Winner</span><strong>${escapeHtml(winner?.name || "N/A")}</strong></div>` +
+      `<div><span>Winning EV</span><strong>${winner?.electoral ?? 0}</strong></div>` +
+      `<div><span>Winning Points</span><strong>${winner?.points ?? 0}</strong></div>` +
+      '</div>' +
+      `<div class="round-summary-rows">${rows}</div>` +
+      '</div>';
+    victoryEl.classList.add("is-open");
+  }
+
+  function showFinalElectionScoreboard(scoreboard) {
+    buildVictoryDom();
+    if (!victoryEl || !scoreboard) return;
+    victoryOverlayMode = "final-scoreboard";
+    configureVictoryActions("Close Results", true);
+    const body = victoryEl.querySelector("#victoryBody");
+    if (!body) return;
+    const winner = scoreboard.rows[0];
+    const rows = scoreboard.rows.map((row, index) => `
+      <div class="score-row" style="--party:${row.color}">
+        <span class="score-rank">${index + 1}</span>
+        <span class="score-name">${escapeHtml(row.name)}</span>
+        <span>${row.midtermPoints}</span>
+        <span>${row.presidentialPoints}</span>
+        <strong>${row.totalPoints}</strong>
+        <small>${row.midtermVotes} EV + ${row.presidentialVotes} EV</small>
+      </div>
+    `).join("");
+    body.innerHTML =
+      '<div class="final-score-screen">' +
+      '<div class="counting-title">RIGGED FINAL TALLY</div>' +
+      `<div class="counting-subtitle">${escapeHtml(winner?.name || "N/A")} wins the cycle</div>` +
+      '<div class="victory-reason">' + escapeHtml(scoreboard.formula) + '</div>' +
+      '<div class="victory-stats">' +
+      `<div><span>Winner</span><strong>${escapeHtml(winner?.name || "N/A")}</strong></div>` +
+      `<div><span>Total Points</span><strong>${winner?.totalPoints ?? 0}</strong></div>` +
+      `<div><span>Leader</span><strong>${escapeHtml(winner?.leader || "N/A")}</strong></div>` +
+      '</div>' +
+      '<div class="scoreboard-head"><span>#</span><span>Party</span><span>Midterm</span><span>Presidential</span><span>Total</span><span>Calculation</span></div>' +
+      `<div class="scoreboard-rows">${rows}</div>` +
+      '</div>';
+    victoryEl.classList.add("is-open");
   }
 
   function buildPipDom() {
