@@ -2056,7 +2056,7 @@
   const WORLD_EVENT_REPORT_DAYS = 2;
   const CAPTURE_THRESHOLD = 50;
   const CHANNEL_COST = 10000;
-  const CHANNEL_INFLUENCE_RATE = 0.14;
+  const CHANNEL_INFLUENCE_RATE = 1;
   const MID_CHANNEL_SUPPRESSION_RATE = 0.07;
   const SPEECH_SECONDS = CAMPAIGN_DAY_SECONDS;
   const SPEECH_COOLDOWN_DAYS = 1;
@@ -6287,7 +6287,7 @@
     const contenders = [...liveSpeakers.filter((candidate) => candidate.id !== player.id), player];
     contenders.forEach((candidate) => {
       candidate.action.debateId = debateId;
-      candidate.action.debateRoll = Number(candidate.action.debateRoll ?? (Math.random() * 20));
+      candidate.action.debateRoll = Number(candidate.action.debateRoll ?? (Math.random() * 10));
       candidate.action.decoyStates = [];
       candidate.action.left = DEBATE_SECONDS;
       candidate.action.total = DEBATE_SECONDS;
