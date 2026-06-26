@@ -2048,9 +2048,13 @@
   // ===== END LOBBY SYSTEM =====
   const MATCH_SECONDS = 900;
   const CAMPAIGN_TOTAL_DAYS = 90;
+  const CAMPAIGN_TOTAL_MONTHS = 48;
   const CAMPAIGN_DAY_SECONDS = MATCH_SECONDS / CAMPAIGN_TOTAL_DAYS;
+  const CAMPAIGN_MONTH_SECONDS = MATCH_SECONDS / CAMPAIGN_TOTAL_MONTHS;
+  const CAMPAIGN_MONTH_VALUE_SCALE = CAMPAIGN_MONTH_SECONDS / CAMPAIGN_DAY_SECONDS;
+  const CAMPAIGN_MONTH_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const MATCH_MODES = {
-    campaign100: { id: "campaign100", label: "90 Days", timed: true, days: 90, seconds: MATCH_SECONDS },
+    campaign100: { id: "campaign100", label: "4 Years", timed: true, days: 90, seconds: MATCH_SECONDS },
   };
   const HOME_BASE_SECONDS = 60;
   const NEWS_INTERVAL = 85;
@@ -5633,7 +5637,7 @@
           player.policeShortageTime -= CAMPAIGN_DAY_SECONDS * 2;
           const lostState = removeRandomPoliceProtection(player);
           if (lostState) {
-            addAlert(player.name + " could not afford police upkeep for 2 days and lost protection in " + lostState.name + ".");
+            addAlert(player.name + " could not afford police upkeep for 2 months and lost protection in " + lostState.name + ".");
             if (player.id === HUMAN) showToast("Police protection lost in " + lostState.abbr + " - upkeep ran dry.");
           } else {
             player.policeShortageTime = 0;
@@ -5787,7 +5791,7 @@
           }
           if (hasTalent(candidate, "backlash_cells")) {
             state.cashFreeze[player.id] = Math.max(state.cashFreeze[player.id] || 0, 3 * CAMPAIGN_DAY_SECONDS);
-            addAlert(candidate.name + "'s backlash cells froze " + player.name + "'s cash flow in " + state.name + " for 3 days.");
+            addAlert(candidate.name + "'s backlash cells froze " + player.name + "'s cash flow in " + state.name + " for 3 months.");
           }
         });
         state.activePulse = 1;
@@ -5857,7 +5861,7 @@
           const delayDays = sabotageFreezeDays(player);
           baseUpgrades.forEach((candidate) => { candidate.left += delayDays * CAMPAIGN_DAY_SECONDS; });
           results.push(target.name + " HQ upgrade delayed " + delayDays + "d");
-          if (target.id === HUMAN) showToast("Your HQ upgrade was delayed " + delayDays + " day(s) by DISRUPT.");
+          if (target.id === HUMAN) showToast("Your HQ upgrade was delayed " + delayDays + " month(s) by DISRUPT.");
         }
       }
 
@@ -6929,7 +6933,7 @@
 
   function worldEventReportText(template, detail = "") {
     const durationDays = Number(template.durationDays || 0);
-    const duration = durationDays > 0 ? ` Lasts ${durationDays} days.` : " One-time event.";
+    const duration = durationDays > 0 ? ` Lasts ${durationDays} months.` : " One-time event.";
     return `${template.text}${detail ? " " + detail : ""}${duration}`;
   }
 
@@ -7494,9 +7498,9 @@
     factionName.style.color = human.color;
     hqHint.textContent = phase === "base"
       ? `${Math.ceil(baseTimer)}s to pick a home base. Click any open state. Everyone starts at 0 influence.`
-      : `${state.name} (${state.ev} EV): ${leader ? `${leader.name} leads ${Math.round(adjustedInfluence(state, leader.id))}%` : "undecided"}. Your support ${Math.round(stateShare(state, HUMAN) * 100)}%. Most electoral votes on election day wins.`;
+      : `${state.name} (${state.ev} EV): ${leader ? `${leader.name} leads ${Math.round(adjustedInfluence(state, leader.id))}%` : "undecided"}. Your support ${Math.round(stateShare(state, HUMAN) * 100)}%. Most electoral votes on election night wins.`;
     cashStat.textContent = formatMoney(human.cash);
-    timeStat.textContent = phase === "base" ? `${Math.ceil(baseTimer)}s` : `${Math.ceil(daysUntilElection())}d`;
+    timeStat.textContent = phase === "base" ? `${Math.ceil(baseTimer)}s` : formatCampaignCalendarStamp();
     voteStat.textContent = `${electoralVotes(HUMAN)}`;
     renderUpgradeStatus(human);
     renderDebatePowerOverlay(human);
@@ -7504,12 +7508,24 @@
     if (calendarCountdown) {
       const calendarCard = calendarCountdown.closest(".election-calendar");
       if (calendarCard) calendarCard.style.display = "block";
-      calendarCountdown.textContent = String(Math.ceil(phase === "base" ? baseTimer : daysUntilElection()));
-      if (calendarLabel) calendarLabel.textContent = phase === "base" ? "SECONDS TO SELECT HQ" : "DAYS TO ELECTION";
+      if (phase === "base") {
+        calendarCountdown.textContent = String(Math.ceil(baseTimer));
+      } else {
+        const calendarParts = campaignCalendarParts();
+        calendarCountdown.textContent = calendarParts.month;
+      }
+      if (calendarLabel) {
+        if (phase === "base") {
+          calendarLabel.textContent = "SECONDS TO SELECT HQ";
+        } else {
+          const calendarParts = campaignCalendarParts();
+          calendarLabel.textContent = `YEAR ${calendarParts.year} // CAMPAIGN`;
+        }
+      }
       if (calendarCard) {
         const progress = phase === "base"
           ? Math.max(0, Math.min(1, 1 - baseTimer / HOME_BASE_SECONDS))
-          : Math.max(0, Math.min(1, campaignDaysElapsed() % 1));
+          : Math.max(0, Math.min(1, campaignMonthsElapsed() % 1));
         calendarCard.style.setProperty("--day-progress", (progress * 100).toFixed(1) + "%");
       }
     }
@@ -7531,7 +7547,7 @@
                 <span class="intel-home">${home}</span>
               </div>
               <div class="intel-metric"><span>Cash</span><strong>${formatMoney(player.cash)}</strong></div>
-              <div class="intel-metric"><span>Per Day</span><strong>${cashFlow}</strong></div>
+              <div class="intel-metric"><span>Per Month</span><strong>${cashFlow}</strong></div>
               <div class="intel-metric"><span>EV</span><strong>${vote}</strong></div>
               <div class="intel-metric"><span>HQ</span><strong>L${player.mainBaseLevel || 0}</strong></div>
             </article>
@@ -9010,6 +9026,40 @@
     return Math.max(0, currentMatchMode.days - campaignDaysElapsed());
   }
 
+  function campaignMonthsElapsed() {
+    return Math.min(CAMPAIGN_TOTAL_MONTHS, elapsed / CAMPAIGN_MONTH_SECONDS);
+  }
+
+  function monthsUntilElection() {
+    return Math.max(0, CAMPAIGN_TOTAL_MONTHS - campaignMonthsElapsed());
+  }
+
+  function campaignCalendarParts(monthsElapsed = campaignMonthsElapsed()) {
+    const clamped = Math.max(0, Math.min(CAMPAIGN_TOTAL_MONTHS - 1e-6, Number(monthsElapsed) || 0));
+    const slot = Math.max(0, Math.min(CAMPAIGN_TOTAL_MONTHS - 1, Math.floor(clamped)));
+    return {
+      year: Math.floor(slot / 12) + 1,
+      monthIndex: slot % 12,
+      month: CAMPAIGN_MONTH_NAMES[slot % 12],
+    };
+  }
+
+  function formatCampaignCalendarStamp(monthsElapsed = campaignMonthsElapsed()) {
+    const parts = campaignCalendarParts(monthsElapsed);
+    return `Y${parts.year} ${parts.month}`;
+  }
+
+  function formatCampaignRemainingShort(seconds) {
+    const months = Math.max(0, Number(seconds) || 0) / CAMPAIGN_MONTH_SECONDS;
+    if (months >= 12) {
+      const wholeMonths = Math.ceil(months);
+      const years = Math.floor(wholeMonths / 12);
+      const remainder = wholeMonths % 12;
+      return remainder > 0 ? `${years}Y ${remainder}M` : `${years}Y`;
+    }
+    return `${months >= 10 ? Math.ceil(months) : Math.max(0.1, Math.ceil(months * 10) / 10)}M`;
+  }
+
   function campaignStage() {
     const left = daysUntilElection();
     if (left > EARLY_STAGE_DAYS_LEFT) return "early";
@@ -9030,11 +9080,11 @@
   }
 
   function formatCampaignDuration(seconds) {
-    return `${Math.max(0, seconds / CAMPAIGN_DAY_SECONDS).toFixed(1)}d`;
+    return formatCampaignRemainingShort(seconds);
   }
 
   function formatCampaignLogTime() {
-    return `D-${Math.ceil(daysUntilElection())}`;
+    return formatCampaignCalendarStamp();
   }
 
   function showToast(message, variant = "") {
@@ -9185,12 +9235,12 @@
       { left:{id:"backdoor_exploits",name:"QUEUE INJECTION",desc:"DISRUPT cancels a target's District Office upgrade, forcing them to pay again.",live:true},
         right:{id:"ghost_servers",name:"BOTNET OPS",desc:"Active DISRUPT limit rises from 1 to 3, cost drops by $2M, and bots favor it more.",live:true} },
       { left:{id:"skynet_protocol",name:"PHANTOM CANDIDATE",desc:"Speeches create 3 decoys. Assassinating a decoy wastes the full cost.",live:true,ult:true},
-        right:{id:"blackout_bypass",name:"HOT-SWAP HEIR",desc:"Assassination blackout is reduced from 3 days to 0.",live:true,ult:true} },
+        right:{id:"blackout_bypass",name:"HOT-SWAP HEIR",desc:"Assassination blackout is reduced from 3 months to 0.",live:true,ult:true} },
     ]},
     vanguard: { name: "IRON VANGUARD", sub: "CENTRAL AUTHORITY", theme: "Police makes money, delays sabotage, then locks territory or executes rivals.", tiers: [
       { left:{id:"fortified_outposts",name:"REINFORCED OUTPOSTS",desc:"Enemy DISRUPT office damage takes 100% longer against your District Offices.",live:true},
-        right:{id:"martial_law_taxes",name:"SECURITY LEVY",desc:"Police-guarded HQs and Offices generate +15% extra cash per day.",live:true} },
-      { left:{id:"bureaucratic_hold",name:"PERMIT FREEZE",desc:"DISRUPT freezes an upgrading enemy base for 2 campaign days.",live:true},
+        right:{id:"martial_law_taxes",name:"SECURITY LEVY",desc:"Police-guarded HQs and Offices generate +15% extra cash per month.",live:true} },
+      { left:{id:"bureaucratic_hold",name:"PERMIT FREEZE",desc:"DISRUPT freezes an upgrading enemy base for 2 campaign months.",live:true},
         right:{id:"checkpoint_grid",name:"CHECKPOINT GRID",desc:"Police-guarded District Offices make enemy DISRUPT take 50% longer.",live:true} },
       { left:{id:"iron_curtain",name:"FORTRESS STATE",desc:"Level 3 HQ state is immune to siphoning and cannot drop below 30 influence.",live:true,ult:true},
         right:{id:"retributive_strike",name:"EXECUTION WINDOW",desc:"Assassination costs $25M while any rival is speaking, and bots favor assassinations more.",live:true,ult:true} },
@@ -9201,27 +9251,27 @@
       { left:{id:"fast_track_zoning",name:"BROADCAST ZONING",desc:"Owned news channels generate 25% more influence across covered states.",live:true},
         right:{id:"prime_time_rhetoric",name:"DEBATE PREP",desc:"Speech influence is 20% stronger during Debate Night.",live:true} },
       { left:{id:"cascade_effect",name:"SILENCE CASCADE",desc:"District Jam also blocks the target from giving speeches while the jam is active.",live:true,ult:true},
-        right:{id:"continuity_office",name:"SUCCESSION TRAP",desc:"Rivals who assassinate your leader suffer a 2-day blackout.",live:true,ult:true} },
+        right:{id:"continuity_office",name:"SUCCESSION TRAP",desc:"Rivals who assassinate your leader suffer a 2-month blackout.",live:true,ult:true} },
     ]},
     machine: { name: "CINDER MACHINE", sub: "STRIKE APPARATUS", theme: "Punish enemy disruption, build faster, then convert labor pressure into map control.", tiers: [
       { left:{id:"picket_lines",name:"PICKET TAX",desc:"Rivals pay 25% more for DISRUPT office damage against you.",live:true},
         right:{id:"wildcat_cells",name:"WILDCAT CREWS",desc:"DISRUPT office damage resolves 35% faster.",live:true} },
       { left:{id:"assembly_line",name:"ASSEMBLY LINE",desc:"District Office deploy and upgrade timers complete 40% faster.",live:true},
-        right:{id:"red_tape_trap",name:"PAPERWORK JAM",desc:"Your DISRUPT leaves states on 1 fewer day of cooldown.",live:true} },
+        right:{id:"red_tape_trap",name:"PAPERWORK JAM",desc:"Your DISRUPT leaves states on 1 fewer month of cooldown.",live:true} },
       { left:{id:"strike_fund",name:"SEIZURE FUND",desc:"POWER GRAB costs 15% less.",live:true,ult:true},
-        right:{id:"backlash_cells",name:"REVENUE LOCKOUT",desc:"Rivals that DISRUPT your Office lose cash flow from that state for 3 days.",live:true,ult:true} },
+        right:{id:"backlash_cells",name:"REVENUE LOCKOUT",desc:"Rivals that DISRUPT your Office lose cash flow from that state for 3 months.",live:true,ult:true} },
     ]},
     signal: { name: "TEAL WIRE ACCORD", sub: "SIGNAL CARTEL", theme: "DISRUPT feeds broadcasts; broadcasts feed influence; influence protects channels.", tiers: [
       { left:{id:"dark_fiber",name:"DARK FIBER",desc:"DISRUPT cash-siphon cost component is 25% lower.",live:true},
-        right:{id:"signal_leak",name:"LEAKED SIGNAL",desc:"Successful DISRUPT or sabotage boosts your news channel influence by 25% for 1 day.",live:true} },
-      { left:{id:"listening_posts",name:"LISTENING POSTS",desc:"Each police-guarded HQ or Office generates +0.5 local influence per day.",live:true},
+        right:{id:"signal_leak",name:"LEAKED SIGNAL",desc:"Successful DISRUPT or sabotage boosts your news channel influence by 25% for 1 month.",live:true} },
+      { left:{id:"listening_posts",name:"LISTENING POSTS",desc:"Each police-guarded HQ or Office generates +0.5 local influence per month.",live:true},
         right:{id:"media_magnate",name:"COVERAGE STACK",desc:"Owned news channels push 40% more influence across covered states.",live:true} },
-      { left:{id:"trend_engine",name:"TREND ENGINE",desc:"Owned channels push 15% more influence and earn $2M/day each.",live:true,ult:true},
+      { left:{id:"trend_engine",name:"TREND ENGINE",desc:"Owned channels push 15% more influence and earn $2M/month each.",live:true,ult:true},
         right:{id:"broadcast_moat",name:"BROADCAST MOAT",desc:"Rivals pay 100% more to take your owned news channels.",live:true,ult:true} },
     ]},
     ledger: { name: "IVORY LEDGER CLUB", sub: "BUDGET COMMITTEE", theme: "Efficient paperwork stabilizes money, then turns procedure into demolition.", tiers: [
       { left:{id:"compliance_forms",name:"OPENING GRANT",desc:"Starting a District Office grants +5 local influence immediately.",live:true},
-        right:{id:"rainy_day_fund",name:"RAINY DAY FUND",desc:"When cash is below $5M, your Main Base generates +$1M/day.",live:true} },
+        right:{id:"rainy_day_fund",name:"RAINY DAY FUND",desc:"When cash is below $5M, your Main Base generates +$1M/month.",live:true} },
       { left:{id:"permit_stack",name:"CAPITAL PERMITS",desc:"Main Base upgrades cost 20% less cash.",live:true},
         right:{id:"media_retainer",name:"MEDIA RETAINER",desc:"News channel buys and takeovers cost 25% less.",live:true} },
       { left:{id:"budget_surplus",name:"BUDGET SURPLUS",desc:"Main Base passive cash output rises by 25% at every HQ level.",live:true,ult:true},
@@ -9711,7 +9761,7 @@
   function formatPerDay(value) {
     const rounded = Math.round(value);
     const sign = rounded > 0 ? "+" : rounded < 0 ? "-" : "+";
-    return `${sign}${formatMoney(Math.abs(rounded))}/day`;
+    return `${sign}${formatMoney(Math.abs(rounded))}/month`;
   }
 
   function applyNationwideInfluencePenalty(player, amount) {
@@ -9749,7 +9799,7 @@
     missions.push({ type: "baseUpgrade", player: playerId, state: player.homeBase, level: next, left: time, total: time });
     states[player.homeBase].activePulse = 1;
     addAlert(player.name + " began upgrading Main Base to Level " + next + ".");
-    if (playerId === HUMAN) showToast("Main Base upgrade to L" + next + " underway (" + req.days + " in-game days).");
+    if (playerId === HUMAN) showToast("Main Base upgrade to L" + next + " underway (" + formatCampaignDuration(time) + ").");
     return true;
   }
   function assassinate(playerId, stateIndex) {
@@ -9818,7 +9868,7 @@
       if (hasTalent(victim, "continuity_office")) {
         player.locked = Math.max(player.locked, 2 * CAMPAIGN_DAY_SECONDS);
         addAlert(victim.name + "'s Assassin's Curfew forced " + player.name + " into a 2-day campaign blackout.");
-        if (playerId === HUMAN) showToast("ASSASSIN'S CURFEW — your campaign is blacked out for 2 days.");
+        if (playerId === HUMAN) showToast("ASSASSIN'S CURFEW — your campaign is blacked out for 2 months.");
       }
       states.forEach((campaignState) => {
         if (worldEventActive("martyrdom_cycle")) {
@@ -10638,7 +10688,7 @@
     const human = players[HUMAN];
     if (!human) return;
     const tree = TALENTS[human.talentTree];
-    const days = typeof daysUntilElection === "function" ? Math.ceil(daysUntilElection()) : 60;
+    const calendarStamp = typeof formatCampaignCalendarStamp === "function" ? formatCampaignCalendarStamp() : "Y1 JAN";
     const next = pipNextUnlock(human);
     const hqUnlocked = human.mainBaseLevel >= 1;
     const nextHq = hqUnlocked && human.mainBaseLevel < 3 ? human.mainBaseLevel + 1 : null;
@@ -10650,14 +10700,14 @@
     const hqUpgradeBusy = missions.some((mission) => mission.type === "baseUpgrade" && mission.player === HUMAN);
     pipEl.querySelector("#pipBrand").textContent = "[ " + human.name.toUpperCase() + " ]";
     pipEl.querySelector("#pipStats").innerHTML =
-      "CASH: " + formatMoney(human.cash) + " &nbsp;|&nbsp; DAYS: " + days;
+      "CASH: " + formatMoney(human.cash) + " &nbsp;|&nbsp; DATE: " + calendarStamp;
     const fund = Math.round(fundingPerDay(human) + hqIncomeDay(human));
     pipEl.querySelector("#pipFaction").innerHTML =
       "FACTION PROTOCOL: [ " + tree.name + " / " + tree.sub + " ]<br>" +
       "LEADER: [ " + escapeHtml(human.leader) + " ]<br>" +
       "THEME: " + tree.theme + "<br>" +
-      "MAIN BASE: [ LEVEL " + human.mainBaseLevel + " ]  PASSIVE: " + formatMoney(hqIncomeDay(human)) + "/day<br>" +
-      "PROJECTED FUNDING: ~" + formatMoney(fund) + "/day" +
+      "MAIN BASE: [ LEVEL " + human.mainBaseLevel + " ]  PASSIVE: " + formatMoney(hqIncomeDay(human)) + "/month<br>" +
+      "PROJECTED FUNDING: ~" + formatMoney(fund) + "/month" +
       '<div class="pip-inline-actions">' +
       '<button class="primary-button pip-inline-button" type="button" data-pip-action="upgrade-hq"' +
       ((nextHq && !hqUpgradeBusy && human.cash >= hqReq.cash && homeInfluence >= hqInfluenceReq) ? '' : ' disabled') + '>' +
@@ -10953,10 +11003,10 @@
       target.action = null;
       if (states[interruptedStateIndex]) states[interruptedStateIndex].activePulse = 1;
     }
-    addAlert(player.name + " jammed " + target.name + "'s District Office influence for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? " and blocked speeches" : "") + (interruptedSpeech ? ", shutting down a live speech." : "."));
-    if (playerId === HUMAN) showToast("DISTRICT JAM — " + target.name + "'s office influence slowed" + (speechBlocked ? " and speeches blocked" : "") + (interruptedSpeech ? "; live speech interrupted." : "") + " for " + OFFICE_SLOW_DAYS + " days.");
-    if (target.id === HUMAN) showToast("Your District Office influence is slowed" + (speechBlocked ? " and speeches are blocked" : "") + (interruptedSpeech ? "; your live speech was cut off." : "") + " for " + OFFICE_SLOW_DAYS + " days.");
-    broadcast(0, "DISTRICT JAM: " + target.name + "'s District Office influence is slowed nationwide for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? ", and speeches are blocked during the jam" : "") + (interruptedSpeech ? ". A live speech was also shut down." : "."));
+    addAlert(player.name + " jammed " + target.name + "'s District Office influence for " + OFFICE_SLOW_DAYS + " months" + (speechBlocked ? " and blocked speeches" : "") + (interruptedSpeech ? ", shutting down a live speech." : "."));
+    if (playerId === HUMAN) showToast("DISTRICT JAM — " + target.name + "'s office influence slowed" + (speechBlocked ? " and speeches blocked" : "") + (interruptedSpeech ? "; live speech interrupted." : "") + " for " + OFFICE_SLOW_DAYS + " months.");
+    if (target.id === HUMAN) showToast("Your District Office influence is slowed" + (speechBlocked ? " and speeches are blocked" : "") + (interruptedSpeech ? "; your live speech was cut off." : "") + " for " + OFFICE_SLOW_DAYS + " months.");
+    broadcast(0, "DISTRICT JAM: " + target.name + "'s District Office influence is slowed nationwide for " + OFFICE_SLOW_DAYS + " months" + (speechBlocked ? ", and speeches are blocked during the jam" : "") + (interruptedSpeech ? ". A live speech was also shut down." : "."));
     return true;
   }
 
@@ -11133,8 +11183,8 @@
     } else if (mission.freeze) {
       const days = sabotageFreezeDays(player);
       missions.filter((candidate) => candidate.type === "baseUpgrade" && candidate.player === target.id).forEach((candidate) => { candidate.left += days * CAMPAIGN_DAY_SECONDS; });
-      addAlert(player.name + " froze " + target.name + "'s Main Base upgrade in " + state.name + " for " + days + " days.");
-      if (player.id === HUMAN) showToast("Sabotage landed: " + target.name + "'s HQ upgrade delayed " + days + " days.");
+      addAlert(player.name + " froze " + target.name + "'s Main Base upgrade in " + state.name + " for " + days + " months.");
+      if (player.id === HUMAN) showToast("Sabotage landed: " + target.name + "'s HQ upgrade delayed " + days + " months.");
     } else {
       const siphonRate = Number(mission.siphonRate) || sabotageCashStealRate(Number(mission.targetInfluence) || 0);
       const siphon = Math.min(target.cash, Math.round(target.cash * siphonRate * (hasTalent(player, "hostile_liquidation") ? 1.5 : 1)));
@@ -11154,7 +11204,7 @@
     }
     if (hasTalent(player, "signal_leak")) {
       player.signalLeakBoost = Math.max(player.signalLeakBoost || 0, CAMPAIGN_DAY_SECONDS);
-      addAlert(player.name + "'s Broadcast Surge boosted owned news channels for 1 day.");
+      addAlert(player.name + "'s Broadcast Surge boosted owned news channels for 1 month.");
     }
     state.activePulse = 1;
     actionEffects.push({ type: "sabotage", player: player.id, target: target.id, state: state.index, left: 1.8, total: 1.8 });
@@ -11204,10 +11254,10 @@
     const enabled = !policeGuards(state, playerId, building);
     setPoliceGuard(state, playerId, building, enabled);
     const buildingLabel = building === "hq" ? "HQ" : "District Office";
-    addAlert(player.name + (enabled ? " deployed police to " : " pulled police from ") + buildingLabel + " in " + state.name + (enabled ? " (" + formatMoney(policeUpkeepDay(player, state, building)) + "/day upkeep)." : "."));
+    addAlert(player.name + (enabled ? " deployed police to " : " pulled police from ") + buildingLabel + " in " + state.name + (enabled ? " (" + formatMoney(policeUpkeepDay(player, state, building)) + "/month upkeep)." : "."));
     if (playerId === HUMAN) {
       showToast(enabled
-        ? "Police deployed on " + buildingLabel + " in " + state.abbr + " for " + formatMoney(policeUpkeepDay(player, state, building)) + "/day."
+        ? "Police deployed on " + buildingLabel + " in " + state.abbr + " for " + formatMoney(policeUpkeepDay(player, state, building)) + "/month."
         : "Police removed from " + buildingLabel + " in " + state.abbr + ".");
     }
     if (enabled) {
@@ -11302,7 +11352,7 @@
       if (target && human) {
         const state = states[target.stateIndex];
         const guarded = policeGuards(state, HUMAN, target.building);
-        const upkeep = formatMoney(policeUpkeepDay(human, state, target.building)) + "/DAY";
+        const upkeep = formatMoney(policeUpkeepDay(human, state, target.building)) + "/MONTH";
         banner.textContent = guarded
           ? "\u25B6 POLICE \u2014 " + state.abbr + " " + target.label + " \u00B7 COST " + upkeep + " \u00B7 GUARDED \u2014 click to withdraw"
           : "\u25B6 POLICE \u2014 " + state.abbr + " " + target.label + " \u00B7 COST " + upkeep + " \u2014 click to deploy";
@@ -11319,9 +11369,9 @@
     { key: "1", action: "deployMiniBase", icon: "\u2302", name: "DISTRICT OFFICE", cost: 2000,
       tip: ["DISTRICT OFFICE", "Click empty state to build.", "Click your District Office icon to upgrade.", "Office cap depends on HQ level."] },
     { key: "2", action: "publicSpeech", icon: "\u25C9", name: "SPEECH", cost: 0,
-      tip: ["SPEECH", "Gain influence over 1 day.", "Speaking over a rival starts Debate Night.", "Late game: click a rival portrait for a duel or click a state for a normal speech.", "Cooldown: 1 day; debate: 2 days."] },
+      tip: ["SPEECH", "Gain influence over 1 month.", "Speaking over a rival starts Debate Night.", "Late game: click a rival portrait for a duel or click a state for a normal speech.", "Cooldown: 1 month; debate: 2 months."] },
     { key: "3", action: "officeSlow", icon: "\u25CE", name: "DISTRICT JAM", cost: OFFICE_SLOW_COST,
-      tip: ["DISTRICT JAM", "Click a rival leader portrait top-right.", "Their District Office influence is slowed nationwide for 3 days.", "Cost $6M. Cooldown: 2 days."] },
+      tip: ["DISTRICT JAM", "Click a rival leader portrait top-right.", "Their District Office influence is slowed nationwide for 3 months.", "Cost $6M. Cooldown: 2 months."] },
     { key: "4", action: "disrupt", icon: "\u26A0", name: "DISRUPT", cost: null,
       tip: ["DISRUPT", "Target a state with a rival HQ or office.", "Steals $3M per rival, damages offices, and disrupts upgrades.", "Police can block office damage."] },
     { key: "5", action: "powerGrab", icon: "\u25C6", name: "POWER GRAB", cost: null,
@@ -11369,10 +11419,10 @@
       return { label: formatMoney(adHubCost(human)), line: "Cost: build District Office for " + formatMoney(adHubCost(human)) + "." };
     }
     if (slot.action === "publicSpeech") {
-      return { label: "FREE", line: "Cost: free. Cooldown: 1 day." };
+      return { label: "FREE", line: "Cost: free. Cooldown: 1 month." };
     }
     if (slot.action === "officeSlow") {
-      return { label: formatMoney(OFFICE_SLOW_COST), line: "Cost: " + formatMoney(OFFICE_SLOW_COST) + ". Cooldown: 2 days." };
+      return { label: formatMoney(OFFICE_SLOW_COST), line: "Cost: " + formatMoney(OFFICE_SLOW_COST) + ". Cooldown: 2 months." };
     }
     if (slot.action === "disrupt") {
       const targets = state ? disruptTargetsForState(HUMAN, state) : [];
@@ -11394,7 +11444,7 @@
       const officeCost = state && officeLevel(state, HUMAN) > 0 ? policeUpkeepDay(human, state, "office") : Infinity;
       const cheapest = Math.min(hqCost, officeCost);
       return Number.isFinite(cheapest)
-        ? { label: formatMoney(cheapest) + "/DAY", line: "Cost: from " + formatMoney(cheapest) + "/day here. Hover HQ or office after arming for exact upkeep." }
+        ? { label: formatMoney(cheapest) + "/MONTH", line: "Cost: from " + formatMoney(cheapest) + "/month here. Hover HQ or office after arming for exact upkeep." }
         : { label: "UPKEEP", line: "Cost: daily upkeep scales with state EV and building level." };
     }
     if (slot.action === "assassinate") {
@@ -11418,7 +11468,7 @@
       '<div class="global-influence" id="globalInfluenceBar" aria-label="Electoral vote totals">' +
       '<div class="global-influence-head"><span>ELECTORAL VOTES</span><strong>50% CONTROL LINE <button type="button" class="stage-effect-icon" id="stageEffectIcon" aria-label="Show current stage effect">EV</button></strong></div>' +
       '<div class="global-influence-track"></div></div>' +
-      '<div class="hot-bottom"><div class="hot-finance" id="hotFinanceBar">CASH $0 (+$0/day)</div><div class="hot-slots">' +
+      '<div class="hot-bottom"><div class="hot-finance" id="hotFinanceBar">CASH $0 (+$0/month)</div><div class="hot-slots">' +
       HOTBAR.map((s, i) =>
         '<button class="hotslot" data-i="' + i + '"><span class="hot-cooldown-fill" aria-hidden="true"></span>' +
         '<span class="hot-cooldown-label" aria-hidden="true"></span><span class="hk">' + s.key + '</span>' +
@@ -11481,10 +11531,10 @@
     const flow = financeBreakdown(human);
     hotTipEl.innerHTML =
       '<div class="htt"><span>CASH FLOW</span><strong>' + formatPerDay(flow.net) + '</strong></div>' +
-      '<div class="htl">HQ income: ' + formatMoney(flow.hq) + '/day</div>' +
-      '<div class="htl">Influence income: ' + formatMoney(flow.influence) + '/day</div>' +
-      '<div class="htl">District Offices: ' + formatMoney(flow.offices) + '/day</div>' +
-      '<div class="htl">Police upkeep: -' + formatMoney(flow.police) + '/day</div>';
+      '<div class="htl">HQ income: ' + formatMoney(flow.hq) + '/month</div>' +
+      '<div class="htl">Influence income: ' + formatMoney(flow.influence) + '/month</div>' +
+      '<div class="htl">District Offices: ' + formatMoney(flow.offices) + '/month</div>' +
+      '<div class="htl">Police upkeep: -' + formatMoney(flow.police) + '/month</div>';
     hotTipEl.classList.add("is-on");
     positionHotTip(hotFinanceEl);
   }
@@ -11653,8 +11703,7 @@
   }
 
   function campaignDaysLabel(seconds) {
-    const days = Math.max(0, Number(seconds) || 0) / CAMPAIGN_DAY_SECONDS;
-    return (days >= 10 ? Math.ceil(days) : Math.max(0.1, Math.ceil(days * 10) / 10)) + "D";
+    return formatCampaignRemainingShort(seconds);
   }
 
   function refreshHotbar() {
@@ -11759,7 +11808,7 @@
       '<div class="leader-tip-row"><span>Leader</span><strong>' + escapeHtml(player.leader) + '</strong></div>' +
       '<div class="leader-tip-row"><span>Home</span><strong>' + home + '</strong></div>' +
       '<div class="leader-tip-row"><span>Cash</span><strong>' + formatMoney(player.cash) + '</strong></div>' +
-      '<div class="leader-tip-row"><span>Per Day</span><strong>' + formatPerDay(projectedCashPerDay(player)) + '</strong></div>' +
+      '<div class="leader-tip-row"><span>Per Month</span><strong>' + formatPerDay(projectedCashPerDay(player)) + '</strong></div>' +
       '<div class="leader-tip-row"><span>EV</span><strong>' + vote + '</strong></div>' +
       '<div class="leader-tip-row"><span>HQ</span><strong>L' + (player.mainBaseLevel || 0) + '</strong></div>';
     positionLeaderIntelTip(card);
