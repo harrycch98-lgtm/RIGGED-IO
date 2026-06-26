@@ -10495,6 +10495,10 @@
     return hasTalent(player, "ghost_servers") ? 3 : 1;
   }
 
+  function disruptCooldownDays(player) {
+    return hasTalent(player, "ghost_servers") ? 0 : DISRUPT_COOLDOWN_DAYS;
+  }
+
   function activeDisruptionOps(playerId) {
     return missions.filter((mission) =>
       mission.player === playerId &&
@@ -10581,7 +10585,7 @@
       left: seconds,
       total: seconds,
     });
-    player.disruptCooldown = DISRUPT_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS;
+    player.disruptCooldown = disruptCooldownDays(player) * CAMPAIGN_DAY_SECONDS;
     state.activePulse = 1;
     const targetNames = targets.map((target) => target.name).join(", ");
     addAlert(player.name + " launched a state-wide DISRUPT against " + targetNames + " in " + state.name + ".");
