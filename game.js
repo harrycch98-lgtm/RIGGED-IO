@@ -5626,7 +5626,7 @@
     if (player.mainBaseLevel > 0) {
       player.cash += hqIncomeRate(player) * dt;
     }
-    player.cash += (fundingPerDay(player) / CAMPAIGN_DAY_SECONDS) * dt;
+    player.cash += (fundingPerDay(player) / CAMPAIGN_MONTH_SECONDS) * dt;
     const policeUpkeep = totalPoliceUpkeepDay(player);
     if (policeUpkeep > 0) {
       player.cash -= policeUpkeepPerTick(player, dt);
@@ -9018,6 +9018,10 @@
     return `$${Math.round(dollars / 1000)}k`;
   }
 
+  function monthEconomyValue(dayValue) {
+    return (Number(dayValue) || 0) * CAMPAIGN_MONTH_VALUE_SCALE;
+  }
+
   function campaignDaysElapsed() {
     return Math.min(currentMatchMode.days, elapsed / CAMPAIGN_DAY_SECONDS);
   }
@@ -9550,7 +9554,8 @@
     };
   }
   function miniBaseCashDay(level) {
-    return (MINI_BASE_CASH_DAY[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0) * 1.2;
+    const baseDayValue = (MINI_BASE_CASH_DAY[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0) * 1.2;
+    return monthEconomyValue(baseDayValue);
   }
   function miniBaseDefense(level) {
     return MINI_BASE_DEFENSE[Math.max(0, Math.min(MINI_BASE_MAX_LEVEL, level))] || 0;
@@ -9568,7 +9573,7 @@
     const electoralCost = (Number(state.ev) || 0) / maxElectoralVotes * POLICE_MAX_STATE_BASE_DAY;
     const officeCost = building === "office" ? officeLevel(state, player.id) * POLICE_OFFICE_LEVEL_DAY : 0;
     const rawCost = Math.max(POLICE_MIN_STATE_DAY, electoralCost + officeCost);
-    return Math.round(rawCost * 0.56 * (worldEventActive("inflation") ? 1.1 : 1) * (hasTalent(player, "private_security") ? 0.5 : 1));
+    return Math.round(monthEconomyValue(rawCost * 0.56 * (worldEventActive("inflation") ? 1.1 : 1) * (hasTalent(player, "private_security") ? 0.5 : 1)));
   }
   function totalPoliceUpkeepDay(player) {
     if (!player) return 0;
@@ -9588,13 +9593,13 @@
       const base = HQ_INCOME_DAY[player.mainBaseLevel] || 0;
       const mult = (hasTalent(player, "shadow_lobbying") && player.mainBaseLevel >= 3 ? 1.5 : 1) * (hasTalent(player, "budget_surplus") ? 1.25 : 1);
       const reserve = hasTalent(player, "rainy_day_fund") && player.cash < 5000 ? 1000 : 0;
-      return base * influenceScale * mult + reserve;
+      return monthEconomyValue(base * influenceScale * mult + reserve);
     }
   function hqIncomeRate(player) {
-    return hqIncomeDay(player) / CAMPAIGN_DAY_SECONDS;
+    return hqIncomeDay(player) / CAMPAIGN_MONTH_SECONDS;
   }
   function policeUpkeepPerTick(player, dt) {
-    return totalPoliceUpkeepDay(player) / CAMPAIGN_DAY_SECONDS * dt;
+    return totalPoliceUpkeepDay(player) / CAMPAIGN_MONTH_SECONDS * dt;
   }
   function policeAtRisk(player) {
     return !!player && projectedCashPerDay(player) < 0;
@@ -9685,12 +9690,12 @@
         daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
-        total += daily;
+        total += monthEconomyValue(daily);
       }
       total += miniBaseCashDay(level);
     }
     if (hasTalent(player, "shadow_lobbying")) total *= 1.25;
-    if (hasTalent(player, "trend_engine")) total += channels.filter((channel) => channel.owner === player.id).length * 2000;
+    if (hasTalent(player, "trend_engine")) total += monthEconomyValue(channels.filter((channel) => channel.owner === player.id).length * 2000);
     return total;
   }
 
@@ -9717,7 +9722,7 @@
         daily *= fundraisingSurgeMultiplier(st);
         if (level > 0 && hasTalent(player, "crowdsourcing")) daily *= 1 + (Math.floor(inf / 5) * 0.01);
         if ((level > 0 || player.homeBase === st.index) && hasAnyPoliceGuard(st, player.id) && hasTalent(player, "martial_law_taxes")) daily *= 1.15;
-        influence += daily;
+        influence += monthEconomyValue(daily);
       }
       offices += miniBaseCashDay(level);
       if (policeGuards(st, player.id, "hq")) police += policeUpkeepDay(player, st, "hq");
@@ -9727,7 +9732,7 @@
       influence *= 1.25;
       offices *= 1.25;
     }
-    if (hasTalent(player, "trend_engine")) influence += channels.filter((channel) => channel.owner === player.id).length * 2000;
+    if (hasTalent(player, "trend_engine")) influence += monthEconomyValue(channels.filter((channel) => channel.owner === player.id).length * 2000);
     const hq = hqIncomeDay(player);
     const net = Math.round(influence + offices + hq - police);
     return {
