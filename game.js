@@ -7213,7 +7213,6 @@
       id: ++matchResultCounter,
       rows,
       winnerId: rows[0]?.playerId ?? -1,
-      formula: "Points = electoral votes controlled at the Midterm Election + electoral votes controlled at the Presidential Election.",
     };
   }
 
@@ -10631,7 +10630,6 @@
       '<div class="final-score-screen">' +
       '<div class="counting-title">RIGGED FINAL TALLY</div>' +
       `<div class="counting-subtitle">${escapeHtml(winner?.name || "N/A")} wins the cycle</div>` +
-      '<div class="victory-reason">' + escapeHtml(scoreboard.formula) + '</div>' +
       '<div class="victory-stats">' +
       `<div><span>Winner</span><strong>${escapeHtml(winner?.name || "N/A")}</strong></div>` +
       `<div><span>Total Points</span><strong>${winner?.totalPoints ?? 0}</strong></div>` +

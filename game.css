@@ -3610,6 +3610,11 @@ canvas{ filter:brightness(1.03) saturate(.92); }
   background:rgba(52,255,134,0.05);
   color:#bfffe0;
   font-size:19px;
+  line-height:1.15;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 .victory-stats{
   display:grid;
