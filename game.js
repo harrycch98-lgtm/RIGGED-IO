@@ -2718,7 +2718,7 @@
     late: {
       name: "RIGGED OVERTIME",
       kicker: "NO MORE PRETENDING",
-      effect: "Random late-game doctrine goes live. Duel speech mode is always active.",
+      effect: "Random late-game doctrine goes live. Duel speech mode unlocks alongside normal Debate Nights.",
       icon: "ballot",
     },
   };
@@ -5343,7 +5343,7 @@
     const info = CAMPAIGN_STAGE_INFO[stage] || CAMPAIGN_STAGE_INFO.early;
     const stageMessage = variant?.effect || info.effect;
     addAlert(info.name + ": " + stageMessage);
-    broadcast(0, info.name + ": " + stageMessage + (stage === "late" ? " Duel speech mode is now active." : ""));
+    broadcast(0, info.name + ": " + stageMessage + (stage === "late" ? " Duel speech mode is now available alongside normal Debate Nights." : ""));
   }
 
   function showCampaignStageSplash(stage) {
@@ -10945,7 +10945,7 @@
       return;
     }
     if (armedAction === "publicSpeech" && isLateStage()) {
-      banner.textContent = "\u25B6 DUEL SPEECH \u2014 click a rival leader portrait to force a Debate Night on their home state";
+      banner.textContent = "\u25B6 SPEECH ARMED \u2014 click a state for a normal speech or click a rival leader portrait to force a duel Debate Night on their home state";
       return;
     }
     if (armedAction === "powerGrab") {
@@ -10982,7 +10982,7 @@
     { key: "1", action: "deployMiniBase", icon: "\u2302", name: "DISTRICT OFFICE", cost: 2000,
       tip: ["DISTRICT OFFICE", "Click empty state to build.", "Click your District Office icon to upgrade.", "Office cap depends on HQ level."] },
     { key: "2", action: "publicSpeech", icon: "\u25C9", name: "SPEECH", cost: 0,
-      tip: ["SPEECH", "Gain influence over 1 day.", "Speaking over a rival starts Debate Night.", "Cooldown: 1 day; debate: 2 days."] },
+      tip: ["SPEECH", "Gain influence over 1 day.", "Speaking over a rival starts Debate Night.", "Late game: click a rival portrait for a duel or click a state for a normal speech.", "Cooldown: 1 day; debate: 2 days."] },
     { key: "3", action: "officeSlow", icon: "\u25CE", name: "DISTRICT JAM", cost: OFFICE_SLOW_COST,
       tip: ["DISTRICT JAM", "Click a rival leader portrait top-right.", "Their District Office influence is slowed nationwide for 3 days.", "Cost $6M. Cooldown: 2 days."] },
     { key: "4", action: "disrupt", icon: "\u26A0", name: "DISRUPT", cost: null,
@@ -11079,7 +11079,7 @@
       '<div id="upgradeStatusBox" class="upgrade-status-box" role="status" aria-live="polite"></div>' +
       '<div class="hot-banner" id="hotBanner">\u25B6 TARGET A STATE &middot; press ESC to cancel</div>' +
       '<div class="global-influence" id="globalInfluenceBar" aria-label="Electoral vote totals">' +
-      '<div class="global-influence-head"><span>ELECTORAL VOTES</span><strong>50% CONTROL LINE</strong></div>' +
+      '<div class="global-influence-head"><span>ELECTORAL VOTES</span><strong>50% CONTROL LINE <button type="button" class="stage-effect-icon" id="stageEffectIcon" aria-label="Show current stage effect">EV</button></strong></div>' +
       '<div class="global-influence-track"></div></div>' +
       '<div class="hot-bottom"><div class="hot-finance" id="hotFinanceBar">CASH $0 (+$0/day)</div><div class="hot-slots">' +
       HOTBAR.map((s, i) =>
@@ -11098,6 +11098,14 @@
       influenceBarEl.addEventListener("mouseenter", () => showInfluenceTip());
       influenceBarEl.addEventListener("mousemove", () => positionHotTip(influenceBarEl));
       influenceBarEl.addEventListener("mouseleave", () => { hotTipEl.classList.remove("is-on"); });
+    }
+    const stageEffectIcon = hotbarEl.querySelector("#stageEffectIcon");
+    if (stageEffectIcon) {
+      stageEffectIcon.addEventListener("mouseenter", () => showStageEffectTip(stageEffectIcon));
+      stageEffectIcon.addEventListener("mousemove", () => positionHotTip(stageEffectIcon));
+      stageEffectIcon.addEventListener("mouseleave", () => { hotTipEl.classList.remove("is-on"); });
+      stageEffectIcon.addEventListener("focus", () => showStageEffectTip(stageEffectIcon));
+      stageEffectIcon.addEventListener("blur", () => { hotTipEl.classList.remove("is-on"); });
     }
     if (hotFinanceEl) {
       hotFinanceEl.addEventListener("mouseenter", () => showFinanceTip());
@@ -11142,6 +11150,36 @@
       '<div class="htl">Police upkeep: -' + formatMoney(flow.police) + '/day</div>';
     hotTipEl.classList.add("is-on");
     positionHotTip(hotFinanceEl);
+  }
+  function stageEffectIconGlyph(stage) {
+    if (stage === "mid") return "TV";
+    if (stage === "late") return "!";
+    return "EV";
+  }
+  function stageEffectTooltipHtml() {
+    if (phase === "base") {
+      return '<div class="htt"><span>HQ DRAFT</span><strong>OPENING MOVE</strong></div>' +
+        '<div class="htl">Choose your headquarters before the live campaign begins.</div>' +
+        '<div class="htl">Stage effects go live once the election countdown starts.</div>';
+    }
+    const stage = campaignStage();
+    const info = CAMPAIGN_STAGE_INFO[stage] || CAMPAIGN_STAGE_INFO.early;
+    const variant = campaignStageVariant(stage);
+    const lines = [
+      '<div class="htl">Current stage: ' + escapeHtml(info.name) + '.</div>',
+      '<div class="htl">Active effect: ' + escapeHtml(variant?.effect || info.effect) + '</div>',
+    ];
+    if (stage === "late") {
+      lines.push('<div class="htl">Late game note: normal Debate Nights still happen, and duel speech is also unlocked.</div>');
+    }
+    return '<div class="htt"><span>' + escapeHtml(info.kicker) + '</span><strong>' + escapeHtml(info.name) + '</strong></div>' +
+      lines.join("");
+  }
+  function showStageEffectTip(anchor) {
+    if (!hotTipEl || !anchor) return;
+    hotTipEl.innerHTML = stageEffectTooltipHtml();
+    hotTipEl.classList.add("is-on");
+    positionHotTip(anchor);
   }
   function showChannelTip(card) {
     if (!hotTipEl) return;
@@ -11220,7 +11258,7 @@
           candidate.locked <= 0 &&
           (candidate.officeSpeechBlocked || 0) <= 0 &&
           realSpeechesInState(candidate.homeBase).length <= 0
-        )) || realSpeechesInState(state.index).length < 2);
+        )) || (!!state && realSpeechesInState(state.index).length < debateParticipantLimit()));
     }
     if (slot.action === "officeSlow") {
       return (human.officeSlowCooldown || 0) <= 0 &&
@@ -11287,6 +11325,15 @@
     hotbarEl.style.display = gameStarted ? "block" : "none";
     const human = players[HUMAN];
     refreshInfluenceBar();
+    const stageEffectIcon = hotbarEl.querySelector("#stageEffectIcon");
+    if (stageEffectIcon) {
+      const stage = phase === "play" ? campaignStage() : "early";
+      stageEffectIcon.textContent = stageEffectIconGlyph(stage);
+      stageEffectIcon.dataset.stage = stage;
+      stageEffectIcon.setAttribute("aria-label", phase === "play"
+        ? `Show current ${stage} stage effect`
+        : "Show headquarters draft status");
+    }
     if (hotFinanceEl && human) {
       hotFinanceEl.textContent = `CASH ${formatMoney(human.cash)} (${formatPerDay(projectedCashPerDay(human))})`;
     }

@@ -3616,6 +3616,32 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .global-influence-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 3px;
   font-size:12px; letter-spacing:1px; line-height:1; }
 .global-influence-head strong{ color:#8fe9b6; font-weight:400; }
+.stage-effect-icon{
+  margin-left:8px;
+  min-width:22px;
+  height:20px;
+  padding:0 5px;
+  border:1px solid rgba(255,215,106,.65);
+  border-radius:3px;
+  background:linear-gradient(180deg, rgba(32,24,4,.96), rgba(12,8,2,.96));
+  box-shadow:0 0 10px rgba(255,215,106,.18), inset 0 0 8px rgba(255,215,106,.08);
+  color:#ffd76a;
+  font:inherit;
+  font-size:11px;
+  line-height:18px;
+  letter-spacing:1px;
+  text-shadow:0 0 7px rgba(255,215,106,.6);
+  pointer-events:auto;
+  cursor:help;
+  vertical-align:middle;
+}
+.stage-effect-icon:hover,
+.stage-effect-icon:focus-visible{
+  border-color:#fff0ad;
+  color:#fff0ad;
+  outline:none;
+  box-shadow:0 0 14px rgba(255,215,106,.35), inset 0 0 10px rgba(255,215,106,.12);
+}
 .global-influence-track{ height:18px; display:flex; overflow:hidden; position:relative;
   background:#021008; border:1px solid var(--term); border-radius:3px;
   box-shadow:inset 0 0 12px rgba(0,0,0,.75), 0 0 12px rgba(52,255,134,.2); }
@@ -6091,68 +6117,6 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   grid-template-columns:repeat(3, minmax(0, 1fr));
 }
 
-.talent-history-hud{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:118px;
-  z-index:88;
-  display:none;
-  gap:8px;
-  padding:8px 10px 9px;
-  border:1px solid rgba(52,255,134,.22);
-  border-radius:6px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 28%),
-    rgba(3,14,9,.86);
-  box-shadow:0 0 18px rgba(0,0,0,.24), inset 0 0 14px rgba(255,255,255,.02);
-  pointer-events:none;
-}
-.talent-history-hud.is-visible{
-  display:grid;
-}
-.talent-history-title{
-  color:#97f7bf;
-  font:1.05rem/1 "VT323","Share Tech Mono",monospace;
-  letter-spacing:1px;
-}
-.talent-history-track{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.talent-history-chip{
-  min-width:0;
-  display:grid;
-  gap:2px;
-  padding:5px 8px 6px;
-  border:1px solid rgba(52,255,134,.18);
-  background:rgba(52,255,134,.05);
-}
-.talent-history-chip-tier{
-  color:#88b39a;
-  font:0.82rem/1 "VT323","Share Tech Mono",monospace;
-  letter-spacing:1px;
-}
-.talent-history-chip strong{
-  color:#effff5;
-  font:0.95rem/1 "VT323","Share Tech Mono",monospace;
-  letter-spacing:.8px;
-  font-weight:400;
-}
-.talent-history-empty{
-  color:#9bcab0;
-  font:0.9rem/1.1 "VT323","Share Tech Mono",monospace;
-  letter-spacing:.8px;
-}
-.talent-history-chip[data-talent-tree="oligarchy"]{ border-color:rgba(255,208,83,.36); background:rgba(255,208,83,.08); }
-.talent-history-chip[data-talent-tree="populist"]{ border-color:rgba(105,216,255,.36); background:rgba(105,216,255,.08); }
-.talent-history-chip[data-talent-tree="syndicate"]{ border-color:rgba(69,255,158,.36); background:rgba(69,255,158,.08); }
-.talent-history-chip[data-talent-tree="vanguard"]{ border-color:rgba(255,122,104,.36); background:rgba(255,122,104,.08); }
-.talent-history-chip[data-talent-tree="futurist"]{ border-color:rgba(199,173,255,.36); background:rgba(199,173,255,.08); }
-.talent-history-chip[data-talent-tree="machine"]{ border-color:rgba(255,155,61,.36); background:rgba(255,155,61,.08); }
-.talent-history-chip[data-talent-tree="signal"]{ border-color:rgba(127,244,234,.36); background:rgba(127,244,234,.08); }
-.talent-history-chip[data-talent-tree="ledger"]{ border-color:rgba(255,244,199,.36); background:rgba(255,244,199,.08); }
 
 @media (max-width: 1100px){
   .talent-draft-grid,
