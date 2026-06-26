@@ -9863,6 +9863,7 @@
     const fundedDefender = chargePoliceAssassinationBlock(policeDefenders);
     if (fundedDefender) {
       state.activePulse = 1;
+      playAssassinationSfx("blocked");
       addAlert(fundedDefender.name + "'s police blocked " + player.name + "'s assassination in " + state.name + " for " + formatMoney(POLICE_ASSASSINATION_BLOCK_COST) + ".");
       if (playerId === HUMAN) showToast("ASSASSINATION BLOCKED — the authorization cost was not refunded.");
       if (fundedDefender.id === HUMAN) showToast("POLICE INTERCEPT — assassination blocked for " + formatMoney(POLICE_ASSASSINATION_BLOCK_COST) + ".");
@@ -10225,7 +10226,15 @@
       osc.start(start);
       osc.stop(start + length + 0.02);
     };
-    if (kind === "incoming") {
+    if (kind === "blocked") {
+      tone("square", 1320, t, 0.09, 0.34, 720);
+      tone("square", 980, t + 0.11, 0.09, 0.32, 520);
+      tone("triangle", 210, t + 0.02, 0.52, 0.34, 78);
+      tone("sawtooth", 160, t + 0.18, 0.4, 0.24, 58);
+      noise(t + 0.015, 0.16, 0.7, 3.1);
+      noise(t + 0.16, 0.14, 0.48, 3.4);
+      tone("sine", 1720, t + 0.24, 0.12, 0.16, 980);
+    } else if (kind === "incoming") {
       tone("sawtooth", 620, t, 0.5, 0.46, 88);
       tone("square", 96, t + 0.02, 0.72, 0.42, 34);
       noise(t + 0.05, 0.68, 0.62, 1.35);

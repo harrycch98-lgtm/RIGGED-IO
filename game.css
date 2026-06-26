@@ -3536,8 +3536,8 @@ canvas{ filter:brightness(1.03) saturate(.92); }
 }
 .victory-overlay.is-open{ display:flex; }
 .victory-card{
-  width:min(620px, 92vw);
-  padding:18px;
+  width:min(744px, 92vw);
+  padding:22px;
   border:2px solid var(--term);
   border-radius:10px;
   background:radial-gradient(120% 120% at 50% 0%, #06351d 0%, #021510 70%, #010a06 100%);
