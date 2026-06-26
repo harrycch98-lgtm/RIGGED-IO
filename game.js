@@ -189,6 +189,7 @@
   let lastPresentedBroadcastEventId = 0;
   let victoryPresentationToken = 0;
   let victoryOverlayMode = "";
+  let victoryAutoCloseTimer = null;
   let emoteWheelOpen = false;
   let emoteWheelPointer = { x: 180, y: 180 };
 
@@ -10375,6 +10376,7 @@
         return;
       }
       if (event.target.closest("[data-victory-close]")) {
+        clearVictoryAutoCloseTimer();
         if (victoryOverlayMode === "midterm-summary") {
           victoryEl.classList.remove("is-open");
           victoryOverlayMode = "";
@@ -10397,6 +10399,7 @@
         }
       }
       if (event.target === victoryEl || event.target.closest("[data-victory-close]")) {
+        clearVictoryAutoCloseTimer();
         victoryEl.classList.remove("is-open");
         victoryOverlayMode = "";
       }
@@ -10547,9 +10550,39 @@
     if (menuButton) menuButton.hidden = !showMenu;
   }
 
+  function clearVictoryAutoCloseTimer() {
+    if (victoryAutoCloseTimer) {
+      clearTimeout(victoryAutoCloseTimer);
+      victoryAutoCloseTimer = null;
+    }
+  }
+
+  function scheduleVictorySummaryAutoClose(result) {
+    clearVictoryAutoCloseTimer();
+    if (!result) return;
+    const roundMode = `${result.round}-summary`;
+    victoryAutoCloseTimer = window.setTimeout(() => {
+      victoryAutoCloseTimer = null;
+      if (!victoryEl || !victoryEl.classList.contains("is-open")) return;
+      if (victoryOverlayMode !== roundMode) return;
+      if (result.round === "midterm") {
+        victoryEl.classList.remove("is-open");
+        victoryOverlayMode = "";
+        paused = false;
+        localPauseRequested = false;
+        updateUi(true);
+        return;
+      }
+      if (result.round === "presidential") {
+        showFinalElectionScoreboard(finalElectionScoreboard || buildFinalElectionScoreboard());
+      }
+    }, 4000);
+  }
+
   function showElectionRoundCountingScreen(result) {
     buildVictoryDom();
     if (!victoryEl || !result) return;
+    clearVictoryAutoCloseTimer();
     victoryOverlayMode = `${result.round}-count`;
     configureVictoryActions("Skip Count", false);
     const body = victoryEl.querySelector("#victoryBody");
@@ -10600,8 +10633,7 @@
     buildVictoryDom();
     if (!victoryEl || !result) return;
     victoryOverlayMode = `${result.round}-summary`;
-    const closeLabel = result.round === "midterm" ? "Continue Campaign" : "Show Final Tally";
-    configureVictoryActions(closeLabel, true);
+    configureVictoryActions("", false);
     const body = victoryEl.querySelector("#victoryBody");
     if (!body) return;
     const winner = result.standings[0];
@@ -10625,11 +10657,13 @@
       `<div class="round-summary-rows">${rows}</div>` +
       '</div>';
     victoryEl.classList.add("is-open");
+    scheduleVictorySummaryAutoClose(result);
   }
 
   function showFinalElectionScoreboard(scoreboard) {
     buildVictoryDom();
     if (!victoryEl || !scoreboard) return;
+    clearVictoryAutoCloseTimer();
     victoryOverlayMode = "final-scoreboard";
     configureVictoryActions("Close Results", true);
     const body = victoryEl.querySelector("#victoryBody");
