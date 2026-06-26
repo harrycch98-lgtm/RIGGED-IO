@@ -9373,6 +9373,7 @@
   let pipOpen = false;
   let pipFocusTier = 0;
   let pipFocusSide = 0;
+  let pipActiveTab = "doctrines";
   let pipEl = null;
   let pipHoverKey = "";
   let pipAudio = null;
@@ -10648,6 +10649,10 @@
       '<div class="pip-head"><div class="pip-brand" id="pipBrand">[ PIP-CAMPAIGN 3000 ]</div><div class="pip-stats" id="pipStats"></div></div>' +
       '<div class="pip-sub"><div id="pipFaction"></div><div class="pip-mascot" id="pipMascot"></div></div>' +
       '<div class="pip-controls" id="pipControls"></div>' +
+      '<div class="pip-tabs" id="pipTabs">' +
+        '<button class="pip-tab is-active" type="button" data-pip-tab="doctrines">DOCTRINES</button>' +
+        '<button class="pip-tab" type="button" data-pip-tab="scoreboard">SCOREBOARD</button>' +
+      '</div>' +
       '<div class="pip-tree" id="pipTree"></div>' +
       '<div class="pip-foot">[W/S] TIER &nbsp; [A/D] OPTION &nbsp; [ENTER] INJECT TALENT &nbsp; [U] UPGRADE HQ &nbsp; [TAB] EXIT TERMINAL</div>' +
       '</div>';
@@ -10680,6 +10685,13 @@
         return;
       }
       const action = button.dataset.pipAction;
+      const tab = button.dataset.pipTab;
+      if (tab) {
+        pipActiveTab = tab;
+        pipSfx("click");
+        renderPip();
+        return;
+      }
       if (action === "upgrade-hq") upgradeMainBase(HUMAN);
       renderPip();
       if (typeof updateUi === "function") updateUi(true);
@@ -10739,6 +10751,13 @@
         ? (hqUpgradeBusy ? 'HQ UPGRADE UNDERWAY' : ('UPGRADE TO HQ L' + nextHq + ' - ' + formatMoney(hqReq.cash) + ' - ' + hqInfluenceReq + '%'))
         : 'HQ MAXED') +
       '</button></div>';
+    pipEl.querySelectorAll("[data-pip-tab]").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.pipTab === pipActiveTab);
+    });
+    if (pipActiveTab === "scoreboard") {
+      pipEl.querySelector("#pipTree").innerHTML = buildPipScoreboardMarkup();
+      return;
+    }
     const rows = tree.tiers.map((tier, i) => {
       const unlocked = tierUnlocked(i, human);
       const chosen = human.talents[i];
@@ -10826,6 +10845,56 @@
   }
   function flashPip(msg) {
     if (typeof showToast === "function") showToast(msg);
+  }
+
+  function buildPipScoreboardMarkup() {
+    const stageLabel = phase === "base"
+      ? "HOME BASE DRAFT"
+      : campaignStage() === "early"
+      ? "EARLY CAMPAIGN"
+      : campaignStage() === "mid"
+      ? "MIDTERM ELECTION"
+      : "PRESIDENTIAL ELECTION";
+    const standings = players.map((player) => {
+      const liveEv = electoralVotes(player.id);
+      const midtermEntry = electionRoundResults.midterm?.standings?.find((entry) => entry.playerId === player.id) || null;
+      const presidentialEntry = electionRoundResults.presidential?.standings?.find((entry) => entry.playerId === player.id) || null;
+      const midtermPoints = midtermEntry?.points ?? (campaignStage() === "mid" ? liveEv : 0);
+      const presidentialPoints = presidentialEntry?.points ?? (campaignStage() === "late" ? liveEv : 0);
+      const totalPoints = midtermPoints + presidentialPoints;
+      return {
+        id: player.id,
+        name: player.name,
+        color: player.color,
+        leader: player.leader,
+        liveEv,
+        midtermPoints,
+        presidentialPoints,
+        totalPoints,
+        cash: projectedCashPerDay(player),
+      };
+    }).sort((a, b) => b.totalPoints - a.totalPoints || b.liveEv - a.liveEv || b.cash - a.cash);
+    const rows = standings.map((row, index) => `
+      <div class="pip-score-row" style="--party:${row.color}">
+        <span class="pip-score-rank">${index + 1}</span>
+        <span class="pip-score-party">${escapeHtml(row.name)}<small>${escapeHtml(row.leader || "")}</small></span>
+        <span class="pip-score-ev">${row.liveEv}</span>
+        <span class="pip-score-round">${row.midtermPoints}</span>
+        <span class="pip-score-round">${row.presidentialPoints}</span>
+        <span class="pip-score-total">${row.totalPoints}</span>
+      </div>
+    `).join("");
+    return '' +
+      '<div class="pip-scoreboard">' +
+        '<div class="pip-scoreboard-head">' +
+          '<div class="pip-control-title">CURRENT SCOREBOARD</div>' +
+          '<div class="pip-control-copy">Stage: ' + stageLabel + '. Live EV updates in real time, while locked rounds keep their recorded points.</div>' +
+        '</div>' +
+        '<div class="pip-scoreboard-grid">' +
+          '<div class="pip-score-labels"><span>#</span><span>Party</span><span>Live EV</span><span>Midterm</span><span>Presidential</span><span>Total</span></div>' +
+          rows +
+        '</div>' +
+      '</div>';
   }
 
   document.addEventListener("keydown", (e) => {
