@@ -4167,6 +4167,19 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   box-shadow: none;
 }
 
+.lobby-bar-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(#000, #000) top left / 92px 92px no-repeat,
+    linear-gradient(#000, #000) top right / 92px 92px no-repeat,
+    linear-gradient(#000, #000) bottom left / 92px 92px no-repeat,
+    linear-gradient(#000, #000) bottom right / 92px 92px no-repeat;
+}
+
 .lobby-bar-video {
   position: absolute;
   inset: 0;
