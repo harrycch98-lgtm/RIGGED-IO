@@ -1739,6 +1739,29 @@ canvas:focus-visible {
   font-size:18px;
   box-shadow:none !important;
 }
+.rival-talent-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.rival-talent-tab{
+  min-height:31px;
+  padding:0 12px;
+  border:1px solid rgba(52,255,134,.24);
+  border-radius:4px;
+  background:rgba(0,0,0,.18);
+  color:#89cfa3;
+  font-family:"VT323","Share Tech Mono",monospace;
+  font-size:18px;
+  letter-spacing:1px;
+  box-shadow:none !important;
+  cursor:pointer;
+}
+.rival-talent-tab.is-active{
+  color:#f5fff9;
+  border-color:rgba(82,255,164,.55);
+  box-shadow:0 0 0 1px rgba(82,255,164,.18) inset, 0 0 14px rgba(82,255,164,.12) !important;
+}
 .rival-talent-theme{
   padding:5px 7px;
   border:1px solid rgba(52,255,134,.2);
@@ -1767,6 +1790,13 @@ canvas:focus-visible {
   gap:5px;
   overflow:auto;
   padding-right:2px;
+}
+.rival-scoreboard-shell .pip-scoreboard{
+  border:1px solid rgba(52,255,134,.18);
+  background:rgba(0,0,0,.16);
+}
+.rival-scoreboard-shell .pip-scoreboard-head{
+  margin-bottom:10px;
 }
 .rival-tier{
   border:1px solid rgba(52,255,134,.22);

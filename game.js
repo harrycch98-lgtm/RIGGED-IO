@@ -2951,6 +2951,13 @@
   }
   if (rivalTalentViewer) {
     rivalTalentViewer.addEventListener("click", (event) => {
+      const tabButton = event.target.closest("[data-rival-tab]");
+      if (tabButton) {
+        rivalTalentActiveTab = tabButton.dataset.rivalTab === "scoreboard" ? "scoreboard" : "doctrines";
+        pipSfx("click");
+        if (rivalTalentPlayerId >= 0) renderRivalTalentViewer(rivalTalentPlayerId);
+        return;
+      }
       const actionButton = event.target.closest("[data-rival-action]");
       if (actionButton) {
         const action = actionButton.dataset.rivalAction;
@@ -4704,6 +4711,15 @@
               : `HQ Level ${player.mainBaseLevel} is fully upgraded.`}
         </div>
       </div>`;
+    const tabBar = `
+      <div class="rival-talent-tabs" role="tablist" aria-label="Leader detail tabs">
+        <button class="rival-talent-tab${rivalTalentActiveTab === "doctrines" ? " is-active" : ""}" type="button" data-rival-tab="doctrines">DOCTRINES</button>
+        <button class="rival-talent-tab${rivalTalentActiveTab === "scoreboard" ? " is-active" : ""}" type="button" data-rival-tab="scoreboard">SCOREBOARD</button>
+      </div>
+    `;
+    const viewerBody = rivalTalentActiveTab === "scoreboard"
+      ? `<div class="rival-scoreboard-shell">${buildPipScoreboardMarkup()}</div>`
+      : `<div class="rival-talent-grid talent-card-collection">${renderChosenTalentCards(player)}</div>`;
     rivalTalentViewer.innerHTML = `
       <div class="rival-talent-head">
         ${leaderPortraitMarkup(player, "leader-portrait")}
@@ -4714,8 +4730,9 @@
         </div>
         <button class="rival-talent-close" type="button" data-rival-close>ESC</button>
       </div>
+      ${tabBar}
       ${hqMeta}
-      <div class="rival-talent-grid talent-card-collection">${renderChosenTalentCards(player)}</div>
+      ${viewerBody}
     `;
     rivalTalentViewer.classList.add("is-open");
     rivalTalentViewer.setAttribute("aria-hidden", "false");
@@ -9374,6 +9391,7 @@
   let pipFocusTier = 0;
   let pipFocusSide = 0;
   let pipActiveTab = "doctrines";
+  let rivalTalentActiveTab = "doctrines";
   let pipEl = null;
   let pipHoverKey = "";
   let pipAudio = null;
