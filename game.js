@@ -9399,7 +9399,7 @@
     const electoralCost = (Number(state.ev) || 0) / maxElectoralVotes * POLICE_MAX_STATE_BASE_DAY;
     const officeCost = building === "office" ? officeLevel(state, player.id) * POLICE_OFFICE_LEVEL_DAY : 0;
     const rawCost = Math.max(POLICE_MIN_STATE_DAY, electoralCost + officeCost);
-    return Math.round(rawCost * 0.7 * (worldEventActive("inflation") ? 1.1 : 1) * (hasTalent(player, "private_security") ? 0.5 : 1));
+    return Math.round(rawCost * 0.56 * (worldEventActive("inflation") ? 1.1 : 1) * (hasTalent(player, "private_security") ? 0.5 : 1));
   }
   function totalPoliceUpkeepDay(player) {
     if (!player) return 0;
@@ -9408,12 +9408,19 @@
       + (policeGuards(state, player.id, "office") ? policeUpkeepDay(player, state, "office") : 0), 0);
   }
   function hqIncomeDay(player) {
-    if (!player || player.mainBaseLevel <= 0) return 0;
-    const base = HQ_INCOME_DAY[player.mainBaseLevel] || 0;
-    const mult = (hasTalent(player, "shadow_lobbying") && player.mainBaseLevel >= 3 ? 1.5 : 1) * (hasTalent(player, "budget_surplus") ? 1.25 : 1);
-    const reserve = hasTalent(player, "rainy_day_fund") && player.cash < 5000 ? 1000 : 0;
-    return base * mult + reserve;
-  }
+      if (!player || player.mainBaseLevel <= 0) return 0;
+      const homeState = Number.isInteger(player.homeBase) && player.homeBase >= 0 ? states[player.homeBase] : null;
+      const homeInfluence = homeState ? Math.max(0, adjustedInfluence(homeState, player.id)) : 0;
+      let influenceScale = 0;
+      if (homeInfluence >= 90) influenceScale = 2.5;
+      else if (homeInfluence >= 70) influenceScale = 2;
+      else if (homeInfluence >= 50) influenceScale = 1.5;
+      else if (homeInfluence >= 20) influenceScale = 1;
+      const base = HQ_INCOME_DAY[player.mainBaseLevel] || 0;
+      const mult = (hasTalent(player, "shadow_lobbying") && player.mainBaseLevel >= 3 ? 1.5 : 1) * (hasTalent(player, "budget_surplus") ? 1.25 : 1);
+      const reserve = hasTalent(player, "rainy_day_fund") && player.cash < 5000 ? 1000 : 0;
+      return base * influenceScale * mult + reserve;
+    }
   function hqIncomeRate(player) {
     return hqIncomeDay(player) / CAMPAIGN_DAY_SECONDS;
   }
@@ -10656,15 +10663,21 @@
       if (playerId === HUMAN) showToast(target.name + " has no District Offices to slow.");
       return false;
     }
+    const interruptedSpeech = target.action?.type === "speech" && !target.action?.debateId;
+    const interruptedStateIndex = interruptedSpeech ? Number(target.action.state) : -1;
     player.cash -= OFFICE_SLOW_COST;
     player.officeSlowCooldown = OFFICE_SLOW_COOLDOWN_DAYS * CAMPAIGN_DAY_SECONDS;
     target.officeInfluenceSlow = Math.max(Number(target.officeInfluenceSlow || 0), OFFICE_SLOW_DAYS * CAMPAIGN_DAY_SECONDS);
     const speechBlocked = hasTalent(player, "cascade_effect");
     if (speechBlocked) target.officeSpeechBlocked = Math.max(Number(target.officeSpeechBlocked || 0), OFFICE_SLOW_DAYS * CAMPAIGN_DAY_SECONDS);
-    addAlert(player.name + " jammed " + target.name + "'s District Office influence for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? " and blocked speeches." : "."));
-    if (playerId === HUMAN) showToast("DISTRICT JAM — " + target.name + "'s office influence slowed" + (speechBlocked ? " and speeches blocked" : "") + " for " + OFFICE_SLOW_DAYS + " days.");
-    if (target.id === HUMAN) showToast("Your District Office influence is slowed" + (speechBlocked ? " and speeches are blocked" : "") + " for " + OFFICE_SLOW_DAYS + " days.");
-    broadcast(0, "DISTRICT JAM: " + target.name + "'s District Office influence is slowed nationwide for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? ", and speeches are blocked during the jam." : "."));
+    if (interruptedSpeech) {
+      target.action = null;
+      if (states[interruptedStateIndex]) states[interruptedStateIndex].activePulse = 1;
+    }
+    addAlert(player.name + " jammed " + target.name + "'s District Office influence for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? " and blocked speeches" : "") + (interruptedSpeech ? ", shutting down a live speech." : "."));
+    if (playerId === HUMAN) showToast("DISTRICT JAM — " + target.name + "'s office influence slowed" + (speechBlocked ? " and speeches blocked" : "") + (interruptedSpeech ? "; live speech interrupted." : "") + " for " + OFFICE_SLOW_DAYS + " days.");
+    if (target.id === HUMAN) showToast("Your District Office influence is slowed" + (speechBlocked ? " and speeches are blocked" : "") + (interruptedSpeech ? "; your live speech was cut off." : "") + " for " + OFFICE_SLOW_DAYS + " days.");
+    broadcast(0, "DISTRICT JAM: " + target.name + "'s District Office influence is slowed nationwide for " + OFFICE_SLOW_DAYS + " days" + (speechBlocked ? ", and speeches are blocked during the jam" : "") + (interruptedSpeech ? ". A live speech was also shut down." : "."));
     return true;
   }
 
