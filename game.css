@@ -3822,8 +3822,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   overflow: auto;
   align-items: center;
   justify-items: center;
-  padding-top: clamp(280px, 24vh, 360px);
-  padding-bottom: clamp(12px, 2vh, 24px);
+  padding: clamp(24px, 3.5vh, 40px);
 }
 
 .menu-card {
@@ -3839,7 +3838,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   background: transparent !important;
   box-shadow: none !important;
   margin: 0 auto;
-  transform: translateY(200px);
+  transform: none;
 }
 
 .menu-topline {
@@ -5309,7 +5308,7 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 @media (min-width: 901px) and (max-height: 1300px) {
   .main-menu {
     overflow: hidden;
-    padding: 8px;
+    padding: clamp(16px, 2.5vh, 28px);
   }
 
   .menu-card {
