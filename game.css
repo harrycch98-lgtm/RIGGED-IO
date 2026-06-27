@@ -4002,20 +4002,21 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .hot-tooltip .htl{ color:#8fe9b6; }
 .hot-tooltip .hot-cost-line{ color:#ffd76a; text-shadow:0 0 7px rgba(255,215,106,.42); }
 .hot-tooltip.stage-effect-tip{
-  max-width:720px;
-  padding:14px 20px;
-  font-size:32px;
-  line-height:1.18;
+  max-width:980px;
+  min-width:680px;
+  padding:20px 28px;
+  font-size:48px;
+  line-height:1.2;
 }
 .hot-tooltip.stage-effect-tip .htt{
   display:flex;
   gap:18px;
-  font-size:34px;
-  margin-bottom:8px;
-  padding-bottom:6px;
+  font-size:50px;
+  margin-bottom:12px;
+  padding-bottom:10px;
 }
 .hot-tooltip.stage-effect-tip .htl{
-  font-size:28px;
+  font-size:42px;
 }
 .influence-tip-row{ display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:7px; color:#9fffc4; }
 .influence-tip-row strong{ color:#d8ffe8; font-weight:400; }

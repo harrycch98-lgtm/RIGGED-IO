@@ -11755,10 +11755,18 @@
   function positionHotTip(btn) {
     const r = btn.getBoundingClientRect();
     const isStageEffectAnchor = btn && btn.id === "stageEffectIcon" && influenceBarEl;
-    const anchorRect = isStageEffectAnchor ? influenceBarEl.getBoundingClientRect() : r;
-    hotTipEl.style.left = Math.round(anchorRect.left + anchorRect.width / 2) + "px";
+    if (isStageEffectAnchor) {
+      const anchorRect = influenceBarEl.getBoundingClientRect();
+      hotTipEl.style.left = Math.round(anchorRect.left + 14) + "px";
+      hotTipEl.style.top = "auto";
+      hotTipEl.style.bottom = Math.round(window.innerHeight - anchorRect.top + 64) + "px";
+      hotTipEl.style.transform = "translateX(0)";
+      return;
+    }
+    hotTipEl.style.left = Math.round(r.left + r.width / 2) + "px";
     hotTipEl.style.top = "auto";
-    hotTipEl.style.bottom = Math.round(window.innerHeight - anchorRect.top + (isStageEffectAnchor ? 10 : 18)) + "px";
+    hotTipEl.style.bottom = Math.round(window.innerHeight - r.top + 18) + "px";
+    hotTipEl.style.transform = "translateX(-50%)";
   }
   function positionHotTipAt(x, y) {
     if (!hotTipEl) return;
