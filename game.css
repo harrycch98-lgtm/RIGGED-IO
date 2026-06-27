@@ -3797,9 +3797,9 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
 .global-influence-head strong{ color:#8fe9b6; font-weight:400; }
 .stage-effect-icon{
   margin-left:8px;
-  width:28px;
-  min-width:28px;
-  height:28px;
+  width:56px;
+  min-width:56px;
+  height:56px;
   padding:0;
   border:1px solid rgba(255,215,106,.65);
   border-radius:3px;
@@ -3819,8 +3819,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   justify-content:center;
 }
 .stage-effect-icon svg{
-  width:18px;
-  height:18px;
+  width:36px;
+  height:36px;
   display:block;
 }
 .stage-effect-icon:hover,
@@ -4005,18 +4005,18 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   max-width:980px;
   min-width:680px;
   padding:20px 28px;
-  font-size:48px;
+  font-size:28px;
   line-height:1.2;
 }
 .hot-tooltip.stage-effect-tip .htt{
   display:flex;
   gap:18px;
-  font-size:50px;
+  font-size:30px;
   margin-bottom:12px;
   padding-bottom:10px;
 }
 .hot-tooltip.stage-effect-tip .htl{
-  font-size:42px;
+  font-size:24px;
 }
 .influence-tip-row{ display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:7px; color:#9fffc4; }
 .influence-tip-row strong{ color:#d8ffe8; font-weight:400; }
