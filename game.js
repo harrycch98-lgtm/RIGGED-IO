@@ -2086,8 +2086,8 @@
   const DEBATE_SECONDS = CAMPAIGN_DAY_SECONDS * 0.5;
   const DEBATE_WIN_BONUS = 15;
   const WORLD_DEBATE_WIN_BONUS = 22;
-  const EARLY_STAGE_DAYS_LEFT = 79;
-  const LATE_STAGE_DAYS_LEFT = 40;
+  const EARLY_STAGE_MONTHS = 12;
+  const MID_STAGE_MONTHS = 24;
   const MID_STAGE_MONEY_MIN_EV = 10;
   const MID_STAGE_MONEY_MAX_EV = 20;
   const MID_STAGE_MONEY_PER_EV_DAY = 150;
@@ -9090,10 +9090,10 @@
   }
 
   function campaignStage() {
-    const left = daysUntilElection();
-    if (left > EARLY_STAGE_DAYS_LEFT) return "early";
-    if (left <= LATE_STAGE_DAYS_LEFT) return "late";
-    return "mid";
+    const monthsElapsed = campaignMonthsElapsed();
+    if (monthsElapsed < EARLY_STAGE_MONTHS) return "early";
+    if (monthsElapsed < MID_STAGE_MONTHS) return "mid";
+    return "late";
   }
 
   function isEarlyStage() {
@@ -11508,19 +11508,19 @@
 
   const HOTBAR = [
     { key: "1", action: "deployMiniBase", icon: "\u2302", name: "DISTRICT OFFICE", cost: 2000,
-      tip: ["DISTRICT OFFICE", "Click empty state to build.", "Click your District Office icon to upgrade.", "Office cap depends on HQ level."] },
+      tip: ["DISTRICT OFFICE", "Build in an empty state.", "Click your office again to upgrade it.", "Your HQ level sets your office limit."] },
     { key: "2", action: "publicSpeech", icon: "\u25C9", name: "SPEECH", cost: 0,
-      tip: ["SPEECH", "Gain influence over 1 month.", "Speaking over a rival starts Debate Night.", "Late game: click a rival portrait for a duel or click a state for a normal speech.", "Cooldown: 1 month; debate: 2 months."] },
+      tip: ["SPEECH", "Run a speech for 1 month to gain influence.", "If a rival is already speaking there, it starts Debate Night.", "Late game: click a rival portrait to force a duel, or click a state for a normal speech.", "Cooldown: 1 month. Debate cooldown: 2 months."] },
     { key: "3", action: "officeSlow", icon: "\u25CE", name: "DISTRICT JAM", cost: OFFICE_SLOW_COST,
-      tip: ["DISTRICT JAM", "Click a rival leader portrait top-right.", "Their District Office influence is slowed nationwide for 3 months.", "Cost $6M. Cooldown: 2 months."] },
+      tip: ["DISTRICT JAM", "Target a rival leader portrait.", "Their District Office influence slows for 3 months.", "Some talents can also stop speeches. Cost $6M. Cooldown: 2 months."] },
     { key: "4", action: "disrupt", icon: "\u26A0", name: "DISRUPT", cost: null,
-      tip: ["DISRUPT", "Target a state with a rival HQ or office.", "Steals $3M per rival, damages offices, and disrupts upgrades.", "Police can block office damage."] },
+      tip: ["DISRUPT", "Target a state with rival buildings.", "Steals $3M from each rival there, damages offices, and interrupts upgrades.", "Police can block the office damage."] },
     { key: "5", action: "powerGrab", icon: "\u25C6", name: "POWER GRAB", cost: null,
-      tip: ["POWER GRAB", "Instantly add 20% influence in one state.", "Cost rises with electoral votes."] },
+      tip: ["POWER GRAB", "Instantly gain 20% influence in one state.", "The cost goes up in higher-EV states."] },
     { key: "6", action: "togglePolice", icon: "\u25EC", name: "POLICE", cost: 0,
-      tip: ["POLICE", "Guard one HQ or District Office.", "Click a guarded HQ or office again to withdraw.", "Blocks assassination and DISRUPT damage when funded.", "Upkeep scales with state votes and office level."] },
+      tip: ["POLICE", "Guard your HQ or one District Office.", "Click the same guarded building again to remove police.", "Blocks assassination and most DISRUPT building damage while funded.", "Upkeep scales with state EV and office level."] },
     { key: "7", action: "assassinate", icon: "\u2297", name: "ASSASSIN", cost: 40000,
-      tip: ["ASSASSINATE", "Kill a rival leader speaking in this state.", "Debate Night kills both speakers and triples backlash.", "Repeat kills add nationwide influence penalties."] },
+      tip: ["ASSASSINATE", "Target a rival leader who is speaking in this state.", "If it hits during Debate Night, every speaker in that debate is taken out.", "Repeat kills cause stronger nationwide backlash."] },
   ];
 
   let hotbarEl = null;
@@ -11607,7 +11607,7 @@
       '<div id="upgradeStatusBox" class="upgrade-status-box" role="status" aria-live="polite"></div>' +
       '<div class="hot-banner" id="hotBanner">\u25B6 TARGET A STATE &middot; press ESC to cancel</div>' +
       '<div class="global-influence" id="globalInfluenceBar" aria-label="Electoral vote totals">' +
-      '<div class="global-influence-head"><span>ELECTORAL VOTES</span><strong>50% CONTROL LINE <button type="button" class="stage-effect-icon" id="stageEffectIcon" aria-label="Show current stage effect">EV</button></strong></div>' +
+      '<div class="global-influence-head"><span>ELECTORAL VOTES</span><strong>50% CONTROL LINE <button type="button" class="stage-effect-icon" id="stageEffectIcon" aria-label="Show current stage effect"></button></strong></div>' +
       '<div class="global-influence-track"></div></div>' +
       '<div class="hot-bottom"><div class="hot-finance" id="hotFinanceBar">CASH $0 (+$0/month)</div><div class="hot-slots">' +
       HOTBAR.map((s, i) =>
@@ -11679,10 +11679,13 @@
     hotTipEl.classList.add("is-on");
     positionHotTip(hotFinanceEl);
   }
-  function stageEffectIconGlyph(stage) {
-    if (stage === "mid") return "TV";
-    if (stage === "late") return "!";
-    return "EV";
+  function stageEffectIconMarkup(stage) {
+    const iconMap = {
+      early: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="18" width="5" height="9" fill="currentColor"/><rect x="13" y="12" width="6" height="15" fill="currentColor"/><rect x="23" y="8" width="5" height="19" fill="currentColor"/><path d="M5 9 C11 4 18 5 27 10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="26" cy="10" r="2" fill="currentColor"/></svg>',
+      mid: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="7" width="24" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="7" y="10" width="10" height="6" fill="currentColor"/><path d="M20 11 L25 15 L20 19 Z" fill="currentColor"/><rect x="13" y="25" width="6" height="3" fill="currentColor"/></svg>',
+      late: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M18 3 L8 18 H15 L13 29 L24 13 H17 Z" fill="currentColor"/><circle cx="24.5" cy="24.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+    };
+    return iconMap[stage] || iconMap.early;
   }
   function stageEffectTooltipHtml() {
     if (phase === "base") {
@@ -11706,6 +11709,7 @@
   function showStageEffectTip(anchor) {
     if (!hotTipEl || !anchor) return;
     hotTipEl.innerHTML = stageEffectTooltipHtml();
+    hotTipEl.classList.add("stage-effect-tip");
     hotTipEl.classList.add("is-on");
     positionHotTip(anchor);
   }
@@ -11713,8 +11717,8 @@
     if (!hotTipEl) return;
     hotTipEl.innerHTML =
       '<div class="htt"><span>NEWS CHANNEL</span><strong>' + formatMoney(CHANNEL_COST) + '</strong></div>' +
-      '<div class="htl">Buy or take control of this network.</div>' +
-      '<div class="htl">It slowly builds influence across its covered states.</div>';
+      '<div class="htl">Buy or seize control of this network.</div>' +
+      '<div class="htl">Owned channels slowly add influence in every state they cover.</div>';
     hotTipEl.classList.add("is-on");
     positionHotTip(card);
   }
@@ -11750,9 +11754,11 @@
   }
   function positionHotTip(btn) {
     const r = btn.getBoundingClientRect();
-    hotTipEl.style.left = Math.round(r.left + r.width / 2) + "px";
+    const isStageEffectAnchor = btn && btn.id === "stageEffectIcon" && influenceBarEl;
+    const anchorRect = isStageEffectAnchor ? influenceBarEl.getBoundingClientRect() : r;
+    hotTipEl.style.left = Math.round(anchorRect.left + anchorRect.width / 2) + "px";
     hotTipEl.style.top = "auto";
-    hotTipEl.style.bottom = Math.round(window.innerHeight - r.top + 18) + "px";
+    hotTipEl.style.bottom = Math.round(window.innerHeight - anchorRect.top + (isStageEffectAnchor ? 10 : 18)) + "px";
   }
   function positionHotTipAt(x, y) {
     if (!hotTipEl) return;
@@ -11855,7 +11861,7 @@
     const stageEffectIcon = hotbarEl.querySelector("#stageEffectIcon");
     if (stageEffectIcon) {
       const stage = phase === "play" ? campaignStage() : "early";
-      stageEffectIcon.textContent = stageEffectIconGlyph(stage);
+      stageEffectIcon.innerHTML = stageEffectIconMarkup(stage);
       stageEffectIcon.dataset.stage = stage;
       stageEffectIcon.setAttribute("aria-label", phase === "play"
         ? `Show current ${stage} stage effect`
