@@ -2834,7 +2834,14 @@
 
   if (newGameButton) newGameButton.addEventListener("click", beginSelectedGame);
   if (createLobbyButton) createLobbyButton.addEventListener("click", handleInviteFriendClick);
-  if (lobbyStartButton) lobbyStartButton.addEventListener("click", beginSelectedGame);
+  if (lobbyStartButton) {
+    lobbyStartButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (lobbyStartButton.disabled) return;
+      void beginSelectedGame({ triggerButton: lobbyStartButton });
+    });
+  }
   if (copyInviteButton) copyInviteButton.addEventListener("click", copyInviteLink);
   if (mainMenuAddBotButton) {
     mainMenuAddBotButton.addEventListener("click", async () => {
@@ -3114,7 +3121,7 @@
 
     if (window.isServerLobbyHost && currentLobby?.id && !options.fromHost) {
       gameStarted = false;
-      const button = document.querySelector("[data-preview-action='start']");
+      const button = options.triggerButton || lobbyStartButton || document.querySelector("[data-preview-action='start']");
       await startServerGameWithBots(button);
       return;
     }

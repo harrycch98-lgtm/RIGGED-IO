@@ -4514,7 +4514,8 @@ body.pip-glitch::after{ animation:crt-flicker .1s steps(2) 6 !important; }
   position: absolute;
   top: 302px;
   right: 173px;
-  z-index: 2;
+  z-index: 6;
+  pointer-events: auto;
   min-width: 179px;
   min-height: 58px;
   padding: 19px 14px 10px 70px;
