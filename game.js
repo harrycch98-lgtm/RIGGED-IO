@@ -8516,9 +8516,6 @@
         const drawX = Math.round(x - size / 2);
         const drawY = Math.round(y - size * 0.78);
         ctx.drawImage(sprite, drawX, drawY, size, size);
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = hexToRgba(visual.color, 0.54);
-        ctx.fillRect(drawX, drawY, size, size);
         ctx.globalCompositeOperation = "source-over";
         drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
         ctx.restore();
@@ -8560,9 +8557,6 @@
         const drawX = Math.round(x - size / 2);
         const drawY = Math.round(y - size * 0.74);
         ctx.drawImage(sprite, drawX, drawY, size, size);
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = hexToRgba(visual.color, 0.58);
-        ctx.fillRect(drawX, drawY, size, size);
         ctx.globalCompositeOperation = "source-over";
         drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
         ctx.restore();
