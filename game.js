@@ -2510,6 +2510,7 @@
       3: loadSpriteAsset("office-l3.svg?v=1"),
     },
   };
+  const POLICE_GUARD_SPRITE = loadSpriteAsset("police-guard.png?v=2");
   const matchModeInput = document.querySelector("#matchMode");
   const playerCountInput = document.querySelector("#playerCount");
   const difficultyInput = document.querySelector("#difficulty");
@@ -8546,21 +8547,18 @@
   }
 
   function drawLevelBadge(x, y, text, visual, parentScale = 1) {
-    ctx.save();
-    ctx.shadowBlur = 0;
-    ctx.font = `bold ${Math.max(7, Math.round(8 / parentScale))}px 'Share Tech Mono', monospace`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const width = Math.max(24, text.length * Math.max(5, 5 / parentScale) + 8);
-    ctx.fillStyle = "rgba(214,255,224,0.92)";
-    ctx.fillRect(x - width / 2, y - 6, width, 12);
-    ctx.strokeStyle = "rgba(0,0,0,0.82)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - width / 2, y - 6, width, 12);
-    ctx.fillStyle = "#050505";
-    ctx.fillText(text, x, y + 0.5);
-    ctx.restore();
-  }
+      ctx.save();
+      ctx.shadowBlur = 0;
+      const zoomFactor = Math.max(1, Camera.zoom || 1);
+      const zoomScale = 1 / Math.pow(zoomFactor, 1.18);
+      const fontSize = Math.max(5, Math.round((8 / parentScale) * zoomScale));
+      ctx.font = `bold ${fontSize}px 'Share Tech Mono', monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#050505";
+      ctx.fillText(text, x, y + 0.5);
+      ctx.restore();
+    }
 
   function drawPoliceShield(x, y, radius, player) {
     const visual = factionVisual(player);
@@ -8589,29 +8587,22 @@
   }
 
   function drawPoliceProtectionBadge(x, y, player) {
-    const visual = factionVisual(player);
-    const s = mapIconScale();
-    const pulse = 0.72 + Math.sin(performance.now() / 180) * 0.12;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
-    ctx.globalAlpha = pulse;
-    ctx.shadowColor = "#A6FFD0";
-    ctx.shadowBlur = 8 / Math.max(s, 0.1);
-    ctx.fillStyle = "rgba(2, 12, 6, 0.92)";
-    ctx.strokeStyle = "#A6FFD0";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(-8, -7, 16, 14, 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = mix(visual.color, "#ffffff", 0.5);
-    ctx.font = "bold 10px 'Share Tech Mono', monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("P", 0, 0.5);
-    ctx.restore();
-  }
+      const visual = factionVisual(player);
+      const s = mapIconScale();
+      const pulse = 0.72 + Math.sin(performance.now() / 180) * 0.12;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(s, s);
+      ctx.globalAlpha = pulse;
+      if (POLICE_GUARD_SPRITE?.complete && POLICE_GUARD_SPRITE.naturalWidth > 0) {
+        const size = 22;
+        ctx.imageSmoothingEnabled = false;
+        ctx.shadowColor = "#A6FFD0";
+        ctx.shadowBlur = 6 / Math.max(s, 0.1);
+        ctx.drawImage(POLICE_GUARD_SPRITE, -size / 2, -size / 2, size, size);
+      }
+      ctx.restore();
+    }
 
   function drawPoliceRiskWarning(x, y) {
     const pulse = 0.55 + Math.sin(elapsed * 8) * 0.25;
