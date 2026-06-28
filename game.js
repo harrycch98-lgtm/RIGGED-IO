@@ -2511,6 +2511,16 @@
     },
   };
   const POLICE_GUARD_SPRITE = loadSpriteAsset("police-guard.png?v=2");
+const DISRUPT_SPRITES = {
+  oligarchy: loadSpriteAsset("disrupt-oligarchy.png?v=1"),
+  populist: loadSpriteAsset("disrupt-populist.png?v=1"),
+  syndicate: loadSpriteAsset("disrupt-syndicate.png?v=1"),
+  vanguard: loadSpriteAsset("disrupt-vanguard.png?v=1"),
+  futurist: loadSpriteAsset("disrupt-futurist.png?v=1"),
+  machine: loadSpriteAsset("disrupt-machine.png?v=1"),
+  signal: loadSpriteAsset("disrupt-signal.png?v=1"),
+  ledger: loadSpriteAsset("disrupt-ledger.png?v=1"),
+};
   const matchModeInput = document.querySelector("#matchMode");
   const playerCountInput = document.querySelector("#playerCount");
   const difficultyInput = document.querySelector("#difficulty");
@@ -8595,7 +8605,7 @@
       ctx.scale(s, s);
       ctx.globalAlpha = pulse;
       if (POLICE_GUARD_SPRITE?.complete && POLICE_GUARD_SPRITE.naturalWidth > 0) {
-        const size = 22;
+        const size = 44;
         ctx.imageSmoothingEnabled = false;
         ctx.shadowColor = "#A6FFD0";
         ctx.shadowBlur = 6 / Math.max(s, 0.1);
@@ -8781,8 +8791,9 @@
 
   function drawSabotageCrosshair(x, y, player, progress) {
     const visual = factionVisual(player);
+    const disruptSprite = DISRUPT_SPRITES[player?.talentTree] || DISRUPT_SPRITES.oligarchy || null;
     ctx.save();
-    ctx.strokeStyle = progress % 0.2 < 0.1 ? visual.glow : "#EF4444";
+    ctx.strokeStyle = progress % 0.2 < 0.1 ? visual.glow : mix(visual.color, "#ffffff", 0.15);
     ctx.shadowColor = visual.glow;
     ctx.shadowBlur = 9;
     ctx.lineWidth = 1.6;
@@ -8800,6 +8811,14 @@
     ctx.lineTo(x, y + 24);
     ctx.stroke();
     ctx.setLineDash([]);
+    if (disruptSprite?.complete && disruptSprite.naturalWidth > 0) {
+      const pulse = 0.92 + Math.sin(elapsed * 10) * 0.08;
+      const size = 24 + Math.round(progress * 8);
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.drawImage(disruptSprite, Math.round(x - size / 2), Math.round(y - size / 2), size, size);
+      ctx.restore();
+    }
     ctx.restore();
   }
 
