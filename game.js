@@ -8412,6 +8412,98 @@
     );
   }
 
+  function drawBuildingFactionTrim(drawX, drawY, size, player, buildingType = "office", level = 1) {
+    const visual = factionVisual(player);
+    const trim = player?.talentTree || "default";
+    const inset = Math.max(2, Math.round(size * 0.14));
+    const innerX = drawX + inset;
+    const innerY = drawY + inset;
+    const innerW = Math.max(8, size - inset * 2);
+    const innerH = Math.max(8, size - inset * 2);
+    const line = Math.max(2, Math.round(size * 0.07));
+    const accent = hexToRgba(visual.glow, 0.9);
+      const soft = hexToRgba(visual.color, 0.58);
+      const bright = hexToRgba(visual.glow, 0.72);
+    const crestW = Math.max(4, Math.round(innerW * 0.24));
+    const crestH = Math.max(4, Math.round(innerH * 0.16));
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.strokeStyle = accent;
+    ctx.fillStyle = soft;
+    ctx.lineWidth = line;
+    switch (trim) {
+      case "oligarchy":
+        ctx.fillRect(innerX + Math.round(innerW * 0.12), innerY + line, Math.round(innerW * 0.76), crestH);
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + crestH + line * 2, Math.round(innerW * 0.64), line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.24), innerY + innerH - crestH - line, Math.round(innerW * 0.52), crestH);
+        break;
+      case "populist":
+        ctx.fillRect(innerX + line, innerY + innerH - crestH, innerW - line * 2, line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.16), innerY + Math.round(innerH * 0.54), crestW, line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.4), innerY + Math.round(innerH * 0.42), crestW, line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.64), innerY + Math.round(innerH * 0.3), crestW, line);
+        break;
+      case "syndicate":
+        for (let i = 0; i < 3; i += 1) {
+          const y = innerY + Math.round((i + 1) * innerH / 4);
+          ctx.fillRect(innerX + Math.round(innerW * 0.14), y, Math.round(innerW * 0.72), line);
+        }
+        ctx.fillRect(innerX + Math.round(innerW * 0.4), innerY + line, Math.round(innerW * 0.2), innerH - line * 2);
+        break;
+      case "vanguard":
+        ctx.fillRect(innerX + Math.round(innerW * 0.44), innerY + line, line + 1, innerH - line * 2);
+        ctx.fillRect(innerX + line, innerY + Math.round(innerH * 0.44), innerW - line * 2, line + 1);
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.18), crestW, line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.58), innerY + Math.round(innerH * 0.18), crestW, line);
+        break;
+      case "futurist":
+        ctx.fillRect(innerX + Math.round(innerW * 0.16), innerY + Math.round(innerH * 0.16), line + 1, line + 1);
+        ctx.fillRect(innerX + Math.round(innerW * 0.68), innerY + Math.round(innerH * 0.16), line + 1, line + 1);
+        ctx.fillRect(innerX + Math.round(innerW * 0.42), innerY + Math.round(innerH * 0.58), line + 1, line + 1);
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.22), Math.round(innerW * 0.5), line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.24), innerY + Math.round(innerH * 0.28), line, Math.round(innerH * 0.38));
+        ctx.fillRect(innerX + Math.round(innerW * 0.7), innerY + Math.round(innerH * 0.22), line, Math.round(innerH * 0.28));
+        break;
+      case "machine":
+        for (let i = 0; i < 4; i += 1) {
+          const x = innerX + Math.round((i + 1) * innerW / 5);
+          ctx.fillRect(x, innerY + Math.round(innerH * 0.16), line, Math.round(innerH * 0.68));
+        }
+        ctx.fillRect(innerX + Math.round(innerW * 0.14), innerY + Math.round(innerH * 0.18), Math.round(innerW * 0.72), line);
+        break;
+      case "signal":
+        ctx.fillRect(innerX + Math.round(innerW * 0.14), innerY + Math.round(innerH * 0.66), Math.round(innerW * 0.72), line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.34), line, Math.round(innerH * 0.34));
+        ctx.fillRect(innerX + Math.round(innerW * 0.78), innerY + Math.round(innerH * 0.34), line, Math.round(innerH * 0.34));
+        ctx.fillRect(innerX + Math.round(innerW * 0.32), innerY + Math.round(innerH * 0.22), Math.round(innerW * 0.36), line);
+        break;
+      case "ledger":
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.18), line, Math.round(innerH * 0.62));
+        ctx.fillRect(innerX + Math.round(innerW * 0.48), innerY + Math.round(innerH * 0.18), line, Math.round(innerH * 0.62));
+        ctx.fillRect(innerX + Math.round(innerW * 0.74), innerY + Math.round(innerH * 0.18), line, Math.round(innerH * 0.62));
+        ctx.fillRect(innerX + Math.round(innerW * 0.12), innerY + Math.round(innerH * 0.22), Math.round(innerW * 0.76), line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.12), innerY + Math.round(innerH * 0.52), Math.round(innerW * 0.76), line);
+        break;
+      default:
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.18), Math.round(innerW * 0.64), line);
+        ctx.fillRect(innerX + Math.round(innerW * 0.18), innerY + Math.round(innerH * 0.62), Math.round(innerW * 0.64), line);
+        break;
+    }
+    if (buildingType === "hq" && level >= 2) {
+      ctx.fillStyle = bright;
+      ctx.fillRect(innerX + Math.round(innerW * 0.12), innerY + innerH - Math.round(innerH * 0.18), Math.max(2, Math.round(innerW * 0.76)), line);
+    }
+    if (buildingType === "hq" && level >= 3) {
+      ctx.fillStyle = accent;
+      ctx.fillRect(innerX + Math.round(innerW * 0.42), innerY - Math.max(1, line), Math.max(2, line + 1), Math.max(2, line + 1));
+    }
+    if (buildingType === "office" && level >= 2) {
+      ctx.fillStyle = bright;
+      ctx.fillRect(innerX + Math.round(innerW * 0.22), innerY + innerH - Math.round(innerH * 0.22), Math.max(2, Math.round(innerW * 0.56)), line);
+    }
+    ctx.restore();
+  }
+
   function drawMainBaseIcon(x, y, player) {
     const visual = factionVisual(player);
     const level = Math.max(1, Math.min(3, Number(player?.mainBaseLevel || 1)));
@@ -8427,11 +8519,12 @@
       const drawY = Math.round(y - size * 0.78);
       ctx.drawImage(sprite, drawX, drawY, size, size);
       ctx.globalCompositeOperation = "source-atop";
-      ctx.fillStyle = hexToRgba(visual.color, 0.34);
-      ctx.fillRect(drawX, drawY, size, size);
-      ctx.globalCompositeOperation = "screen";
-      ctx.fillStyle = hexToRgba(visual.glow, 0.14);
-      ctx.fillRect(drawX, drawY, size, size);
+        ctx.fillStyle = hexToRgba(visual.color, 0.54);
+        ctx.fillRect(drawX, drawY, size, size);
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = hexToRgba(visual.glow, 0.28);
+        ctx.fillRect(drawX, drawY, size, size);
+      drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
       ctx.restore();
       return;
     }
@@ -8474,11 +8567,12 @@
       const drawY = Math.round(y - size * 0.74);
       ctx.drawImage(sprite, drawX, drawY, size, size);
       ctx.globalCompositeOperation = "source-atop";
-      ctx.fillStyle = hexToRgba(visual.color, 0.38);
-      ctx.fillRect(drawX, drawY, size, size);
-      ctx.globalCompositeOperation = "screen";
-      ctx.fillStyle = hexToRgba(visual.glow, 0.16);
-      ctx.fillRect(drawX, drawY, size, size);
+        ctx.fillStyle = hexToRgba(visual.color, 0.58);
+        ctx.fillRect(drawX, drawY, size, size);
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = hexToRgba(visual.glow, 0.3);
+        ctx.fillRect(drawX, drawY, size, size);
+      drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
       ctx.restore();
       return;
     }
