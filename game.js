@@ -2487,9 +2487,28 @@
 
   const canvas = document.querySelector("#gameCanvas");
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
   const usWorldMapImage = new Image();
   usWorldMapImage.src = "us_world_map.png?v=5";
   usWorldMapImage.onload = () => { if (gameStarted) render(); };
+  function loadSpriteAsset(src) {
+    const image = new Image();
+    image.src = src;
+    image.onload = () => { if (gameStarted) render(); };
+    return image;
+  }
+  const BUILDING_SPRITES = {
+    hq: {
+      1: loadSpriteAsset("hq-l1.svg?v=1"),
+      2: loadSpriteAsset("hq-l2.svg?v=1"),
+      3: loadSpriteAsset("hq-l3.svg?v=1"),
+    },
+    office: {
+      1: loadSpriteAsset("office-l1.svg?v=1"),
+      2: loadSpriteAsset("office-l2.svg?v=1"),
+      3: loadSpriteAsset("office-l3.svg?v=1"),
+    },
+  };
   const matchModeInput = document.querySelector("#matchMode");
   const playerCountInput = document.querySelector("#playerCount");
   const difficultyInput = document.querySelector("#difficulty");
@@ -8395,13 +8414,34 @@
 
   function drawMainBaseIcon(x, y, player) {
     const visual = factionVisual(player);
-    const s = mapIconScale() * 0.64;
+    const level = Math.max(1, Math.min(3, Number(player?.mainBaseLevel || 1)));
+    const sprite = BUILDING_SPRITES.hq[level];
+    const s = mapIconScale();
+    if (sprite?.complete && sprite.naturalWidth > 0) {
+      const size = Math.round(42 * s);
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.shadowColor = visual.glow;
+      ctx.shadowBlur = 10;
+      const drawX = Math.round(x - size / 2);
+      const drawY = Math.round(y - size * 0.78);
+      ctx.drawImage(sprite, drawX, drawY, size, size);
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = hexToRgba(visual.color, 0.34);
+      ctx.fillRect(drawX, drawY, size, size);
+      ctx.globalCompositeOperation = "screen";
+      ctx.fillStyle = hexToRgba(visual.glow, 0.14);
+      ctx.fillRect(drawX, drawY, size, size);
+      ctx.restore();
+      return;
+    }
+    const fallbackScale = s * 0.64;
     const fill = mix(visual.color, "#ffffff", 0.18);
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(s, s);
+    ctx.scale(fallbackScale, fallbackScale);
     ctx.shadowColor = visual.glow;
-    ctx.shadowBlur = 10 / Math.max(s, 0.1);
+    ctx.shadowBlur = 10 / Math.max(fallbackScale, 0.1);
     ctx.beginPath();
     ctx.moveTo(0, -18);
     ctx.lineTo(18, 15);
@@ -8421,13 +8461,34 @@
   }
   function drawMiniBaseIcon(x, y, player, level = 1) {
     const visual = factionVisual(player);
-    const s = mapIconScale() * MINI_BASE_ICON_SCALE;
+    const clampedLevel = Math.max(1, Math.min(3, Number(level || 1)));
+    const sprite = BUILDING_SPRITES.office[clampedLevel];
+    const s = mapIconScale();
+    if (sprite?.complete && sprite.naturalWidth > 0) {
+      const size = Math.round(32 * s);
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.shadowColor = visual.glow;
+      ctx.shadowBlur = 8;
+      const drawX = Math.round(x - size / 2);
+      const drawY = Math.round(y - size * 0.74);
+      ctx.drawImage(sprite, drawX, drawY, size, size);
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = hexToRgba(visual.color, 0.38);
+      ctx.fillRect(drawX, drawY, size, size);
+      ctx.globalCompositeOperation = "screen";
+      ctx.fillStyle = hexToRgba(visual.glow, 0.16);
+      ctx.fillRect(drawX, drawY, size, size);
+      ctx.restore();
+      return;
+    }
+    const fallbackScale = s * MINI_BASE_ICON_SCALE;
     const fill = mix(visual.color, "#ffffff", 0.2);
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(s, s);
+    ctx.scale(fallbackScale, fallbackScale);
     ctx.shadowColor = visual.glow;
-    ctx.shadowBlur = 9 / Math.max(s, 0.1);
+    ctx.shadowBlur = 9 / Math.max(fallbackScale, 0.1);
     ctx.beginPath();
     ctx.arc(0, 0, 11, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(0, 0, 0, 0.92)";
@@ -8438,7 +8499,7 @@
     ctx.stroke();
     ctx.fillStyle = fill;
     ctx.fill();
-    drawLevelBadge(0, 18, String(level), visual, s);
+    drawLevelBadge(0, 18, String(clampedLevel), visual, fallbackScale);
     ctx.restore();
   }
 
