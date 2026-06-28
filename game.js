@@ -2500,9 +2500,46 @@
   }
   const BUILDING_SPRITES = {
     hq: {
-      1: loadSpriteAsset("hq-l1.svg?v=1"),
-      2: loadSpriteAsset("hq-l2.svg?v=1"),
-      3: loadSpriteAsset("hq-l3.svg?v=1"),
+      oligarchy: {
+        1: loadSpriteAsset("hq-building-crops/building_01.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_02.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_03.png?v=1"),
+      },
+      populist: {
+        1: loadSpriteAsset("hq-building-crops/building_04.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_05.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_06.png?v=1"),
+      },
+      syndicate: {
+        1: loadSpriteAsset("hq-building-crops/building_07.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_08.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_09.png?v=1"),
+      },
+      vanguard: {
+        1: loadSpriteAsset("hq-building-crops/building_10.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_11.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_12.png?v=1"),
+      },
+      futurist: {
+        1: loadSpriteAsset("hq-building-crops/building_13.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_14.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_15.png?v=1"),
+      },
+      machine: {
+        1: loadSpriteAsset("hq-building-crops/building_16.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_17.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_18.png?v=1"),
+      },
+      signal: {
+        1: loadSpriteAsset("hq-building-crops/building_19.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_20.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_21.png?v=1"),
+      },
+      ledger: {
+        1: loadSpriteAsset("hq-building-crops/building_22.png?v=1"),
+        2: loadSpriteAsset("hq-building-crops/building_23.png?v=1"),
+        3: loadSpriteAsset("hq-building-crops/building_24.png?v=1"),
+      },
     },
     office: {
       1: loadSpriteAsset("office-l1.svg?v=1"),
@@ -8442,7 +8479,8 @@ const DISRUPT_SPRITES = {
   function drawMainBaseIcon(x, y, player) {
     const visual = factionVisual(player);
     const level = Math.max(1, Math.min(3, Number(player?.mainBaseLevel || 1)));
-    const sprite = BUILDING_SPRITES.hq[level];
+    const hqSet = BUILDING_SPRITES.hq[player?.talentTree] || BUILDING_SPRITES.hq.oligarchy;
+    const sprite = hqSet?.[level] || null;
     const s = mapIconScale();
     if (sprite?.complete && sprite.naturalWidth > 0) {
       const size = Math.max(28, Math.round(42 * s));
@@ -8450,9 +8488,7 @@ const DISRUPT_SPRITES = {
           ctx.imageSmoothingEnabled = false;
           const drawX = Math.round(x - size / 2);
           const drawY = Math.round(y - size * 0.78);
-          ctx.filter = `sepia(1) saturate(7) hue-rotate(${hexHueDegrees(visual.color)}deg) brightness(1.08)`;
           ctx.drawImage(sprite, drawX, drawY, size, size);
-          ctx.filter = "none";
           ctx.globalCompositeOperation = "source-over";
           drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
           ctx.restore();
