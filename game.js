@@ -8511,22 +8511,18 @@
     const s = mapIconScale();
     if (sprite?.complete && sprite.naturalWidth > 0) {
       const size = Math.round(42 * s);
-      ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      ctx.shadowColor = visual.glow;
-      ctx.shadowBlur = 10;
-      const drawX = Math.round(x - size / 2);
-      const drawY = Math.round(y - size * 0.78);
-      ctx.drawImage(sprite, drawX, drawY, size, size);
-      ctx.globalCompositeOperation = "source-atop";
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        const drawX = Math.round(x - size / 2);
+        const drawY = Math.round(y - size * 0.78);
+        ctx.drawImage(sprite, drawX, drawY, size, size);
+        ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = hexToRgba(visual.color, 0.54);
         ctx.fillRect(drawX, drawY, size, size);
-        ctx.globalCompositeOperation = "screen";
-        ctx.fillStyle = hexToRgba(visual.glow, 0.28);
-        ctx.fillRect(drawX, drawY, size, size);
-      drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
-      ctx.restore();
-      return;
+        ctx.globalCompositeOperation = "source-over";
+        drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
+        ctx.restore();
+        return;
     }
     const fallbackScale = s * 0.64;
     const fill = mix(visual.color, "#ffffff", 0.18);
@@ -8559,22 +8555,18 @@
     const s = mapIconScale();
     if (sprite?.complete && sprite.naturalWidth > 0) {
       const size = Math.round(32 * s);
-      ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      ctx.shadowColor = visual.glow;
-      ctx.shadowBlur = 8;
-      const drawX = Math.round(x - size / 2);
-      const drawY = Math.round(y - size * 0.74);
-      ctx.drawImage(sprite, drawX, drawY, size, size);
-      ctx.globalCompositeOperation = "source-atop";
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        const drawX = Math.round(x - size / 2);
+        const drawY = Math.round(y - size * 0.74);
+        ctx.drawImage(sprite, drawX, drawY, size, size);
+        ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = hexToRgba(visual.color, 0.58);
         ctx.fillRect(drawX, drawY, size, size);
-        ctx.globalCompositeOperation = "screen";
-        ctx.fillStyle = hexToRgba(visual.glow, 0.3);
-        ctx.fillRect(drawX, drawY, size, size);
-      drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
-      ctx.restore();
-      return;
+        ctx.globalCompositeOperation = "source-over";
+        drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
+        ctx.restore();
+        return;
     }
     const fallbackScale = s * MINI_BASE_ICON_SCALE;
     const fill = mix(visual.color, "#ffffff", 0.2);
