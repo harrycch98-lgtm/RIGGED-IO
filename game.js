@@ -2097,6 +2097,7 @@
   const AD_HUB_COST = 2000;
   const AD_HUB_DEPLOY_SECONDS = CAMPAIGN_DAY_SECONDS * 0.5;
   const AD_HUB_RATE = 1 / CAMPAIGN_DAY_SECONDS;
+  const HQ_INFLUENCE_RATE = 1.15 / CAMPAIGN_DAY_SECONDS;
   const MINI_BASE_MAX_LEVEL = 3;
   const MINI_BASE_ICON_SCALE = 0.5;
   const MINI_BASE_HIT_RADIUS = 9;
@@ -5712,11 +5713,16 @@
   }
 
   function tickPassive(player, dt) {
+    if (player.homeBase >= 0 && states[player.homeBase] && player.mainBaseLevel > 0) {
+      const homeState = states[player.homeBase];
+      applyInfluenceGain(homeState, player.id, player.mainBaseLevel * HQ_INFLUENCE_RATE, dt, true, 1);
+      homeState.activePulse = 1;
+    }
     states.forEach((state) => {
       const level = officeLevel(state, player.id);
       if (level > 0) {
         const slowMult = player.officeInfluenceSlow > 0 ? 0.5 : 1;
-        applyInfluenceGain(state, player.id, level * AD_HUB_RATE * slowMult, dt, false);
+        applyInfluenceGain(state, player.id, level * AD_HUB_RATE * slowMult, dt, true, 1);
         state.activePulse = 1;
       }
     });
@@ -5731,7 +5737,7 @@
             * (hasTalent(player, "trend_engine") ? 1.15 : 1)
             * (worldEventActive("news_multiplier") ? 3 : 1)
             * signalLeak;
-          applyInfluenceGain(state, player.id, channelRate, dt, false);
+          applyInfluenceGain(state, player.id, channelRate, dt, true, 1);
           if (stageVariantActive("media_war", "mid") && isMidStage()) {
             players.forEach((rival) => {
               if (rival.id === player.id) return;
