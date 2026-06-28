@@ -2219,24 +2219,43 @@ body .channel-card{
   bottom:calc(100% + 72px);
 }
 .upgrade-status-item{
-  padding:4px 7px;
-  border-left:3px solid #ffd76a;
-  background:rgba(0,0,0,.24);
-}
+  display:flex;
+  align-items:center;
+  gap:8px;
+    padding:4px 7px;
+    border-left:3px solid #ffd76a;
+    background:rgba(0,0,0,.24);
+  }
 .upgrade-status-item.is-talent{ border-left-color:var(--term); }
+.upgrade-status-copy{ display:block; }
 .upgrade-status-item strong,
 .upgrade-status-item span{ display:block; }
 .upgrade-status-item strong{
-  color:#ffd76a;
-  font-size:17px;
-  letter-spacing:1px;
-}
+    color:#ffd76a;
+    font-size:17px;
+    letter-spacing:1px;
+  }
 .upgrade-status-item.is-talent strong{ color:var(--term); }
 .upgrade-status-item span{
-  margin-top:2px;
-  color:#bfffe0;
-  font-size:14px;
-  line-height:1.1;
+    margin-top:2px;
+    color:#bfffe0;
+    font-size:14px;
+    line-height:1.1;
+  }
+.upgrade-status-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:26px;
+  height:26px;
+  flex:0 0 26px;
+  color:#ffd76a;
+}
+.upgrade-status-item.is-talent .upgrade-status-icon{ color:var(--term); }
+.upgrade-status-icon svg{
+  width:100%;
+  height:100%;
+  display:block;
 }
 
 .state-action-menu {

@@ -7727,6 +7727,7 @@
     if (talentChoices > 0) {
       notices.push({
         kind: "talent",
+        icon: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 L19 11 L28 11 L21 16 L24 25 L16 19 L8 25 L11 16 L4 11 L13 11 Z" fill="currentColor"/></svg>',
         title: talentChoices === 1 ? "TALENT CHOICE READY" : `${talentChoices} TALENT CHOICES READY`,
         detail: "Press TAB to select a talent",
       });
@@ -7744,9 +7745,10 @@
         const ready = homeInfluence >= influenceReq;
         notices.push({
           kind: "hq",
-          title: ready ? `HQ L${nextLevel} UPGRADE READY` : `HQ L${nextLevel} FUNDS READY`,
+          icon: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 25 L9 25 L15 11 L10 11 Z" fill="currentColor"/><path d="M14 11 H23 L28 25 H19 Z" fill="currentColor" opacity="0.9"/><rect x="11" y="6" width="10" height="4" fill="currentColor"/><rect x="15" y="3" width="2" height="4" fill="currentColor"/></svg>',
+          title: ready ? `HQ L${nextLevel} RENOVATION READY` : `HQ L${nextLevel} RENOVATION FUNDED`,
           detail: ready
-            ? "Press TAB, then U to begin upgrade"
+            ? "Press TAB, then U to start construction"
             : `Need ${influenceReq}% home influence (currently ${Math.floor(homeInfluence)}%)`,
         });
       }
@@ -7754,8 +7756,11 @@
 
     upgradeStatusBox.innerHTML = notices.map((notice) => `
       <div class="upgrade-status-item is-${notice.kind}">
-        <strong>${notice.title}</strong>
-        <span>${notice.detail}</span>
+        <span class="upgrade-status-icon" aria-hidden="true">${notice.icon || ""}</span>
+        <div class="upgrade-status-copy">
+          <strong>${notice.title}</strong>
+          <span>${notice.detail}</span>
+        </div>
       </div>
     `).join("");
     upgradeStatusBox.classList.toggle("is-visible", notices.length > 0);
@@ -8389,6 +8394,7 @@
         if (policeGuards(state, player.id, "hq") && player.homeBase === state.index) {
           const point = mainBasePoint(state);
           drawPoliceShield(point.x, point.y, 15, player);
+          drawPoliceProtectionBadge(point.x, point.y, player);
           if (policeAtRisk(player)) drawPoliceRiskWarning(point.x + 16, point.y - 16);
         }
         if (policeGuards(state, player.id, "office") && officeLevel(state, player.id) > 0) {
@@ -8397,7 +8403,7 @@
           if (officeIndex < 0) return;
           const point = miniBasePoint(state, player, officeIndex, hubs.length);
           drawPoliceShield(point.x, point.y, 13, player);
-          drawPoliceProtectionBadge(point.x + 12, point.y - 12, player);
+          drawPoliceProtectionBadge(point.x, point.y, player);
           if (policeAtRisk(player)) drawPoliceRiskWarning(point.x + 14, point.y - 14);
         }
       });
@@ -8422,7 +8428,7 @@
     const sprite = BUILDING_SPRITES.hq[level];
     const s = mapIconScale();
     if (sprite?.complete && sprite.naturalWidth > 0) {
-      const size = Math.round(42 * s);
+      const size = Math.max(28, Math.round(42 * s));
         ctx.save();
           ctx.imageSmoothingEnabled = false;
           const drawX = Math.round(x - size / 2);
@@ -8475,6 +8481,13 @@
           ctx.filter = "none";
           ctx.globalCompositeOperation = "source-over";
           drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
+          drawLevelBadge(
+            Math.round(drawX + size / 2),
+            Math.round(drawY + size + Math.max(6, size * 0.12)),
+            String(clampedLevel),
+            visual,
+            1
+          );
           ctx.restore();
           return;
     }
@@ -11106,6 +11119,10 @@
     ).length;
   }
 
+  function activeDisruptMissionInState(stateIndex) {
+    return missions.find((mission) => mission.type === "disrupt" && mission.state === stateIndex) || null;
+  }
+
   function canStartDisruptionOp(player, playerId) {
     return activeDisruptionOps(playerId) < operationLimit(player);
   }
@@ -11157,6 +11174,15 @@
     }
     if ((player.disruptCooldown || 0) > 0) {
       if (playerId === HUMAN) showToast(`DISRUPT cooldown: ${campaignDaysLabel(player.disruptCooldown)} remaining.`);
+      return false;
+    }
+    const existingDisrupt = activeDisruptMissionInState(stateIndex);
+    if (existingDisrupt) {
+      if (playerId === HUMAN) {
+        const existingPlayer = players[existingDisrupt.player];
+        const ownerName = existingPlayer?.name || "Another party";
+        showToast(`${state.abbr} is already being disrupted by ${ownerName}.`);
+      }
       return false;
     }
     const targets = disruptTargetsForState(playerId, state);
@@ -11891,7 +11917,11 @@
     }
     if (slot.action === "disrupt") {
       const targets = disruptTargetsForState(HUMAN, state);
-      return (human.disruptCooldown || 0) <= 0 && canStartDisruptionOp(human, HUMAN) && targets.length > 0 && human.cash >= disruptCost(human, targets);
+      return (human.disruptCooldown || 0) <= 0 &&
+        canStartDisruptionOp(human, HUMAN) &&
+        !activeDisruptMissionInState(state.index) &&
+        targets.length > 0 &&
+        human.cash >= disruptCost(human, targets);
     }
     if (slot.action === "powerGrab") {
       const cost = powerGrabCost(human, state);
