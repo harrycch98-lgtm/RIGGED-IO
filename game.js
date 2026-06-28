@@ -8427,10 +8427,9 @@
           ctx.imageSmoothingEnabled = false;
           const drawX = Math.round(x - size / 2);
           const drawY = Math.round(y - size * 0.78);
+          ctx.filter = `sepia(1) saturate(7) hue-rotate(${hexHueDegrees(visual.color)}deg) brightness(1.08)`;
           ctx.drawImage(sprite, drawX, drawY, size, size);
-          ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = mix(visual.color, "#ffffff", 0.18);
-          ctx.fillRect(drawX, drawY, size, size);
+          ctx.filter = "none";
           ctx.globalCompositeOperation = "source-over";
           drawBuildingFactionTrim(drawX, drawY, size, player, "hq", level);
           ctx.restore();
@@ -8471,10 +8470,9 @@
           ctx.imageSmoothingEnabled = false;
           const drawX = Math.round(x - size / 2);
           const drawY = Math.round(y - size * 0.74);
+          ctx.filter = `sepia(1) saturate(7) hue-rotate(${hexHueDegrees(visual.color)}deg) brightness(1.1)`;
           ctx.drawImage(sprite, drawX, drawY, size, size);
-          ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = mix(visual.color, "#ffffff", 0.22);
-          ctx.fillRect(drawX, drawY, size, size);
+          ctx.filter = "none";
           ctx.globalCompositeOperation = "source-over";
           drawBuildingFactionTrim(drawX, drawY, size, player, "office", clampedLevel);
           ctx.restore();
@@ -9214,6 +9212,24 @@
     const m = Math.max(0, Math.min(1, amount));
     const rgb = a.map((value, index) => Math.round(value * (1 - m) + b[index] * m));
     return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  }
+
+  function hexHueDegrees(hex) {
+    const [rRaw, gRaw, bRaw] = parseHex(hex);
+    const r = rRaw / 255;
+    const g = gRaw / 255;
+    const b = bRaw / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+    if (delta <= 0) return 0;
+    let hue = 0;
+    if (max === r) hue = ((g - b) / delta) % 6;
+    else if (max === g) hue = (b - r) / delta + 2;
+    else hue = (r - g) / delta + 4;
+    hue *= 60;
+    if (hue < 0) hue += 360;
+    return Math.round(hue);
   }
 
   function parseHex(hex) {
